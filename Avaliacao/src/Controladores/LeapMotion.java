@@ -1,84 +1,131 @@
 package Controladores;
 
-import com.leapmotion.leap.*;
-import com.leapmotion.leap.Gesture.Type;
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.InputEvent;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import com.leapmotion.leap.*;
+
+/***
+ * Tempo: 55
+ * @author manuelcesar
+ *
+ */
 
 public class LeapMotion extends Listener 
 {
-	private boolean destro = true;
+	private enum modoDeControlo{MaoSemGesto, MaosComGestoKeytap, MaoComGestoScreenTap};
+	
+	private boolean destro = false;
 	private Hand maoDominante = new Hand();
 	private Hand maoAuxiliar = new Hand();
 	
-	private enum modoDeControlo{MAO, DEDO, DEDOS};
-	private enum mapeamentoDoCursor{ DIRECTO, INTERSESSAO};
+	private modoDeControlo formaDeControlo = modoDeControlo.MaosComGestoKeytap;
 	
-	modoDeControlo formaDeControlo = modoDeControlo.MAO;
-	mapeamentoDoCursor mapeamento = mapeamentoDoCursor.DIRECTO; 
-	
-	int posicaoCursorX;
-	float posicaoCursorY;
+	private int posicaoCursorX = 0;
+	private int posicaoCursorY = 0;
+	private double distanciaZonaDeToque = 0;
+	private boolean botaoPressionado = false;
 	
 	int teste = 0;
+	Robot cursor;
 	
 	public LeapMotion()
 	{
+		//////<<<<<<<-----------------------------------------------******
+		try 
+		{
+			cursor = new Robot();
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//////<<<<<<<-----------------------------------------------******
+
 		Controller controlador = new Controller();
 		controlador.addListener(this);	
+		
+		//////<<<<<<<-----------------------------------------------******
+        while(true)
+        {}
+		//////<<<<<<<-----------------------------------------------******
+
 	}
 	
 	public void onInit(Controller controller)
 	{	
+		System.out.println("Leap Motion inicializado.");
 	}
 	
 	public void onConnect(Controller controller)
-	{	
+	{
+		System.out.println("Leap Motion ligado!");
 	}
 	
 	public void onDisconnect(Controller controller)
-	{}
+	{
+		System.out.println("Leap Motion desligado...");
+	}
 	
 	public void onExit(Controller controller)
-	{}
+	{
+		System.out.println("A sair...");
+		controller.removeListener(this);
+		controller.delete();
+	}
 	
 	public void onFrame(Controller controller)
 	{		
 		Frame imagemCaptada = controller.frame();
 		
 		if(!imagemCaptada.isValid())
-		{return;}
+		{
+			System.out.println("Imagem captada inadequada!");
+			return;
+		}
 		
 		HandList maos = imagemCaptada.hands();
 		
 		if(maos.isEmpty())
-		{return;}
+		{
+			System.out.println("Nao foi detectada nenhuma m‹o.");
+			return;
+		}
 		
 		if(maos.count() == 1)
 		{
-			System.out.println("Entrou dentro de uma mão.");
+			System.out.println("Uma m‹o detectada.");
 			
 			maoDominante = maos.get(0);
 			
 			if(!maoDominante.isValid())
-			{return;}
-			
-			System.out.println("Entrou dentro de uma mão COMPLETO.");
-			
+			{
+				System.out.println("M‹o dominante detectada invalida...");
+				return;
+			}
 		}
 		else if(maos.count() == 2)
 		{
-			System.out.println("Entrou dentro de 2 mão.");
+			System.out.println("Duas m‹os detectadas.");
 			
 			if( ( !maos.get(0).isValid() ) || ( !maos.get(1).isValid() ) )
-			{ return; }
+			{ 
+				System.out.println("Uma das m‹os detectadas n‹o Ž valida.");
+				return; 
+			}
 			
-			//Descobrir qual a mão esquerda e a mão direita
+			//Descobrir qual a m‹o esquerda e qual a m‹o direita
 			Hand maoEsquerda = maos.leftmost();
 			Hand maoDireita = maos.rightmost();
 			
 			//Conforme as preferências do utilizador, definir qual a mao dominante e auxiliar
 			if(maoEsquerda.equals(maoDireita))
-			{return;}
+			{
+				System.out.println("M‹o esquerda Ž igual a m‹o direita!!");
+				return;
+			}
 			
 			if(destro)
 			{
@@ -90,54 +137,87 @@ public class LeapMotion extends Listener
 				maoDominante = maoEsquerda;
 				maoAuxiliar = maoDireita;
 			}
-			
-			
-			System.out.println("Entrou dentro de 2 mão COMPLETO.");
 		}
 		else
 		{
-			//Será o dispositivo capaz de captar tanta mão??
+			//Ser‡ o dispositivo capaz de captar tanta m‹o??
+			System.out.println("Foram detectadas trs m‹os. S— podem ser usadas uma ou duas m‹os.");
 			return;
 		}
 		
 		System.out.println(maoAuxiliar.fingers().count());
 		
 		//Tomar respectiva acção conforme o modo de controlo
-		if(formaDeControlo == modoDeControlo.DEDO && !maoAuxiliar.equals(null))
-		{ controlarComDedo(); }
-		else if(formaDeControlo == modoDeControlo.DEDOS)
-		{ controlarComDedos(); }
-		else if(formaDeControlo == modoDeControlo.MAO)
-		{ controlarComMao(); }
-		
+		if(formaDeControlo == modoDeControlo.MaoComGestoScreenTap)
+		{ controlarComDedo(controller); }
+		else if(formaDeControlo == modoDeControlo.MaosComGestoKeytap)
+		{ controlarComUmaMaoMaisGestoKeyTap(controller); }
+		else if(formaDeControlo == modoDeControlo.MaoSemGesto)
+		{ tipoControlo1(controller); }
 	}
 	
-	//A mão dominante é utilizada para controlar o cursor e um dedo mao da mao auxiliar confirma a seleção.
-	//São necessárias as duas mãos.
-	public void controlarComMao()
+	//Um dedo da m\ao dominante mais aproximado do ecr‹ (o mais distante do centro da m‹o) Ž utilizado para simular o movimento 
+	//do cursor e um clique do rato esquerdo.
+	//S— necessita de uma m‹o.
+	public void tipoControlo1(Controller controlador)
 	{
-		//Vamos assumir que o dedo com que o utilizador é o que estiver mais a frente.
-		//Escolher o que esta mais avançado resolverá conflitos quando o dispositivo detecta mais dedos do que os pretendidos
-		Pointable dedoAPontador = maoAuxiliar.pointables().frontmost();
+		ScreenList ecras = controlador.locatedScreens();
 		
-		Vector valor = maoDominante.palmPosition();
-		posicaoCursorX = (int) valor.getX();
-		posicaoCursorY = valor.getY();
+		if(ecras.isEmpty())
+		{
+			System.out.println("N‹o foi detectado nenhum ecr‹.");
+			return;
+		}
 		
-		System.out.println(posicaoCursorX + " " + posicaoCursorY);
-		System.out.println(teste++);
+		Pointable dedoApontador = maoDominante.pointables().frontmost();
+		
+		if(!dedoApontador.isValid())
+		{
+			System.out.println("Dedo apontador invalido!");
+			return;
+		}
+		
+		Screen ecra = ecras.get(0);
+		
+		Vector interseccao = ecra.intersect(dedoApontador, true, 1.0f);
+		
+		posicaoCursorX = (int) ( ecra.widthPixels() * interseccao.getX() );
+		posicaoCursorY = (int) ( ecra.heightPixels() * ( 1.0f - interseccao.getY() ) );
+		distanciaZonaDeToque = dedoApontador.touchDistance();
+		
+		//////<<<<<<<-----------------------------------------------******
+		cursor.mouseMove(posicaoCursorX, posicaoCursorY);
+		//////<<<<<<<-----------------------------------------------******
+		
+		if(distanciaZonaDeToque < 0.0)
+		{
+			System.out.println("Bot‹o carregado.");
+			botaoPressionado = true;
+			//////<<<<<<<-----------------------------------------------******
+			cursor.mousePress(InputEvent.BUTTON1_MASK);
+			//////<<<<<<<-----------------------------------------------******
+		}
+		else
+		{
+			System.out.println("Bot‹o liberto.");
+			botaoPressionado = false;
+			//////<<<<<<<-----------------------------------------------******
+			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
+			//////<<<<<<<-----------------------------------------------******
+		}
 	}
 	
-	//Um dedo da mão dominante controla o cursor e um dedo da mão auxiliar faz a seleção.
-	//São necessárias as duas mãos
-	public void controlarComDedos()
+	//Um dedo da m‹o dominante mais aproximado do ecr‹ (o mais distante do centro da m‹o) Ž utilizado para simular o movimento do cursor.
+	//Um dedo da m‹o auxiliar mais pr—ximo do ecr‹ executa o gesto KEYTAP (deslocamento  de um dedo na vertical, rapidamente) simula um clique do bot‹o esquerdo do rato.
+	//S‹o necess‡rias as duas m‹os.
+	public void controlarComUmaMaoMaisGestoKeyTap(Controller controlador)
 	{
 		
 	}
 	
 	//Um dedo da mão dominante controla o cursor e faz a seleção.
 	//Só é necessária uma mão
-	public void controlarComDedo()
+	public void controlarComDedo(Controller controlador)
 	{
 		
 	}
@@ -155,7 +235,14 @@ public class LeapMotion extends Listener
 	public static void main(String[] args) 
 	{
 		LeapMotion lm = new LeapMotion();
-		while(true)
-		{}
 	}
+	
+	public int getPosicaoCursorX()
+	{ return this.posicaoCursorX; }
+	
+	public int getPosicaoCursorY()
+	{ return this.posicaoCursorY; }
+	
+	public boolean getBotaoPressionado()
+	{ return this.botaoPressionado;	}
 }
