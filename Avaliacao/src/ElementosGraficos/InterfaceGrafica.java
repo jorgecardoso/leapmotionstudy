@@ -5,6 +5,9 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.Vector;
 
+import Controladores.LeapMotion;
+import Controladores.LeapMotion.modoDeControlo;
+import Som.Som;
 import processing.core.*;
 
 public class InterfaceGrafica extends PApplet
@@ -28,8 +31,18 @@ public class InterfaceGrafica extends PApplet
 	
 	Vector<Circulo> circulos = new Vector<Circulo>(16);
 	
+	LeapMotion dispositivo = new LeapMotion(modoDeControlo.MaosComGestoKeytap, true); // booleano indica se utilizador � destro ou n�o
+	
 	public void setup() 
 	{
+		//Inicializar Leap Motion
+		Thread lmThread = new Thread("Leap Motion Listener") {
+			public void run(){
+				dispositivo.inicializar();
+			};
+		};
+		lmThread.start();
+
 		//Algumas definições de desenho.
 		rectMode(PConstants.CENTER); 			// As coordenadas passadas aos rectângulos são o seu centro
 		stroke(0);								// As linhas são desenhadas a preto
@@ -48,15 +61,11 @@ public class InterfaceGrafica extends PApplet
 		//Incluir um "ouvinte" que altere os valores anteriores sempre que verifique que a aplicação é redimensionada.
 		this.addComponentListener( new ComponentAdapter() {
 			public void componentResized(ComponentEvent e)
-			{
-				redesenharElementos = true;
-			}
+			{	redesenharElementos = true;	 }
 		});
 
 		//Pintar o fundo da janela de branco
 		background(255);
-		
-		//Falta inicializar o Leap Motion <<<<<<------------
 	}
 
 	public void draw() 
@@ -89,13 +98,12 @@ public class InterfaceGrafica extends PApplet
 		}
 		
 		//Para teste
-		Circulo cir = circulos.get(0);
+		Circulo cir = circulos.get(10);
 		desenharSinalAlvo(cir.getCentroX(), cir.getCentroY());
 		
-		/*
-		//C�digo Experimental
-		 
-		if(mousePressed)
+		desenhaCircunfencia(mouseX, mouseY, 5);
+		
+		if(mousePressed || dispositivo.getBotaoPressionado())
 		{
 			boolean circuloEncontrado = false;
 			
@@ -113,8 +121,10 @@ public class InterfaceGrafica extends PApplet
 			{
 				Som.tocarSomFracasso();
 			}
+			
+			try {Thread.sleep(200);}catch (InterruptedException e) {}
+			dispositivo.resetBotaoPressiondado();
 		}
-		*/
 	}
 	
 	private void redesenharElementos() 
