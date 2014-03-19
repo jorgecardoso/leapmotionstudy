@@ -3,109 +3,203 @@ package ElementosGraficos;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.Vector;
 
 import processing.core.*;
-
-
 
 public class InterfaceGrafica extends PApplet
 {
 	private static final long serialVersionUID = 1L;
 	
-	double posicaoCentralX;
-	double posicaoCentralY;
+	private double posicaoCentralX;
+	private double posicaoCentralY;
 
-	int raioCircunferenciaDesejado = 40;
-	int raioCircunferencia;
-	int distanciaCentro;
+	private int raioCircunferenciaDesejado = 40;
+	private int raioCircunferencia;
+	private int distanciaCentro;
+	
+	private int tamanhoAlvoDesejadoX = 30;
+	private int tamanhoAlvoDesejadoY = 5;
+	private int tamanhoAlvoXActual;
+	private int tamanhoAlvoYActual;
+	
+	protected boolean redesenharElementos = false;
+	private int teste = 0;
+	
+	Vector<Circulo> circulos = new Vector<Circulo>(16);
 	
 	public void setup() 
 	{
-		//Descobrir resolução do ecrã.
+		//Algumas defini√ß√µes de desenho.
+		rectMode(PConstants.CENTER); 			// As coordenadas passadas aos rect√¢ngulos s√£o o seu centro
+		stroke(0);								// As linhas s√£o desenhadas a preto
+		
+		//Descobrir resolu√ß√£o do ecr√£.
 		int alturaJanela = Toolkit.getDefaultToolkit().getScreenSize().height;
 		int larguraJanela = Toolkit.getDefaultToolkit().getScreenSize().width;
 		
-		//Janela vai ocupar todo os espaço permitido no ecrã.
+		//Janela vai ocupar todo o espa√ßo permitido no ecr√£.
 		size(larguraJanela,alturaJanela);
 		
-		//O espaço ocupado é sempre inferior a resolução (a janela não se sobrepõe as barras de ferramentas / atalhos).
-		//É, por isso, necessário actualizar as dimensões do Ecrã		
-		posicaoCentralX = this.width / 2.0;
-		posicaoCentralY = this.height / 2.0;
+		//Com base na tamanho ocupado realmente pela aplica√ß√£o, recalcular as dimens√µes de todos os elementos
+		redesenharElementos = true;
+		redesenharElementos();
 		
-		//Vamos admitir que a distãncia ao centro de todas as circunferências é 1/2 da posição anterior mais pequena (podia ser outro valor qualquer).
-		//Inicialmente, a altura é sempre a mais pequena para todas as resoluções, logo "posicaoCentralY".
-		distanciaCentro = (int) (posicaoCentralY / 2.0);
-		
-		//Admitimos também que para a resolução 1280x1024 o raio das circunferências são de 40 pixeis.
-		//Alterar caso a resolução seja diferente.
-		raioCircunferencia = ((this.width * this.height) * raioCircunferenciaDesejado) / (1280*1024);
-		
-		//Incluir um "ouvinte" que altere os valores anteriores sempre que verifique que a aplicação é redimensionada.
-		this.addComponentListener(
-				new ComponentAdapter() 
-				{
-					public void componentResized(ComponentEvent e)
-					{
-						reajustarValores();
-					}
-				}
-		);
-		
+		//Incluir um "ouvinte" que altere os valores anteriores sempre que verifique que a aplica√ß√£o √© redimensionada.
+		this.addComponentListener( new ComponentAdapter() {
+			public void componentResized(ComponentEvent e)
+			{
+				redesenharElementos = true;
+			}
+		});
+
 		//Pintar o fundo da janela de branco
 		background(255);
-		
-		//Forçar reajuste manual. Apesar da janela não poder ocupar o ecrã de forma completa, os valores anteriores não são actualizados. 
-		reajustarValores();
 		
 		//Falta inicializar o Leap Motion <<<<<<------------
 	}
 
-	
-	
 	public void draw() 
-	{   
+	{  
+		//Quando a aplica√ß√£o √© redimensionada os valores t√™m de ser recalculados.
+		if(redesenharElementos)
+		{ redesenharElementos(); }
+		
+		//Caso ocorra um redimensionamento... Encarregar a pr√≥xima execu√ß√£o de "draw()" de recalcular os elementos.
+		if(redesenharElementos)
+		{ return ; }
+		
 		//Pintar o fundo da janela de branco.
 		background(255);
 		
-		//Desenhar o conjunto de circunferências necessários a avaliação do dispositivo.
-		//São 16 círculos no total.
-		for(int i = 0; i < 16; i++)
+		//Desenhar os circulos criados anteriormente.
+		for(int i = 0; (i < circulos.size()); i++)
 		{
-			double angulo = Math.toRadians(22.5 * i);
+			Circulo alvo = circulos.get(i);
+				
+			desenhaCircunfencia( 
+					alvo.getCentroX(), 
+					alvo.getCentroY(),
+					alvo.getRaioCircunferencia()
+			);	
 			
-			double coordenadaX = posicaoCentralX + 
-					distanciaCentro * Math.cos(angulo);
-			
-			double coordenadaY = posicaoCentralY + 
-					distanciaCentro * Math.sin(angulo);
-			
-			desenhaCircunfencia((int) coordenadaX , (int) coordenadaY , raioCircunferencia);
+			//Poupan√ßa de recursos.
+			if(redesenharElementos)
+			{ return ; }
 		}
+		
+		//Para teste
+		Circulo cir = circulos.get(0);
+		desenharSinalAlvo(cir.getCentroX(), cir.getCentroY());
+		
+		/*
+		//Código Experimental
+		 
+		if(mousePressed)
+		{
+			boolean circuloEncontrado = false;
+			
+			for(int i = 0; i < circulos.size(); i++)
+			{	
+				if(circulos.get(i).pontoPertenceCirculo(mouseX, mouseY))
+				{
+					Som.tocarSomSucesso();
+					circuloEncontrado = true;
+					break;
+				}	
+			}
+			
+			if(!circuloEncontrado)
+			{
+				Som.tocarSomFracasso();
+			}
+		}
+		*/
 	}
 	
-	public void desenhaCircunfencia(int coordenadaX, int coordenadaY, int raio)
+	private void redesenharElementos() 
 	{
-		ellipse(coordenadaX, coordenadaY, raio, raio);
-	}
-	
-	public void desenhaSinalPartida()
-	{}
-	
-	public void desenhaSinalObjectivo()
-	{}
-	
-	protected void reajustarValores()
-	{
-		//Reajustar os valores caso a dimensão da janela seja alterada dependendo do tamanho da aplicação.
+		//Impedir que a fun√ß√£o se reinvoque caso n√£o seja necess√°rio.
+		redesenharElementos = false;
+		
+		//Caso a aplica√ß√£o volte a ser redimensionada imediatamente, algo que acontece enquanto se ajusta a janela.
+		if(redesenharElementos)
+		{ return ; }
+		
+		//O espa√ßo ocupado √© sempre inferior a resolu√ß√£o (a janela pode n√£o se sobrepor as barras de ferramentas / atalhos). No OSx n√£o, em Windows sim.
+		//Pode ser, por isso, necess√°rio actualizar as dimens√µes do ecr√£		
 		posicaoCentralX = this.width / 2.0;
 		posicaoCentralY = this.height / 2.0;
 		
+		//Vamos admitir que a dist√¢ncia ao centro da circunfer√™ncia √© 1/2 da "posicaoCentral" anterior mais pequena (podia ser outro valor qualquer).
+		//Nota: inicialmente a altura √© sempre a mais pequena para qualquer das resolu√ß√µes, logo "posicaoCentralY".
 		if(posicaoCentralX > posicaoCentralY)
 		{distanciaCentro = (int) (posicaoCentralY / 2.0);}
 		else
 		{distanciaCentro = (int) (posicaoCentralX / 2.0);}
 		
-		raioCircunferencia = ((this.width * this.height) * 40) / (1280*1024);
+		//Poupan√ßa de recursos.
+		if(redesenharElementos)
+		{ return ; }
+		
+		//Para outras resolu√ß√µes, calcular a altera√ß√£o do raio da circunfer√™ncia.
+		raioCircunferencia = ((this.width * this.height) * raioCircunferenciaDesejado) / (1280*1024);
+		
+		//Poupan√ßa de recursos.
+		if(redesenharElementos)
+		{ return; }
+		
+		//Para outras resolu√ß√µes, calcular a altera√ß√£o do tamanho do alvo.
+		tamanhoAlvoXActual = ((this.width * this.height) * tamanhoAlvoDesejadoX) / (1280*1024);
+		tamanhoAlvoYActual = ((this.width * this.height) * tamanhoAlvoDesejadoY) / (1280*1024);
+		
+		//Poupan√ßa de recursos.
+		if(redesenharElementos)
+		{ return; }
+		
+		//Verificar se os circulos da avalia√ß√£o j√° foram desenhados.
+		//Em setup, esta ac√ß√£o n√£o faz sentido, contudo esta fun√ß√£o √© invocada varias vezes em "draw()" caso exista um redimensionamento da janela. 
+		if(!circulos.isEmpty())
+		{ circulos.clear(); }
+		
+		//Calcular, criar ou redesenhar o conjunto de c√≠rculos necess√°rios a avalia√ß√£o do dispositivo.
+		//S√£o 16 c√≠rculos no total.
+		for(int i = 0; i < 16; i++)
+		{
+			double angulo = Math.toRadians(22.5 * i);
+				
+			double coordenadaX = posicaoCentralX + 
+					distanciaCentro * Math.cos(angulo);
+				
+			double coordenadaY = posicaoCentralY + 
+					distanciaCentro * Math.sin(angulo);
+			
+			circulos.add( 
+					new Circulo( ((int) coordenadaX),
+								 ((int) coordenadaY), 
+								 ((int) raioCircunferencia))
+			);
+			
+			//Poupan√ßa de recursos.
+			if(redesenharElementos)
+			{ return; }
+		}
+	}
+	
+	public void desenhaCircunfencia(int posicaoCentroCircunferenciaX, int posicaoCentroCircunferenciaY, int raioDaCircunferencia)
+	{
+		ellipse(posicaoCentroCircunferenciaX, posicaoCentroCircunferenciaY, raioDaCircunferencia, raioDaCircunferencia);
+	}
+	
+	protected void desenharSinalAlvo(int coordanadaCentralX, int coordenadaCentralY)
+	{
+		noStroke();
+		fill(137,42,139); 			//Roxo
+		
+		rect(coordanadaCentralX, coordenadaCentralY, tamanhoAlvoXActual, tamanhoAlvoYActual);
+		rect(coordanadaCentralX, coordenadaCentralY, tamanhoAlvoYActual, tamanhoAlvoXActual);
+		
+		fill(255,255,255);			//Branco
+		stroke(0);
 	}
 }
