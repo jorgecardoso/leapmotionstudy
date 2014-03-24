@@ -1,7 +1,7 @@
 Nº de circunferências: 16
 
-Raio da circunferência: 40
+Raio da circunferência: 25
 
 Distância das circunferências ao centro do ecrã: 300
 
-Nota: todos os valores devem ser inteiros!
+Nota: Todos os valores devem ser inteiros!

@@ -8,8 +8,6 @@ import com.leapmotion.leap.*;
 import com.leapmotion.leap.Gesture.State;
 import com.leapmotion.leap.Gesture.Type;
 
-import ElementosGraficos.*;
-
 public class LeapMotion extends Listener
 {
 	public enum modoDeControlo{MaoSemGesto, MaosComGestoKeytap, MaoComGestoScreenTap, MaosComGestoSwipe};
@@ -473,6 +471,7 @@ public class LeapMotion extends Listener
 	
 	public static void main(String[] args) 
 	{
+		@SuppressWarnings("unused")
 		LeapMotion lm = new LeapMotion(modoDeControlo.MaosComGestoSwipe,true);
 	}
 	

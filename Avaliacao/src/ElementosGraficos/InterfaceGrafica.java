@@ -1,8 +1,5 @@
 package ElementosGraficos;
 
-import java.awt.DisplayMode;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -13,11 +10,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Vector;
 
-import javax.swing.JFrame;
-
 import Controladores.LeapMotion;
 import Controladores.LeapMotion.modoDeControlo;
-import Som.Som;
+import Som.*;
+import EstruturaDados.*;
 import processing.core.*;
 
 public class InterfaceGrafica extends PApplet
@@ -35,13 +31,16 @@ public class InterfaceGrafica extends PApplet
 	private int tamanhoAlvoXActual;
 	private int tamanhoAlvoYActual;
 	
-	boolean redesenharElementos;
+	protected boolean redesenharElementos;
 	
-	int corDeFundo = 255; 			// Branco
-	int corDeFundoCirculoR = 183;
-	int corDeFundoCirculoG = 228;
-	int corDeFundoCirculoB = 240;
+	private final int corDeFundo = 255; 			// Branco
+	private final int corDeFundoCirculoR = 183;
+	private final int corDeFundoCirculoG = 228;
+	private final int corDeFundoCirculoB = 240;
 	
+	private Sequencia sequenciaARealizar;
+	private boolean sequenciaAleatoria = false;
+	private int posicaoSequencia = 0;
 	
 	private int teste = 0;
 	private boolean debug = false;
@@ -66,8 +65,8 @@ public class InterfaceGrafica extends PApplet
 		stroke(0);								// As linhas são desenhadas a preto
 		    
 		//Descobrir resolução do ecrã.
-		int alturaJanela = 800;//Toolkit.getDefaultToolkit().getScreenSize().height;
-		int larguraJanela = 800;//Toolkit.getDefaultToolkit().getScreenSize().width;
+		int alturaJanela = Toolkit.getDefaultToolkit().getScreenSize().height;
+		int larguraJanela = Toolkit.getDefaultToolkit().getScreenSize().width;
 		
 		//Janela vai ocupar todo o espaço permitido no ecrã.
 		size(larguraJanela,alturaJanela);
@@ -118,17 +117,14 @@ public class InterfaceGrafica extends PApplet
 		//Pintar o fundo da janela de branco.
 		background(corDeFundo);
 		
-		System.out.println(raioCircunferencia);
-		
-		desenhaCircunfencia(mouseX, mouseY, 10);
 		//Desenhar os circulos criados anteriormente.
 		for(int i = 0; i < circulos.size(); i++)
 		{
 			Circulo alvo = circulos.get(i);
 			
+			//Se o cursor estiver posicionado sobre a circunferência, pintar o seu interior de outra cor.
 			if( alvo.pontoPertenceCirculo(mouseX, mouseY) )
 			{
-				
 				fill(corDeFundoCirculoR,corDeFundoCirculoG,corDeFundoCirculoB);
 			}
 		
@@ -141,10 +137,40 @@ public class InterfaceGrafica extends PApplet
 			noFill();
 		}
 		
-		//Para teste
-		Circulo cir = circulos.get(0);
-		desenharSinalAlvo(cir.getCentroX(), cir.getCentroY());
+		//Para teste *********************************
 		
+		if( posicaoSequencia == sequenciaARealizar.size() )
+		{
+			System.out.println("Teste completado com sucesso!\nA sair...");
+			System.exit(0);
+		}
+		
+		Circulo circuloAlvo = circulos.get(sequenciaARealizar.get(posicaoSequencia));
+		desenharSinalAlvo(circuloAlvo.getCentroX(), circuloAlvo.getCentroY());
+		
+		/////////*************************************
+		
+		if(mousePressed || dispositivo.getBotaoPressionado())
+		{
+			Circulo circuloSelecionado = circulos.get(sequenciaARealizar.get(posicaoSequencia));
+			
+			if( circuloSelecionado.pontoPertenceCirculo(mouseX, mouseY) )
+			{
+				Som.tocarSomSucesso();
+				posicaoSequencia++;
+			}	
+			else
+			{
+				Som.tocarSomFracasso();
+			}
+			
+			dispositivo.resetBotaoPressiondado();
+			
+			//Uma pequena pausa para evitar que o som se repita sempre caso o utilizador mantiver o rato pressionado. 
+			try {Thread.sleep(200);}catch (InterruptedException e) {}
+		}
+		
+		/*
 		if(mousePressed || dispositivo.getBotaoPressionado())
 		{
 			boolean circuloEncontrado = false;
@@ -164,9 +190,10 @@ public class InterfaceGrafica extends PApplet
 				Som.tocarSomFracasso();
 			}
 			
-			//try {Thread.sleep(200);}catch (InterruptedException e) {}
+			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			dispositivo.resetBotaoPressiondado();
 		}
+		*/
 	}
 	
 	private void redesenharElementos() 
@@ -220,7 +247,8 @@ public class InterfaceGrafica extends PApplet
 	
 	public void desenhaCircunfencia(int posicaoCentroCircunferenciaX, int posicaoCentroCircunferenciaY, int raioDaCircunferencia)
 	{
-		ellipse(posicaoCentroCircunferenciaX, posicaoCentroCircunferenciaY, raioDaCircunferencia, raioDaCircunferencia);
+		//Nota: O Processing recebe o não raio mas o diametro da circunferência em X e Y. Como só passamos o raio é preciso multiplicar por 2.
+		ellipse(posicaoCentroCircunferenciaX, posicaoCentroCircunferenciaY, raioDaCircunferencia * 2, raioDaCircunferencia * 2);
 	}
 	
 	protected void desenharSinalAlvo(int coordanadaCentralX, int coordenadaCentralY)
@@ -283,12 +311,10 @@ public class InterfaceGrafica extends PApplet
 			{ distanciaCentro = Integer.parseInt(resultado[1]); }
 		}
 		
-		System.out.println(posicaoCentralX >= 0 && posicaoCentralX <= 1920);
-		
 		//Verifica se os valores foram realmente lidos correctamente ou se ultrapassam valores considerados adequados
-		if( !(nCircunferencias >= 1 && nCircunferencias <= 32) )
+		if( !(nCircunferencias >= 2 && nCircunferencias <= 32) )
 		{
-			System.out.println("Valor de \"Nº de circunferências\" deve variar entre 1 e 32, inclusíve.");
+			System.out.println("Valor de \"Nº de circunferências\" deve variar entre 2 e 32, inclusíve.");
 			System.exit(3);
 		}
 		else if( !(raioCircunferencia >= 0 && raioCircunferencia <= 200) )
@@ -303,8 +329,9 @@ public class InterfaceGrafica extends PApplet
 		}
 		
 		//Inicializar as restantes variáveis com os valores adquiridos 
-		tamanhoAlvoXActual = (int) (0.75 * raioCircunferencia);
-		tamanhoAlvoYActual = (int) (0.125 * raioCircunferencia);
+		tamanhoAlvoXActual = (int) (0.75 * 2 * raioCircunferencia);		//Nota: Processing recebe o diâmetro e não o raio. É preciso multiplicar por dois para os valores estarem matematicamente correctos.
+		tamanhoAlvoYActual = (int) (0.125 * 2 * raioCircunferencia);
 		circulos = new Vector<Circulo>(nCircunferencias);
+		sequenciaARealizar = new Sequencia(nCircunferencias, sequenciaAleatoria);
 	}
 }
