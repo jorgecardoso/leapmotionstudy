@@ -32,8 +32,8 @@ public class Circulo
 	{ this.raioCircunferencia = raioCircunferencia; }
 	
 	/**
-	 * Função que determina se o ponto, com as coordenadas passsadas em argumento,
-	 * se encontra dentro do círculo especificado. 
+	 * FunÔøΩÔøΩo que determina se o ponto, com as coordenadas passsadas em argumento,
+	 * se encontra dentro do cÔøΩrculo especificado. 
 	 * 
 	 * @param pontoCoordenadaX
 	 * @param pontoCoordenadaY
@@ -42,16 +42,16 @@ public class Circulo
 	public boolean pontoPertenceCirculo(int pontoCoordenadaX, int pontoCoordenadaY)
 	{
 		/*
-		 * Formula da área do circulo:
+		 * Formula da ÔøΩrea do circulo:
 		 * (x - Cx)^2 + (y - Cy)^2 = raio^2
 		 */
 		double parte1 = Math.pow( (double) (pontoCoordenadaX - centroX) , 2.0);
 		double parte2 = Math.pow( (double) (pontoCoordenadaY - centroY) , 2.0);
-		double parte3 = Math.pow( (double) raioCircunferencia, 2.0);
+		double parte3 = Math.pow( (double) raioCircunferencia / 2, 2.0);
 		
 		parte1 = parte1 + parte2;
 		
-		//Vamos considerar que a circunferência também conta como dentro do circulo
+		//Vamos considerar que a circunferÔøΩncia tambÔøΩm conta como dentro do circulo
 		if( parte1 <= parte3)
 		{ return true; }
 		else

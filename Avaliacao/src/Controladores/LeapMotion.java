@@ -10,14 +10,6 @@ import com.leapmotion.leap.Gesture.Type;
 
 import ElementosGraficos.*;
 
-/***
- * 3:45
- * 10:08
- * 
- * @author manuelcesar
- *
- */
-
 public class LeapMotion extends Listener
 {
 	public enum modoDeControlo{MaoSemGesto, MaosComGestoKeytap, MaoComGestoScreenTap, MaosComGestoSwipe};
@@ -61,10 +53,10 @@ public class LeapMotion extends Listener
 		
 		if(formaDeControlo == modoDeControlo.MaosComGestoKeytap)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execuÔøΩ‚Äπo.
 			if(!controlador.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.3f) )
 			{
-				if(debug){System.out.println("Não foi possível as configuraçoes de \"Gesture.KeyTap.HistorySeconds\"");}
+				if(debug){System.out.println("N‚Äπo foi poss‚Äôvel as configuraÔøΩoes de \"Gesture.KeyTap.HistorySeconds\"");}
 				return;
 			}
 			controlador.config().save();
@@ -73,10 +65,10 @@ public class LeapMotion extends Listener
 		}
 		else if(formaDeControlo == modoDeControlo.MaoComGestoScreenTap)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execuÔøΩ‚Äπo.
 			if(!controlador.config().setFloat("Gesture.ScreenTap.HistorySeconds", 0.3f) )
 			{
-				if(debug){System.out.println("Não foi possível as configuraçoes de \"Gesture.ScreenTap.HistorySeconds\"");}
+				if(debug){System.out.println("N‚Äπo foi poss‚Äôvel as configuraÔøΩoes de \"Gesture.ScreenTap.HistorySeconds\"");}
 				return;
 			}
 			
@@ -84,10 +76,10 @@ public class LeapMotion extends Listener
 		}
 		else if(formaDeControlo == modoDeControlo.MaosComGestoSwipe)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execuÔøΩ‚Äπo.
 			if(!controlador.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.3f) )
 			{
-				if(debug){System.out.println("Não foi possível as configuraçoes de \"Gesture.KeyTap.HistorySeconds\"");}
+				if(debug){System.out.println("N‚Äπo foi poss‚Äôvel as configuraÔøΩoes de \"Gesture.KeyTap.HistorySeconds\"");}
 				return;
 			}
 			controlador.config().save();
@@ -139,7 +131,7 @@ public class LeapMotion extends Listener
 		
 		if(maos.isEmpty())
 		{
-			if(debug) {System.out.println("Nao foi detectada nenhuma mão.");}
+			if(debug) {System.out.println("Nao foi detectada nenhuma m‚Äπo.");}
 			return;
 		}
 		
@@ -149,7 +141,7 @@ public class LeapMotion extends Listener
 			
 			if(!maoDominante.isValid())
 			{
-				if(debug){System.out.println("Mão dominante detectada invalida...");}
+				if(debug){System.out.println("M‚Äπo dominante detectada invalida...");}
 				return;
 			}
 		}
@@ -157,18 +149,18 @@ public class LeapMotion extends Listener
 		{
 			if( ( !maos.get(0).isValid() ) || ( !maos.get(1).isValid() ) )
 			{ 
-				if(debug){System.out.println("Uma das mãos detectadas não é valida.");}
+				if(debug){System.out.println("Uma das m‚Äπos detectadas n‚Äπo ≈Ω valida.");}
 				return; 
 			}
 			
-			//Descobrir qual a mão esquerda e qual a mão direita
+			//Descobrir qual a m‚Äπo esquerda e qual a m‚Äπo direita
 			Hand maoEsquerda = maos.leftmost();
 			Hand maoDireita = maos.rightmost();
 			
-			//Conforme as preferÍncias do utilizador, definir qual a mao dominante e auxiliar
+			//Conforme as prefer√™ncias do utilizador, definir qual a mao dominante e auxiliar
 			if(maoEsquerda.equals(maoDireita))
 			{
-				if(debug){System.out.println("Mão esquerda é igual a mão direita!!");}
+				if(debug){System.out.println("M‚Äπo esquerda ≈Ω igual a m‚Äπo direita!!");}
 				return;
 			}
 			
@@ -185,12 +177,12 @@ public class LeapMotion extends Listener
 		}
 		else
 		{
-			//Será o dispositivo capaz de captar tanta mão??
-			System.out.println("Foram detectadas três mãos. Só podem ser usadas uma ou duas mãos.");
+			//Ser‚Ä° o dispositivo capaz de captar tanta m‚Äπo??
+			System.out.println("Foram detectadas trÔøΩs m‚Äπos. S‚Äî podem ser usadas uma ou duas m‚Äπos.");
 			return;
 		}
 		
-		//Tomar respectiva acção conforme o modo de controlo
+		//Tomar respectiva acÔøΩ‚Äπo conforme o modo de controlo
 		if(formaDeControlo == modoDeControlo.MaoComGestoScreenTap)
 		{ 
 			tipoControlo3(controller); 
@@ -209,16 +201,16 @@ public class LeapMotion extends Listener
 		}
 	}
 	
-	//Um dedo da mão dominante mais próximo do ecrã (o mais distante do centro da mão) é utilizado para simular o movimento do cursor.
-	//A mão auxiliar, não importa qual o dedo, executa o gesto SWIPE (hum... chapada... rápida sobre o dispositivo) simulando um clique do botão esquerdo do rato.
-	//São necessárias as duas mãos.
+	//Um dedo da m‚Äπo dominante mais pr‚Äîximo do ecr‚Äπ (o mais distante do centro da m‚Äπo) ≈Ω utilizado para simular o movimento do cursor.
+	//A m‚Äπo auxiliar, n‚Äπo importa qual o dedo, executa o gesto SWIPE (hum... chapada... r‚Ä°pida sobre o dispositivo) simulando um clique do bot‚Äπo esquerdo do rato.
+	//S‚Äπo necess‚Ä°rias as duas m‚Äπos.
 	private void tipoControlo4(Controller controlador) 
 	{
 		ScreenList ecras = controlador.locatedScreens();
 
 		if(ecras.isEmpty())
 		{
-			if(debug){System.out.println("Não foi detectado nenhum ecrã.");}
+			if(debug){System.out.println("N‚Äπo foi detectado nenhum ecr‚Äπ.");}
 			return;
 		}
 
@@ -245,40 +237,40 @@ public class LeapMotion extends Listener
 		
 		if(!maoAuxiliar.isValid())
 		{
-			if(debug){System.out.println("Deve colocar a sua mão direita sobre o dispositivo.");}
+			if(debug){System.out.println("Deve colocar a sua m‚Äπo direita sobre o dispositivo.");}
 			return;
 		}
 		
 		if(!gestoEfectuado.isValid())
 		{
-			if(debug){System.out.println("O gesto efectuado não é valido.");}
+			if(debug){System.out.println("O gesto efectuado n‚Äπo ≈Ω valido.");}
 			return;
 		}
 		
 		if(gestoEfectuado.hands().count() != 1)
 		{
-			if(debug){System.out.println("Mais que uma mão efectou o gesto SWIPE. Deve utilizar apenas a sua mão não dominante.");}
+			if(debug){System.out.println("Mais que uma m‚Äπo efectou o gesto SWIPE. Deve utilizar apenas a sua m‚Äπo n‚Äπo dominante.");}
 			return;
 		}
 		
 		if(!gestoEfectuado.hands().get(0).equals(maoAuxiliar))
 		{
-			if(debug){System.out.println("Só a mão auxiliar deve efectuar gestos. A mão dominante serve para controlar o cursor.");}
+			if(debug){System.out.println("S‚Äî a m‚Äπo auxiliar deve efectuar gestos. A m‚Äπo dominante serve para controlar o cursor.");}
 			return;
 		}
 		
-		//O gesto swipe é continuo. Como é suposto ser só um clique é necessário verificar quando este termina.
-		//Caso contrário, ao longo da sua execução, ocorreriam varios cliques.
+		//O gesto swipe ≈Ω continuo. Como ≈Ω suposto ser s‚Äî um clique ≈Ω necess‚Ä°rio verificar quando este termina.
+		//Caso contr‚Ä°rio, ao longo da sua execuÔøΩ‚Äπo, ocorreriam varios cliques.
 		if( !gestoEfectuado.state().equals(State.STATE_STOP) )
 		{
 			return;
 		}
 		
-		//Se apenas um gesto estiver a ser reconhecido, este pedaço de código pode ser removido
+		//Se apenas um gesto estiver a ser reconhecido, este pedaÔøΩo de c‚Äîdigo pode ser removido
 		if(!gestoEfectuado.type().equals(Type.TYPE_SWIPE))
 		{
-			//Não foi detectada o gesto pretendido.
-			if(debug){System.out.println("O gesto efectuado não foi do tipo SWIPE.");}
+			//N‚Äπo foi detectada o gesto pretendido.
+			if(debug){System.out.println("O gesto efectuado n‚Äπo foi do tipo SWIPE.");}
 			return;
 		}
 		
@@ -289,15 +281,15 @@ public class LeapMotion extends Listener
 		//////<<<<<<<---------------------------------------
 	}
 
-	//Um dedo da mão dominante mais próximo do ecrã (o mais distante do centro da mão) é utilizado para simular o movimento do cursor e o clique do botão esquerdo do rato.
-	//É apenas necessario uma mão.
+	//Um dedo da m‚Äπo dominante mais pr‚Äîximo do ecr‚Äπ (o mais distante do centro da m‚Äπo) ≈Ω utilizado para simular o movimento do cursor e o clique do bot‚Äπo esquerdo do rato.
+	//∆í apenas necessario uma m‚Äπo.
 	public void tipoControlo3(Controller controlador)
 	{
 		ScreenList ecras = controlador.locatedScreens();
 
 		if(ecras.isEmpty())
 		{
-			System.out.println("Não foi detectado nenhum ecrã.");
+			System.out.println("N‚Äπo foi detectado nenhum ecr‚Äπ.");
 			return;
 		}
 
@@ -324,27 +316,27 @@ public class LeapMotion extends Listener
 			
 		if(!gestoEfectuado.isValid())
 		{
-			System.out.println("O gesto efectuado não é valido.");
+			System.out.println("O gesto efectuado n‚Äπo ≈Ω valido.");
 			return;
 		}
 		
 		if(gestoEfectuado.hands().count() != 1)
 		{
-			System.out.println("Mais que uma mão efectou o gesto SCREEN_TAP. Deve utilizar apenas a sua mão dominante.");
+			System.out.println("Mais que uma m‚Äπo efectou o gesto SCREEN_TAP. Deve utilizar apenas a sua m‚Äπo dominante.");
 			return;
 		}
 		
 		if(!gestoEfectuado.hands().get(0).equals(maoDominante))
 		{
-			System.out.println("Só a mão dominante deve efectuar gestos.");
+			System.out.println("S‚Äî a m‚Äπo dominante deve efectuar gestos.");
 			return;
 		}
 		
-		//Se apenas um gesto estiver a ser reconhecido, este pedaço de código pode ser removido
+		//Se apenas um gesto estiver a ser reconhecido, este pedaÔøΩo de c‚Äîdigo pode ser removido
 		if(!gestoEfectuado.type().equals(Type.TYPE_SCREEN_TAP))
 		{
-			//Não foi detectada o gesto pretendido.
-			if(debug){System.out.println("O gesto efectuado não foi do tipo SCREEN_TAP.");}
+			//N‚Äπo foi detectada o gesto pretendido.
+			if(debug){System.out.println("O gesto efectuado n‚Äπo foi do tipo SCREEN_TAP.");}
 			return;
 		}
 		
@@ -355,16 +347,16 @@ public class LeapMotion extends Listener
 		//////<<<<<<<---------------------------------------	
 	}
 
-	//Um dedo da mão dominante mais próximo do ecrã (o mais distante do centro da mão) é utilizado para simular o movimento do cursor.
-	//Um dedo da mão auxiliar mais próximo do ecrã executa o gesto KEYTAP (deslocamento  de um dedo na vertical, rapidamente) simulando um clique do botão esquerdo do rato.
-	//São necessárias as duas mãos.
+	//Um dedo da m‚Äπo dominante mais pr‚Äîximo do ecr‚Äπ (o mais distante do centro da m‚Äπo) ≈Ω utilizado para simular o movimento do cursor.
+	//Um dedo da m‚Äπo auxiliar mais pr‚Äîximo do ecr‚Äπ executa o gesto KEYTAP (deslocamento  de um dedo na vertical, rapidamente) simulando um clique do bot‚Äπo esquerdo do rato.
+	//S‚Äπo necess‚Ä°rias as duas m‚Äπos.
 	public void tipoControlo2(Controller controlador)
 	{
 		ScreenList ecras = controlador.locatedScreens();
 		
 		if(ecras.isEmpty())
 		{
-			System.out.println("Não foi detectado nenhum ecrã.");
+			System.out.println("N‚Äπo foi detectado nenhum ecr‚Äπ.");
 			return;
 		}
 		
@@ -391,33 +383,33 @@ public class LeapMotion extends Listener
 		
 		if(!maoAuxiliar.isValid())
 		{
-			System.out.println("Deve colocar a sua mão direita sobre o dispositivo.");
+			System.out.println("Deve colocar a sua m‚Äπo direita sobre o dispositivo.");
 			return;
 		}
 		
 		if(!gestoEfectuado.isValid())
 		{
-			System.out.println("O gesto efectuado não é valido.");
+			System.out.println("O gesto efectuado n‚Äπo ≈Ω valido.");
 			return;
 		}
 		
 		if(gestoEfectuado.hands().count() != 1)
 		{
-			System.out.println("Mais que uma mão efectou o gesto KEYTAP. Deve utilizar apenas a sua mão não dominante.");
+			System.out.println("Mais que uma m‚Äπo efectou o gesto KEYTAP. Deve utilizar apenas a sua m‚Äπo n‚Äπo dominante.");
 			return;
 		}
 		
 		if(!gestoEfectuado.hands().get(0).equals(maoAuxiliar))
 		{
-			System.out.println("Só a mão auxiliar deve efectuar gestos. A mão dominante serve para controlar o cursor.");
+			System.out.println("S‚Äî a m‚Äπo auxiliar deve efectuar gestos. A m‚Äπo dominante serve para controlar o cursor.");
 			return;
 		}
 		
-		//Se apenas um gesto estiver a ser reconhecido, este pedaço de código pode ser removido
+		//Se apenas um gesto estiver a ser reconhecido, este pedaÔøΩo de c‚Äîdigo pode ser removido
 		if(!gestoEfectuado.type().equals(Type.TYPE_KEY_TAP))
 		{
-			//Não foi detectada o gesto pretendido.
-			if(debug){System.out.println("O gesto efectuado não foi do tipo KEYTAP.");}
+			//N‚Äπo foi detectada o gesto pretendido.
+			if(debug){System.out.println("O gesto efectuado n‚Äπo foi do tipo KEYTAP.");}
 			return;
 		}
 		
@@ -428,16 +420,16 @@ public class LeapMotion extends Listener
 		//////<<<<<<<---------------------------------------
 	}
 	
-	//Um dedo da mão dominante mais aproximado do ecrã (o mais distante do centro da mão) é utilizado para simular o movimento 
+	//Um dedo da m‚Äπo dominante mais aproximado do ecr‚Äπ (o mais distante do centro da m‚Äπo) ≈Ω utilizado para simular o movimento 
 	//do cursor e um clique do rato esquerdo.
-	//Só necessita de uma mão.
+	//S‚Äî necessita de uma m‚Äπo.
 	public void tipoControlo1(Controller controlador)
 	{
 		ScreenList ecras = controlador.locatedScreens();
 
 		if(ecras.isEmpty())
 		{
-			System.out.println("Não foi detectado nenhum ecrã.");
+			System.out.println("N‚Äπo foi detectado nenhum ecr‚Äπ.");
 			return;
 		}
 
@@ -463,7 +455,7 @@ public class LeapMotion extends Listener
 
 		if(distanciaZonaDeToque < 0.0)
 		{
-			System.out.println("Botão carregado.");
+			System.out.println("Bot‚Äπo carregado.");
 			botaoPressionado = true;
 			//////<<<<<<<-----------------------------------------------******
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
@@ -471,7 +463,7 @@ public class LeapMotion extends Listener
 		}
 		else
 		{
-			System.out.println("Botão liberto.");
+			System.out.println("Bot‚Äπo liberto.");
 			botaoPressionado = false;
 			//////<<<<<<<-----------------------------------------------******
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
