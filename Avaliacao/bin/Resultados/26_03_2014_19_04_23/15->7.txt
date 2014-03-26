@@ -1,0 +1,14 @@
+Sucesso: false
+
+NCirculos: 16
+
+IndexCirculoInicio: 15
+
+IndexCirculoFim: 7
+
+DistanciaCirculos: 600.3882077456219
+
+LarguraAlvo(diametro/Pixel): 50
+
+Tempo: 203
+

@@ -51,7 +51,7 @@ public class LeapMotion extends Listener
 		
 		if(formaDeControlo == modoDeControlo.MaosComGestoKeytap)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execu�‹o.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
 			if(!controlador.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.3f) )
 			{
 				if(debug){System.out.println("N‹o foi poss’vel as configura�oes de \"Gesture.KeyTap.HistorySeconds\"");}
@@ -63,7 +63,7 @@ public class LeapMotion extends Listener
 		}
 		else if(formaDeControlo == modoDeControlo.MaoComGestoScreenTap)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execu�‹o.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
 			if(!controlador.config().setFloat("Gesture.ScreenTap.HistorySeconds", 0.3f) )
 			{
 				if(debug){System.out.println("N‹o foi poss’vel as configura�oes de \"Gesture.ScreenTap.HistorySeconds\"");}
@@ -74,7 +74,7 @@ public class LeapMotion extends Listener
 		}
 		else if(formaDeControlo == modoDeControlo.MaosComGestoSwipe)
 		{
-			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execu�‹o.
+			//Extender o tempo de reconhecimento do gesto de forma a facilitar a sua execução.
 			if(!controlador.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.3f) )
 			{
 				if(debug){System.out.println("N‹o foi poss’vel as configura�oes de \"Gesture.KeyTap.HistorySeconds\"");}

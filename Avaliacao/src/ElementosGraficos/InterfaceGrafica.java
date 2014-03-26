@@ -3,6 +3,8 @@ package ElementosGraficos;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,6 +14,7 @@ import java.util.Vector;
 
 import Controladores.LeapMotion;
 import Controladores.LeapMotion.modoDeControlo;
+import Outros.Cronometro;
 import Som.*;
 import EstruturaDados.*;
 import processing.core.*;
@@ -42,10 +45,19 @@ public class InterfaceGrafica extends PApplet
 	private boolean sequenciaAleatoria = false;
 	private int posicaoSequencia = 0;
 	
+	private Vector<InformacaoGeral> experiencias = new Vector<InformacaoGeral>();
+	private InformacaoGeral experienciaActual = new InformacaoGeral();
+	boolean criarNovaExperiencia = true;
+	
+	private final Cronometro cronometro = new Cronometro();
+	
+	LeapMotion dispositivo = new LeapMotion(modoDeControlo.MaosComGestoKeytap, true); // booleano indica se utilizador é destro ou não.
+	
+	MouseMotionListener ouvinteRato;
+	
 	private int teste = 0;
 	private boolean debug = false;
 	
-	LeapMotion dispositivo = new LeapMotion(modoDeControlo.MaosComGestoKeytap, true); // booleano indica se utilizador é destro ou não.
 	
 	public void setup()
 	{
@@ -128,74 +140,102 @@ public class InterfaceGrafica extends PApplet
 				fill(corDeFundoCirculoR,corDeFundoCirculoG,corDeFundoCirculoB);
 			}
 		
-			desenhaCircunfencia( 
-					alvo.getCentroX(), 
-					alvo.getCentroY(),
-					alvo.getRaioCircunferencia()
-			);
+			desenhaCircunfencia( alvo.getCentroX(), alvo.getCentroY(), alvo.getRaioCircunferencia() );
 			
 			noFill();
 		}
 		
-		//Para teste *********************************
-		
 		if( posicaoSequencia == sequenciaARealizar.size() )
 		{
 			System.out.println("Teste completado com sucesso!\nA sair...");
+			
+			InformacaoGeral.guardarInformacaoEmFicheiros(experiencias);
 			System.exit(0);
 		}
 		
 		Circulo circuloAlvo = circulos.get(sequenciaARealizar.get(posicaoSequencia));
 		desenharSinalAlvo(circuloAlvo.getCentroX(), circuloAlvo.getCentroY());
 		
-		/////////*************************************
-		
-		if(mousePressed || dispositivo.getBotaoPressionado())
+		if( ( mousePressed || dispositivo.getBotaoPressionado() ) && ( posicaoSequencia > 0 ) )
 		{
+			cronometro.parar();
+			this.removeMouseMotionListener(ouvinteRato);
+			
+			Circulo circuloSelecionado = circulos.get(sequenciaARealizar.get(posicaoSequencia));
+			
+			if( circuloSelecionado.pontoPertenceCirculo(mouseX, mouseY) )
+			{
+				Som.tocarSomSucesso();
+				
+				//Identificar o resultado como um sucesso.
+				experienciaActual.setSeleccaoComSucesso(true);
+			}	
+			else
+			{
+				Som.tocarSomFracasso();
+				
+				//Identificar o resultado como um insucesso.
+				experienciaActual.setSeleccaoComSucesso(false);
+			}
+			
+			Circulo circuloAnterior = circulos.get(sequenciaARealizar.get(posicaoSequencia - 1));
+			
+			//Armazenar os dados comuns a situação de insucesso ou sucesso.
+			experienciaActual.setNumeroDeCirculos(nCircunferencias);
+			experienciaActual.setIndexCirculoFinal(sequenciaARealizar.get(posicaoSequencia));
+			experienciaActual.setIndexCirculoInicial(sequenciaARealizar.get(posicaoSequencia - 1));
+			experienciaActual.setLarguraAlvo(circuloAlvo.getRaioCircunferencia() * 2); 		//A largura do alvo é o diametro da circunferência.
+			experienciaActual.setTempoDecorrido(cronometro.getTempoEmMilisegundos());
+			experienciaActual.setDistanciaEntreCirculos(
+					InformacaoGeral.calcularDistanciaEntrePontos(
+							circuloAnterior.getCentroX(), circuloAnterior.getCentroY(), 
+							circuloAlvo.getCentroX(), circuloAlvo.getCentroY())
+			);
+			
+			//Guardar a experência realizada...
+			experiencias.add(experienciaActual);
+			
+			//... e passar para a próxima.
+			experienciaActual = new InformacaoGeral();
+			posicaoSequencia++;
+			
+			//No caso de se estiver a usar o LeapMotion, indicar que o botão foi levantado.
+			dispositivo.resetBotaoPressiondado();
+			
+			//Reinicializar cronometro
+			cronometro.reset();	cronometro.comecar();
+			
+			//Reinicializar ouvinte do Rato de forma a armazenar a posição para a nova experiência
+			ouvinteRato = funcaoOuvinteRato();
+			this.addMouseMotionListener(ouvinteRato);
+			
+			//Uma pequena pausa para evitar que o programa avançe se utilizador manter o botão carregado. 
+			try {Thread.sleep(200);}catch (InterruptedException e) {}
+		}
+		else if( ( mousePressed || dispositivo.getBotaoPressionado() ) && ( posicaoSequencia == 0 ) )
+		{
+			//A experiência só deve ser inicializada quando o utilizador carregar com sucesso no primeiro círculo. caso contrário
 			Circulo circuloSelecionado = circulos.get(sequenciaARealizar.get(posicaoSequencia));
 			
 			if( circuloSelecionado.pontoPertenceCirculo(mouseX, mouseY) )
 			{
 				Som.tocarSomSucesso();
 				posicaoSequencia++;
+				cronometro.comecar();
+				
+				//Começar a armazenar as posições do rato ao longo do tempo
+				ouvinteRato = funcaoOuvinteRato();
+				this.addMouseMotionListener(ouvinteRato);
 			}	
-			else
-			{
-				Som.tocarSomFracasso();
-			}
 			
+			//No caso de se estiver a usar o LeapMotion, indicar que o botão foi levantado.
 			dispositivo.resetBotaoPressiondado();
 			
-			//Uma pequena pausa para evitar que o som se repita sempre caso o utilizador mantiver o rato pressionado. 
+			//Uma pequena pausa para evitar que o programa avançe se utilizador manter o botão carregado. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
 		}
-		
-		/*
-		if(mousePressed || dispositivo.getBotaoPressionado())
-		{
-			boolean circuloEncontrado = false;
-			
-			for(int i = 0; i < circulos.size(); i++)
-			{	
-				if(circulos.get(i).pontoPertenceCirculo(mouseX, mouseY))
-				{
-					Som.tocarSomSucesso();
-					circuloEncontrado = true;
-					break;
-				}	
-			}
-			
-			if(!circuloEncontrado)
-			{
-				Som.tocarSomFracasso();
-			}
-			
-			try {Thread.sleep(200);}catch (InterruptedException e) {}
-			dispositivo.resetBotaoPressiondado();
-		}
-		*/
 	}
-	
+
 	private void redesenharElementos() 
 	{
 		//Impedir que a função se reinvoque caso não seja necessário.
@@ -218,7 +258,6 @@ public class InterfaceGrafica extends PApplet
 		//Em setup, esta acção não faz sentido, contudo esta função é invocada varias vezes em "draw()" caso exista um redimensionamento da janela. 
 		if(!circulos.isEmpty())
 		{ circulos.clear(); }
-		
 		
 		double angulo = 360.0 / ( (double) nCircunferencias);
 		
@@ -273,7 +312,7 @@ public class InterfaceGrafica extends PApplet
 		} 
 		catch (FileNotFoundException e) 
 		{
-			System.out.println("Não foi encontrado o ficheiro \"Config.txt\".\nA encerrar...\n");// TODO Auto-generated catch block
+			System.out.println("Não foi encontrado o ficheiro \"Config.txt\".\nA encerrar...\n");
 			e.printStackTrace();
 		}
 		
@@ -333,5 +372,16 @@ public class InterfaceGrafica extends PApplet
 		tamanhoAlvoYActual = (int) (0.125 * 2 * raioCircunferencia);
 		circulos = new Vector<Circulo>(nCircunferencias);
 		sequenciaARealizar = new Sequencia(nCircunferencias, sequenciaAleatoria);
+	}
+
+	private MouseMotionListener funcaoOuvinteRato()
+	{
+		return new MouseMotionListener() 
+		{
+			public void mouseMoved(MouseEvent e) 
+			{ experienciaActual.guardarPosicaoRato(mouseX, mouseY);}
+			
+			public void mouseDragged(MouseEvent e) {}
+		};
 	}
 }
