@@ -23,12 +23,13 @@ public class InformacaoGeral
 	private boolean seleccaoComSucesso;
 	private double distanciaEntreCirculosInicialFinal;	//Por enquanto, em píxies.
 	private int larguraAlvo; 							//= 2 * Raio da circunferência.
+	private int distanciaCentroReferencial;
 	
 	public InformacaoGeral() 
 	{
-		this.setNumeroDeCirculos(0);		this.percurso = new Vector<Pixel>();	this.setIndexCirculoFinal(0);
+		this.setNumeroDeCirculos(0);	this.percurso = new Vector<Pixel>();	this.setIndexCirculoFinal(0);
 		this.setIndexCirculoInicial(0);	this.setSeleccaoComSucesso(false);		this.setLarguraAlvo(0);
-		this.setTempoDecorrido(0);		this.setDistanciaEntreCirculos(0.0);
+		this.setTempoDecorrido(0);		this.setDistanciaEntreCirculos(0.0);	this.setDistanciaCentroReferencial(0);
 	}
 	
 	public int getNumeroDeCirculos() 
@@ -106,6 +107,11 @@ public class InformacaoGeral
 		percurso.add(new Pixel(coordenadaX, coordenadaY) );
 	}
 	
+	public Vector<Pixel> getPercurso() 
+	{
+		return this.percurso;
+	}
+	
 	public void imprimirInformacaoNoEcraSemPercurso()
 	{
 		System.out.print("Nesta ronda a selecção foi efectuada ");
@@ -115,7 +121,8 @@ public class InformacaoGeral
 		
 		System.out.println(
 			"sucesso." + "\n" +
-			"Número de ciruculos existentes na experiência: " + numeroDeCirculos + "\n" +
+			"Número de ciruculos existentes na experiência: " + numeroDeCirculos + ",\n" +
+			"Distando " + distanciaCentroReferencial + " píxeis do centro do referencial.\n" + 
 			"Index do círculo onde começou esta ronda: " + indexCirculoInicial + "\n" +
 			"acabando no círculo com index: " + indexCirculoFinal + ",\n" +
 			"distando entre si: " + distanciaEntreCirculosInicialFinal + " píxeis.\n" +
@@ -152,7 +159,8 @@ public class InformacaoGeral
 	{
 		
 		//Criar o directório onde serão armazenados os resultados
-		File pastaPrincipal = new File("Resultados");
+		String nomePastaPrincipal = "../Resultados";
+		File pastaPrincipal = new File(nomePastaPrincipal);
 		
 		//Verificar se o directório já existe
 		if ( !pastaPrincipal.exists() ) 
@@ -160,14 +168,12 @@ public class InformacaoGeral
 			pastaPrincipal.mkdir();
 		}
 		
-		System.out.println("Passou aqui??");
-	 
 		//Criar outro directório, dentro do anterior, onde serão armazenados os resultados da experiência
 		//O nome deste será o data e hora a que este código é executado.
 		DateFormat formatoDataHora = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss");
 		Date DataHora = new Date();
 		
-		String nomeNovaPasta = "Resultados/" + formatoDataHora.format(DataHora).toString();
+		String nomeNovaPasta = nomePastaPrincipal+ "/" + formatoDataHora.format(DataHora).toString();
 		File novaPasta = new File(nomeNovaPasta);
 		
 		//Verificar se o directório já existe. Pouco provável...
@@ -181,7 +187,7 @@ public class InformacaoGeral
 		{
 			InformacaoGeral valores = resultadosExperiencias.get(i);
 			
-			String nomeFicheiroResultado = nomeNovaPasta + "/" + valores.indexCirculoInicial + "->" + valores.indexCirculoFinal + ".txt";
+			String nomeFicheiroResultado = nomeNovaPasta + "/" + valores.indexCirculoInicial + "-+" + valores.indexCirculoFinal + ".txt";
 			File ficheiroResultado = new File(nomeFicheiroResultado);
 			
 			if ( !ficheiroResultado.exists() ) 
@@ -192,6 +198,7 @@ public class InformacaoGeral
 				} 
 				catch (IOException e) 
 				{
+					e.printStackTrace();
 					System.err.println("Não foi possível armazenar a informação pretendida. Função \"guardarInformacaoEmFicheiros\".");
 					return;
 				}
@@ -201,14 +208,23 @@ public class InformacaoGeral
 			{
 				PrintWriter writer;
 				writer = new PrintWriter(nomeFicheiroResultado, "UTF-8");
-				writer.println("Sucesso: " + valores.isSeleccaoComSucesso() + "\n");
-				writer.println("NCirculos: " + valores.getNumeroDeCirculos() + "\n");
-				writer.println("IndexCirculoInicio: " + valores.getIndexCirculoInicial() + "\n");
-				writer.println("IndexCirculoFim: " + valores.getIndexCirculoFinal() + "\n");
-				writer.println("DistanciaCirculos: " + valores.getDistanciaEntreCirculos() + "\n");
-				writer.println("LarguraAlvo(diametro/Pixel): " + valores.getLarguraAlvo() + "\n");
-				writer.println("Tempo: " +  valores.getTempoDecorrido()+ "\n");
-
+				writer.println("Sucesso: " + valores.isSeleccaoComSucesso() );
+				writer.println("NCirculos: " + valores.getNumeroDeCirculos() );
+				writer.println("DistanciaCentro: " + valores.getDistanciaCentroReferencial() );
+				writer.println("IndexCirculoInicio: " + valores.getIndexCirculoInicial() );
+				writer.println("IndexCirculoFim: " + valores.getIndexCirculoFinal() );
+				writer.println("DistanciaCirculos: " + valores.getDistanciaEntreCirculos() );
+				writer.println("LarguraAlvo(diametro/Pixel): " + valores.getLarguraAlvo() );
+				writer.println("Tempo: " +  valores.getTempoDecorrido() );
+				writer.println("Percurso: ");
+				
+				Vector<Pixel> percursoRealizado = valores.getPercurso();
+				
+				for(int w = 0; w < percursoRealizado.size(); w++)
+				{
+					writer.println("<" + percursoRealizado.get(w).getCoordenadaX() + "," + percursoRealizado.get(w).getCoordenadaY() + ">");
+				}
+				
 				writer.close();
 			} 
 			catch (FileNotFoundException e) 
@@ -222,5 +238,15 @@ public class InformacaoGeral
 		}
 		
 		return;
+	}
+
+	public int getDistanciaCentroReferencial() 
+	{
+		return distanciaCentroReferencial;
+	}
+
+	public void setDistanciaCentroReferencial(int distanciaCentroReferencial) 
+	{
+		this.distanciaCentroReferencial = distanciaCentroReferencial;
 	}
 }

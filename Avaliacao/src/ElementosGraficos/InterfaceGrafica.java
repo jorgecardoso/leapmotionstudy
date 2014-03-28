@@ -186,6 +186,7 @@ public class InterfaceGrafica extends PApplet
 			experienciaActual.setIndexCirculoInicial(sequenciaARealizar.get(posicaoSequencia - 1));
 			experienciaActual.setLarguraAlvo(circuloAlvo.getRaioCircunferencia() * 2); 		//A largura do alvo é o diametro da circunferência.
 			experienciaActual.setTempoDecorrido(cronometro.getTempoEmMilisegundos());
+			experienciaActual.setDistanciaCentroReferencial(distanciaCentro);
 			experienciaActual.setDistanciaEntreCirculos(
 					InformacaoGeral.calcularDistanciaEntrePontos(
 							circuloAnterior.getCentroX(), circuloAnterior.getCentroY(), 
@@ -201,31 +202,28 @@ public class InterfaceGrafica extends PApplet
 			
 			//No caso de se estiver a usar o LeapMotion, indicar que o botão foi levantado.
 			dispositivo.resetBotaoPressiondado();
-			
-			//Reinicializar cronometro
-			cronometro.reset();	cronometro.comecar();
+						
+			//Uma pequena pausa para evitar que o programa avançe se utilizador manter o botão carregado. 
+			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			
 			//Reinicializar ouvinte do Rato de forma a armazenar a posição para a nova experiência
 			ouvinteRato = funcaoOuvinteRato();
 			this.addMouseMotionListener(ouvinteRato);
 			
-			//Uma pequena pausa para evitar que o programa avançe se utilizador manter o botão carregado. 
-			try {Thread.sleep(200);}catch (InterruptedException e) {}
+			//Reinicializar cronometro
+			cronometro.reset();	cronometro.comecar();
 		}
 		else if( ( mousePressed || dispositivo.getBotaoPressionado() ) && ( posicaoSequencia == 0 ) )
 		{
 			//A experiência só deve ser inicializada quando o utilizador carregar com sucesso no primeiro círculo. caso contrário
 			Circulo circuloSelecionado = circulos.get(sequenciaARealizar.get(posicaoSequencia));
 			
-			if( circuloSelecionado.pontoPertenceCirculo(mouseX, mouseY) )
+			Boolean botaoCertoCarragado = circuloSelecionado.pontoPertenceCirculo(mouseX, mouseY);
+			
+			if( botaoCertoCarragado )
 			{
 				Som.tocarSomSucesso();
 				posicaoSequencia++;
-				cronometro.comecar();
-				
-				//Começar a armazenar as posições do rato ao longo do tempo
-				ouvinteRato = funcaoOuvinteRato();
-				this.addMouseMotionListener(ouvinteRato);
 			}	
 			
 			//No caso de se estiver a usar o LeapMotion, indicar que o botão foi levantado.
@@ -233,6 +231,15 @@ public class InterfaceGrafica extends PApplet
 			
 			//Uma pequena pausa para evitar que o programa avançe se utilizador manter o botão carregado. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
+			
+			if( botaoCertoCarragado )
+			{
+				//Começar a armazenar as posições do rato ao longo do tempo
+				ouvinteRato = funcaoOuvinteRato();
+				this.addMouseMotionListener(ouvinteRato);
+				
+				cronometro.comecar();
+			}
 		}
 	}
 
