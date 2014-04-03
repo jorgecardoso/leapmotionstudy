@@ -1,7 +1,9 @@
 eclipse.preferences.version=1
-encoding//src/Controladores/LeapMotion.java=UTF-8
-encoding//src/ElementosGraficos/Circulo.java=UTF-8
-encoding//src/ElementosGraficos/InterfaceGrafica.java=UTF-8
-encoding//src/EstruturaDados/InformacaoGeral.java=UTF-8
-encoding//src/EstruturaDados/Sequencia.java=UTF-8
+encoding//src/core/EvaluationApp.java=UTF-8
+encoding//src/datastructure/Circle.java=UTF-8
+encoding//src/datastructure/Information.java=UTF-8
+encoding//src/datastructure/Sequence.java=UTF-8
+encoding//src/device/LeapMotion.java=UTF-8
+encoding//src/other/Chronometer.java=UTF-8
+encoding//src/other/Sound.java=UTF-8
 encoding/Config.txt=UTF-8

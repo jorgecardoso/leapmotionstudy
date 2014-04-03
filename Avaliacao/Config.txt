@@ -1,7 +1,7 @@
-Nº de circunferências: 16
+Number of circles: 16
 
-Raio da circunferência: 25
+Circle radius: 25
 
-Distância das circunferências ao centro do ecrã: 300
+Distance between circles and frame center: 300
 
-Nota: Todos os valores devem ser inteiros!
+Note: Every value should be an integer number!
