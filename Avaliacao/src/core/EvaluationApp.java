@@ -4,6 +4,7 @@ import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.BufferedReader;
 import java.io.File;
@@ -126,6 +127,8 @@ public class EvaluationApp extends PApplet
 			{	redrawElements = true;	 }
 		});
 		
+		this.addMouseListener( createMouseListener() );
+		
 		//Paint the application background with desired color. Processing function.
 		background(backgroundColor);
 	}
@@ -179,9 +182,16 @@ public class EvaluationApp extends PApplet
 		
 		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
+	}
+
+	/**
+	 * Handler to be called when the mouse button is pressed.
+	 */
+	protected void mouseButtonPressed() 
+	{
+		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 		
-		//if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex > 0 ) )
-		if( mousePressed  && ( currentSequenceIndex > 0 ) )
+		if( currentSequenceIndex > 0 )
 		{
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 			
@@ -216,6 +226,19 @@ public class EvaluationApp extends PApplet
 				
 				//...and start a new one.
 				informationFromCurrentTrial.resetInformation();
+				
+				//Print goodbye message
+				if( (currentSequenceIndex + 1) == sequenceToPerform.size() )
+				{	
+					displayText = "Thank you very much for your time and help!\nGoodbye.";
+					
+					//A little time out to make sure the system has time to present the displayText
+					try {Thread.sleep(200);}catch (InterruptedException e) {}
+					
+					//Force to display the message earlier otherwise it might not show up. 
+					displayText();
+				}
+				
 				currentSequenceIndex++;
 			}	
 			else
@@ -223,25 +246,13 @@ public class EvaluationApp extends PApplet
 				Sound.playFailureSound();
 			}
 			
-			//If using the Leap Motion device, force the release.
-			//leapMotionDevice.resetButtonPressed();
-			
 			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
-			
-			//Print goodbye message
-			if( currentSequenceIndex == sequenceToPerform.size() )
-			{	
-				displayText = "Thank you very much for your time and help!\nGoodbye.";
-				
-				//Force to display the message earlier otherwise it might not show up. 
-				displayText();
-			}
 			
 			if( isSelectionRight )
 			{
 				//Restart listener.
-				mouseMotionList = createMouseListener();
+				mouseMotionList = createMouseMotionListener();
 				this.addMouseMotionListener(mouseMotionList);
 				
 				//Restart chronometer.
@@ -249,8 +260,7 @@ public class EvaluationApp extends PApplet
 			}
 			
 		}
-		//else if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex == 0 ) )
-		else if( mousePressed && ( currentSequenceIndex == 0 ) )
+		else if( currentSequenceIndex == 0 )
 		{
 			//The experience should only be started when the user presses with sucess the first default target.
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
@@ -263,9 +273,6 @@ public class EvaluationApp extends PApplet
 				currentSequenceIndex++;
 			}	
 			
-			//If using the Leap Motion device, force the release.
-			//leapMotionDevice.resetButtonPressed();
-			
 			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			
@@ -275,7 +282,7 @@ public class EvaluationApp extends PApplet
 				displayText = "";
 				
 				//Start listener that will store the mouse positions over the time.
-				mouseMotionList = createMouseListener();
+				mouseMotionList = createMouseMotionListener();
 				this.addMouseMotionListener(mouseMotionList);
 				
 				chronometer.start();
@@ -463,7 +470,7 @@ public class EvaluationApp extends PApplet
 	 * 
 	 * @return The said listener.
 	 */
-	private MouseMotionListener createMouseListener()
+	private MouseMotionListener createMouseMotionListener()
 	{
 		return new MouseMotionListener() 
 		{
@@ -471,6 +478,26 @@ public class EvaluationApp extends PApplet
 			{ informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);}
 			
 			public void mouseDragged(MouseEvent e) {}
+		};
+	}
+	
+	/**
+	 * Function that creates a listener that will store the mouse position over time.
+	 * 
+	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
+	 * 
+	 * @return The said listener.
+	 */
+	private MouseListener createMouseListener()
+	{
+		return new MouseListener() 
+		{
+			@Override
+			public void mousePressed(MouseEvent e) { mouseButtonPressed(); }
+			public void mouseClicked(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {}
+			public void mouseExited(MouseEvent e){}
+			public void mouseReleased(MouseEvent e){}
 		};
 	}
 }
