@@ -3,6 +3,7 @@ package device;
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
+import java.security.acl.Permission;
 
 import com.leapmotion.leap.*;
 import com.leapmotion.leap.Gesture.State;
@@ -400,11 +401,17 @@ public class LeapMotion extends Listener
 			cursor.mouseMove(cursorPositionX, cursorPositionY);
 			//////<<<<<<<-----------------------------------------------******
 
-			Gesture performedGesture = controller.frame().gestures().get(0);
-
+			GestureList gestures = controller.frame().gestures();
+			
+			//If there are no gestures, no need to go any further.
+			if(gestures.isEmpty())
+			{ return; }
+			
+			Gesture performedGesture = gestures.get(0);
+			
 			if(!auxiliaryHand.isValid())
 			{
-				System.out.println("Most place your auxiliary hand over the Leap Motion device.");
+				System.out.println("Must place your auxiliary hand over the Leap Motion device.");
 				return;
 			}
 
@@ -598,7 +605,7 @@ public class LeapMotion extends Listener
 		//For testing purposes
 		public static void main(String[] args) 
 		{
-			@SuppressWarnings("unused")
-			LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_SWIPE_GESTURE,true);
+			LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE,true);
+			lm.initialize();
 		}
 }

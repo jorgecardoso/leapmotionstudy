@@ -51,4 +51,15 @@ public class Pixel
 	 */
 	public void setYCoordinate(int yCoordinate) 
 	{ this.yCoordinate = yCoordinate; }
+	
+	/**
+	 * Function that returns a string with Pixel's coordinates.
+	 * The result follows this format: "X_Coordinate Y_Coordinate".
+	 * 
+	 * @return String containing the Pixel's X and Y coordinates.
+	 */
+	public String toString()
+	{
+		return "" + xCoordinate + " " + yCoordinate + "";		 
+	}
 }

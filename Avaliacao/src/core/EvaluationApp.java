@@ -36,7 +36,7 @@ public class EvaluationApp extends PApplet
 	
 	protected boolean redrawElements;
 	
-	private final int backgroundColor = 255; 			// Branco
+	private final int backgroundColor = 255; 			//White
 	private final int HoverColorCircleRed = 183;
 	private final int HoverColorCircleGreen = 228;
 	private final int HoverColorCircleBlue = 240;
@@ -45,13 +45,18 @@ public class EvaluationApp extends PApplet
 	private boolean generateRandomSequence = false;
 	private int currentSequenceIndex = 0;
 	
-	private Vector<Information> informationFromBlock = new Vector<Information>();
 	private Information informationFromCurrentTrial = new Information();
 	boolean createNewExperience = true;
 	
 	private final Chronometer chronometer = new Chronometer();
 	
-	LeapMotion leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true); // booleano indica se utilizador é destro ou não.
+	LeapMotion leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true); //Boolean represents if user is right handed or not.
+	boolean useLeapMotion = false;
+	
+	//Variables related to the presentation of text on the application.
+	PFont font;
+	int displayFontSize;
+	String displayText;
 	
 	MouseMotionListener mouseMotionList;
 	
@@ -66,8 +71,9 @@ public class EvaluationApp extends PApplet
 	{
 		//Loading the required values to the execution of the application from the configuration text file ("Config.txt").
 		loadConfigurationFile();
-				
-		//Star Leap Motion device in its own thread <<<<<<<<<<<<<<<-------------------- Ponderar remover
+		
+		//Star Leap Motion device in its own thread
+
 		Thread lmThread = new Thread("Leap Motion Listener") {
 			public void run(){
 				leapMotionDevice.initialize();
@@ -78,7 +84,11 @@ public class EvaluationApp extends PApplet
 		//Some drawing parameters for Processing.
 		rectMode(PConstants.CENTER); 			// When drawing rectangles, the given coordinates are their center and not the extremes points.
 		stroke(0);								// Lines are drawn in black
-		    
+		font = createFont("Arial",16,true); 	// Create a Font in Arial, 16 point, anti-aliasing on.
+		
+		//Set starting text.
+		displayText = "Welcome to the Evaluation application!\nTo start press the + on the top!";
+		
 		//Discover the screen resolution.
 		int windowHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
 		int windowWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -89,6 +99,9 @@ public class EvaluationApp extends PApplet
 		//The occupied screen area is always inferior to the resolution of the screen ( window may not overlap certain bars).
 		centralPositionX = (int) (windowWidth / 2);
 		centralPositionY = (int) (windowHeight / 2);
+		
+		//Set text font size
+		displayFontSize = ( 25 * windowWidth * windowHeight ) / ( 1280*960 );
 		
 		double angle = 360.0 / ( (double) numberOfCircles);
 		
@@ -134,6 +147,18 @@ public class EvaluationApp extends PApplet
 		//Paint background with the selected color. Processing function. Processing function.
 		background(backgroundColor);
 		
+		displayText();
+		
+		if( currentSequenceIndex == sequenceToPerform.size() )
+		{	
+			System.out.println("Evaluation successfully completed!\nExiting...");
+			
+			//A little pause so the user can see the goodbye message. 
+			try {Thread.sleep(2000);}catch (InterruptedException e) {}
+			
+			System.exit(1);
+		}
+		
 		//Draw the circles.
 		for(int i = 0; i < circles.size(); i++)
 		{
@@ -152,18 +177,11 @@ public class EvaluationApp extends PApplet
 			noFill();
 		}
 		
-		if( currentSequenceIndex == sequenceToPerform.size() )
-		{	
-			System.out.println("Evaluation successfully completed!\nExiting...");
-			
-			Information.storeInformationInFile(informationFromBlock);
-			System.exit(0);
-		}
-
 		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
 		
-		if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex > 0 ) )
+		//if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex > 0 ) )
+		if( mousePressed  && ( currentSequenceIndex > 0 ) )
 		{
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 			
@@ -194,12 +212,11 @@ public class EvaluationApp extends PApplet
 				);
 				
 				//Store trial results...
-				informationFromBlock.add(informationFromCurrentTrial);
+				informationFromCurrentTrial.storeInformationInFile();
 				
-				//... and start next trial.
-				informationFromCurrentTrial = new Information();
+				//...and start a new one.
+				informationFromCurrentTrial.resetInformation();
 				currentSequenceIndex++;
-				
 			}	
 			else
 			{
@@ -207,10 +224,19 @@ public class EvaluationApp extends PApplet
 			}
 			
 			//If using the Leap Motion device, force the release.
-			leapMotionDevice.resetButtonPressed();
+			//leapMotionDevice.resetButtonPressed();
 			
 			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
+			
+			//Print goodbye message
+			if( currentSequenceIndex == sequenceToPerform.size() )
+			{	
+				displayText = "Thank you very much for your time and help!\nGoodbye.";
+				
+				//Force to display the message earlier otherwise it might not show up. 
+				displayText();
+			}
 			
 			if( isSelectionRight )
 			{
@@ -223,7 +249,8 @@ public class EvaluationApp extends PApplet
 			}
 			
 		}
-		else if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex == 0 ) )
+		//else if( ( mousePressed || leapMotionDevice.isButtonPressed() ) && ( currentSequenceIndex == 0 ) )
+		else if( mousePressed && ( currentSequenceIndex == 0 ) )
 		{
 			//The experience should only be started when the user presses with sucess the first default target.
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
@@ -237,13 +264,16 @@ public class EvaluationApp extends PApplet
 			}	
 			
 			//If using the Leap Motion device, force the release.
-			leapMotionDevice.resetButtonPressed();
+			//leapMotionDevice.resetButtonPressed();
 			
 			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			
 			if( wasRightCirclePressed )
 			{
+				//Don't print anything in the screen.
+				displayText = "";
+				
 				//Start listener that will store the mouse positions over the time.
 				mouseMotionList = createMouseListener();
 				this.addMouseMotionListener(mouseMotionList);
@@ -251,6 +281,18 @@ public class EvaluationApp extends PApplet
 				chronometer.start();
 			}
 		}
+	}
+	
+	/**
+	 * Function that prints, on the application frame, the string stored in "displayText" variable.
+	 */
+	private void displayText() 
+	{
+		textFont(font,displayFontSize);            
+		fill(0);
+		textAlign(CENTER);
+		text(displayText,centralPositionX,centralPositionY);
+		noFill();
 	}
 
 	/**
@@ -269,7 +311,7 @@ public class EvaluationApp extends PApplet
 		//For that reason, it may be need to uodate the application frame size.		
 		centralPositionX = (int) (this.width / 2.0);
 		centralPositionY = (int) (this.height / 2.0);
-				
+		
 		//Save resources.
 		if(redrawElements)
 		{ return ; }
@@ -414,6 +456,13 @@ public class EvaluationApp extends PApplet
 		sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
 	}
 
+	/**
+	 * Function that creates a listener that will store the mouse position over time.
+	 * 
+	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
+	 * 
+	 * @return The said listener.
+	 */
 	private MouseMotionListener createMouseListener()
 	{
 		return new MouseMotionListener() 
