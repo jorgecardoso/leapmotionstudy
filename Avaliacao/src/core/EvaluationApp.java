@@ -7,12 +7,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.Thread.State;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import datastructure.*;
@@ -54,15 +55,16 @@ public class EvaluationApp extends PApplet
 	
 	private final Chronometer chronometer = new Chronometer();
 	
-	private LeapMotion leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true); //Boolean represents if user is right handed or not.
+	protected boolean makePause = true;	//To be used on the Thread that saves the mouse movement.
+	
+	private Thread lmThread;
+	protected LeapMotion leapMotionDevice;
 	private boolean activateLeapMotion;
 	
 	//Variables related to the presentation of text on the application.
 	private PFont font;
 	private int displayFontSize;
 	private String displayText;
-	
-	private MouseMotionListener mouseMotionList;
 	
 	private int teste = 0;
 	private boolean debug = false;
@@ -77,16 +79,10 @@ public class EvaluationApp extends PApplet
 		//Loading the required values to the execution of the application from the configuration text file ("Config.txt").
 		loadConfigurationFile();
 		
-		//Star Leap Motion device in its own thread
-
+		//Start Leap Motion device in its own thread
 		if(activateLeapMotion)
 		{
-			Thread lmThread = new Thread("Leap Motion Listener") {
-				public void run(){
-					leapMotionDevice.initialize();
-				};
-			};
-			lmThread.start();
+			activateLeapMotion();
 		}
 		
 		//Some drawing parameters for Processing.
@@ -118,11 +114,9 @@ public class EvaluationApp extends PApplet
 		{
 			double currentAngle = Math.toRadians(angle * i);
 						
-			double coordinateX = centralPositionX + 
-					centerDistance * Math.cos(currentAngle);
+			double coordinateX = centralPositionX + centerDistance * Math.cos(currentAngle);
 						
-			double coordinateY = centralPositionY + 
-					centerDistance * Math.sin(currentAngle);
+			double coordinateY = centralPositionY + centerDistance * Math.sin(currentAngle);
 					
 			circles.add( 
 				new Circle( ((int) coordinateX), ((int) coordinateY), ((int) circleRadius))
@@ -134,13 +128,16 @@ public class EvaluationApp extends PApplet
 			{	redrawElements = true;	 }
 		});
 		
+		//Create and start the thread that will save the mouse position over time
+		createMouseMovementThread().start();
+		
 		this.addMouseListener( createMouseListener() );
 		this.addKeyListener( createKeyListener() );
 		
 		//Paint the application background with desired color. Processing function.
 		background(backgroundColor);
 	}
-	
+
 	/**
 	 * Extended function from Processing.
 	 * This function is executed in Loop by the processing. In other words, when it ends, it is executed again.
@@ -222,7 +219,8 @@ public class EvaluationApp extends PApplet
 			if( isSelectionRight  )
 			{
 				chronometer.stop();
-				this.removeMouseMotionListener(mouseMotionList);
+				
+				stopStoringMousePosition();
 				
 				Sound.playSucessSound();
 					
@@ -277,9 +275,7 @@ public class EvaluationApp extends PApplet
 			
 			if( isSelectionRight )
 			{
-				//Restart listener.
-				mouseMotionList = createMouseMotionListener();
-				this.addMouseMotionListener(mouseMotionList);
+				startStoringMousePosition();
 				
 				//Restart chronometer.
 				chronometer.reset();	chronometer.start();
@@ -288,7 +284,7 @@ public class EvaluationApp extends PApplet
 		}
 		else if( currentSequenceIndex == 0 )
 		{
-			//The experience should only be started when the user presses with sucess the first default target.
+			//The experience should only be started when the user presses with success the first default target.
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 			
 			Boolean wasRightCirclePressed = selectedCircle.doesPointBelongToCircle(mouseX, mouseY);
@@ -299,7 +295,7 @@ public class EvaluationApp extends PApplet
 				currentSequenceIndex++;
 			}	
 			
-			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
+			//A little pause to avoid several "button presses" if the user remains with the button pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			
 			if( wasRightCirclePressed )
@@ -307,15 +303,14 @@ public class EvaluationApp extends PApplet
 				//Don't print anything in the screen.
 				displayText = "";
 				
-				//Start listener that will store the mouse positions over the time.
-				mouseMotionList = createMouseMotionListener();
-				this.addMouseMotionListener(mouseMotionList);
+				//Start saving the mouse position over time.
+				startStoringMousePosition();
 				
 				chronometer.start();
 			}
 		}
 	}
-	
+
 	/**
 	 * Function that prints, on the application frame, the string stored in "displayText" variable.
 	 */
@@ -402,7 +397,7 @@ public class EvaluationApp extends PApplet
 		noStroke();
 		fill(137,42,139); 			//Purple
 		
-		//Processing funtion. Draws a rectangle.
+		//Processing function. Draws a rectangle.
 		rect(centerTargetX, centerTargetY, targetSizeX, targetSizeY);
 		rect(centerTargetX, centerTargetY, targetSizeY, targetSizeX);
 		
@@ -455,7 +450,7 @@ public class EvaluationApp extends PApplet
 			result[1] = result[1].replace(" ", "");
 			result[1] = result[1].replace(".", "");
 			
-			//Guarda os valores lidos nas variáveis adequadas.
+			//Store the read values in the respective variable.
 			if( result[0].equals("Number of circles (integer)") )
 			{ numberOfCircles = Integer.parseInt(result[1]); }
 			else if( result[0].equals("Circle radius (integer)") )
@@ -486,7 +481,7 @@ public class EvaluationApp extends PApplet
 			}
 		}
 		
-		//Check if the acquired values are respect the estabilished limits.
+		//Check if the acquired values are respect the established limits.
 		if( !(numberOfCircles >= 2 && numberOfCircles <= 32) )
 		{
 			System.out.println("\"Number of circles\" can only vary between 2 and 32.");
@@ -510,24 +505,6 @@ public class EvaluationApp extends PApplet
 		circles = new Vector<Circle>(numberOfCircles);
 		sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
 	}
-
-	/**
-	 * Function that creates a listener that will store the mouse position over time.
-	 * 
-	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
-	 * 
-	 * @return The said listener.
-	 */
-	private MouseMotionListener createMouseMotionListener()
-	{
-		return new MouseMotionListener() 
-		{
-			public void mouseMoved(MouseEvent e) 
-			{ informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);}
-			
-			public void mouseDragged(MouseEvent e) {}
-		};
-	}
 	
 	/**
 	 * Function that creates a listener that will store the mouse position over time.
@@ -550,6 +527,33 @@ public class EvaluationApp extends PApplet
 	}
 	
 	/**
+	 * Function that starts the Leap Motion device (and respective functions) and creates a new thread 
+	 * for it to run exclusively.
+	 */
+	private void activateLeapMotion() 
+	{
+		leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true);
+		lmThread = new Thread("Leap Motion Listener") {
+			public void run(){
+				//Boolean represents if user is right handed or not.
+				leapMotionDevice.initialize();
+			};
+		};
+		lmThread.start();
+	}
+	
+	/**
+	 * Function that starts the Leap Motion device (and respective functions) and creates a new thread 
+	 * for it to run exclusively.
+	 */
+	private void turnOffLeapMotion() 
+	{
+		leapMotionDevice.turnOff();
+		leapMotionDevice = null;
+		lmThread = null;
+	}
+	
+	/**
 	 * Function that creates a key listener in order to alter the application parameters.
 	 * The keys are as follows:
 	 * 
@@ -568,107 +572,70 @@ public class EvaluationApp extends PApplet
 			@Override
 			public void keyReleased(KeyEvent e) 
 			{
+				//"Space" key pressed. When prompted, this key acts as the "Yes" or positive input.
+				if(e.getKeyCode() == 32)
+				{
+					if(acceptKeyInput)
+					{
+						//Restart experiment.
+						acceptKeyInput = false;
+						isEvaluationComplete = false;
+						
+						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
+						currentSequenceIndex = 0;
+						informationFromCurrentTrial.increaseSequenceNumber();
+						
+						displayText = "Let's do it again!\nTo start press the + symbol!";
+					}
+				}
+				//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
+				//"R" key pressed.
+				else if(e.getKeyCode() == 32)
+				{
+					generateRandomSequence = !generateRandomSequence;
+					
+					String message = "The sequence generator was change to:\n";
+					
+					if(generateRandomSequence)
+					{	message += "Random.";	}
+					else
+					{	message += "Mackenzie's style.";	}
+					
+					displayText = message;
+				}
+				//Changes the Device number when the "0", "1" or "2" keys are pressed.
+				else if(e.getKeyCode() >= 96 && e.getKeyCode() <= 98)
+				{ 
+					/*
+					 * The device number are as follow:
+					 *    -> 0 = Leap Motion;
+					 *    -> 1 = Mouse;
+					 *    -> 2 = Touch Pad;
+					 */
+					int numberPressed = e.getKeyCode() - 96;
+					
+					//If the number pressed is the same as the current device, don't do anything.
+					if(informationFromCurrentTrial.getDeviceID() == numberPressed)
+					{return;}
+					
+					informationFromCurrentTrial.changeDevice(numberPressed);
+					
+					if(numberPressed == 0)
+					{
+						activateLeapMotion();
+					}
+					else
+					{
+						turnOffLeapMotion();
+					}
+					
+					displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID(); 
+				}
+				
+				
 				switch( e.getKeyCode() )
 				{
-					//"Space" key pressed. When prompted, this key acts as the "Yes" or positive input.
-					case 32:
-						
-						if(acceptKeyInput)
-						{
-							//Restart experiment.
-							acceptKeyInput = false;
-							isEvaluationComplete = false;
-							
-							sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
-							currentSequenceIndex = 0;
-							informationFromCurrentTrial.increaseSequenceNumber();
-							
-							displayText = "Let's do it again!\nTo start press the + symbol!";
-						}
-						break;
 					
-					//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
-					//"R" key pressed.
-					case 82:
-						
-						generateRandomSequence = !generateRandomSequence;
-						
-						String message = "The sequence generator was change to:\n";
-						
-						if(generateRandomSequence)
-						{
-							message += "Random.";
-						}
-						else
-						{
-							message += "Mackenzie's style.";
-						}
-						
-						displayText = message;
-						
-						break;
-						
-					/*//Changes the Device number when the following keys are pressed.
-					//"0" key pressed.
-					case 96:
-						informationFromCurrentTrial.changeDevice(0);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"1" key pressed.
-					case 97:
-						informationFromCurrentTrial.changeDevice(1);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"2" key pressed.
-					case 98:
-						informationFromCurrentTrial.changeDevice(2);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"3" key pressed.
-					case 99:
-						informationFromCurrentTrial.changeDevice(3);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"4" key pressed.
-					case 100:
-						informationFromCurrentTrial.changeDevice(4);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"5" key pressed.
-					case 101:
-						informationFromCurrentTrial.changeDevice(5);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"6" key pressed.
-					case 102:
-						informationFromCurrentTrial.changeDevice(6);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-						
-					//"7" key pressed.
-					case 103:
-						informationFromCurrentTrial.changeDevice(7);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"8" key pressed.
-					case 104:
-						informationFromCurrentTrial.changeDevice(8);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					
-					//"9" key pressed.
-					case 105:
-						informationFromCurrentTrial.changeDevice(9);
-						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
-						break;
-					*/	
 					/*//Change User ID when the following keys are pressed.
 					//"+" key pressed.
 					case 107:
@@ -690,4 +657,72 @@ public class EvaluationApp extends PApplet
 		};
 	}
 	
+	/**
+	 * Function responsible for creating a Thread that, when allowed, will store the mouse position
+	 * (x and y coordinates) in the respective variable.
+	 * 
+	 * Note: This function only creates a Thread, doesn't start it. That must be done manually by the
+	 * 		 by the programmer.
+	 * 
+	 * Note2: To start storing the values the function "startStoringMousePosition()" must be called otherwise
+	 * 		  no value will be stored.
+	 * 
+	 * @return Thread that stores the mouse position.
+	 */
+	private Thread createMouseMovementThread()
+	{
+		return new Thread("Mouse Movement Listener") 
+		{	
+			public void run()
+			{
+				//Set priority to max as the values read in the Thread are of special importance.
+				setPriority(Thread.MAX_PRIORITY);
+
+				try 
+				{
+					while(true)
+					{
+						//Sleep 10 milliseconds.
+						sleep(10);
+						
+						//While changing between targets or writing values to a file, there's no need to store information.
+						if(!makePause)
+						{
+							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
+						}
+					}
+				}
+				catch (InterruptedException e) 
+				{ e.printStackTrace(); }
+			}
+		};
+	}
+	
+	/**
+	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
+	 * to start saving values.
+	 * 
+	 * Note: To stop registering values, use the function "stopStoringMousePosition()". 
+	 * 
+	 * Note2: Calling this function again without changing the behavior won't produce any effects. 
+	 */
+	private void startStoringMousePosition() 
+	{
+		makePause = false;
+	}
+	
+	/**
+	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
+	 * to stop saving values.
+	 * 
+	 * Note: To start registering values, use the function "startStoringMousePosition()". 
+	 * 
+	 * Note2: Calling this function again without changing the behavior won't produce any effects.
+	 * 
+	 * Note3: This is the default behavior of the Thread.
+	 */
+	private void stopStoringMousePosition() 
+	{
+		makePause = true;
+	}
 }

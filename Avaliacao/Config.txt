@@ -6,7 +6,7 @@ Distance between circles and frame center (integer): 300
 
 Random sequence generator (true/false): false
 
-Assigned UserID to person performing the evaluation: 12
+Assigned UserID to person performing the evaluation: 5
 
 Number of the device to be used: 0
 

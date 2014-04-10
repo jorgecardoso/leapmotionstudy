@@ -3,34 +3,43 @@ package device;
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.security.acl.Permission;
+import java.util.TimerTask;
+
+import javax.swing.Timer;
 
 import com.leapmotion.leap.*;
 import com.leapmotion.leap.Gesture.State;
 import com.leapmotion.leap.Gesture.Type;
 
-public class LeapMotion extends Listener
+public class LeapMotion
 {
 	public enum ControlMode{HAND_WITHOUT_GESTURE, HANDS_WITH_KEYTAP_GESTURE,
 		HAND_WITH_SCREENTAP_GESTURE, HANDS_WITH_SWIPE_GESTURE};
 
 		private ControlMode choosenControlMode;
-
 		private boolean isRightHanded;
+		
+		private Controller device;
+		private Frame lastFrame = new Frame();
 		private Hand dominantHand = new Hand();
 		private Hand auxiliaryHand = new Hand();
-
+		
 		private int cursorPositionX = 0;
 		private int cursorPositionY = 0;
 		private double touchZoneDistance = 0;
 		private boolean isButtonPressed = false;
 
+		private boolean keepExecutting = true;
 		//////<<<<<<<-----------------------------------------------******
 		Robot cursor;
 		//////<<<<<<<-----------------------------------------------******
 
-		//int teste = 0;
-		final boolean debug = true;
+		int teste = 0;
+		boolean boolTeste = false;
+		final boolean debug = false;
 		
 		/**
 		 * Constructor of Class LeapMotion.
@@ -65,7 +74,7 @@ public class LeapMotion extends Listener
 			}
 			//////<<<<<<<-----------------------------------------------******
 
-			Controller device = new Controller();
+			device = new Controller();
 
 			if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 			{
@@ -102,15 +111,19 @@ public class LeapMotion extends Listener
 
 				device.enableGesture(Type.TYPE_SWIPE);
 			}
-
-			device.addListener(this);
-
-			//////<<<<<<<-----------------------------------------------******
+			
+			System.out.println("Leap Motion has been initialized.");
 			//Since the class will be using listeners for controlling the cursor and inputing commands,
 			//this thread just need to keep the resources alive. To keep alive the While(true) is used.
-			while(true)
-			{}
-			//////<<<<<<<-----------------------------------------------******
+			while(keepExecutting)
+			{
+				if(device.isConnected())
+				{
+					onFrame(device);
+				}
+			}
+			
+			System.out.println("Leap Motion is closing...");
 		}
 
 		/**
@@ -145,48 +158,7 @@ public class LeapMotion extends Listener
 		public void resetButtonPressed()
 		{ this.isButtonPressed = false; }
 		
-		/**
-		 * Leap Motion listener extended.
-		 * 
-		 * Just a simple message confirming the presence of the Leap Motion Software.
-		 */
-		public void onInit(Controller controller)
-		{	
-			System.out.println("Leap Motion software found.");
-		}
-
-		/**
-		 * Leap Motion listener extended.
-		 * 
-		 * Just a simple message confirming that the Leap Motion device is connected to the computer.
-		 */
-		public void onConnect(Controller controller)
-		{
-			System.out.println("Leap Motion connected!");
-		}
-
-		/**
-		 * Leap Motion listener extended.
-		 * 
-		 * Just a simple message confirming that the Leap Motion device has been disconnected.
-		 */
-		public void onDisconnect(Controller controller)
-		{
-			System.out.println("Leap Motion disconnected...");
-		}
-
-		/**
-		 * Leap Motion listener extended.
-		 * 
-		 * A message confirming that the Leap Motion is terminating it's processing.
-		 * The listeners are removed and the controller deleted.
-		 */
-		public void onExit(Controller controller)
-		{
-			System.out.println("A sair...");
-			controller.removeListener(this);
-			controller.delete();
-		}
+		
 
 		/**
 		 * Leap Motion listener extended.
@@ -196,7 +168,7 @@ public class LeapMotion extends Listener
 		 * recovered the respective action will be taken.
 		 */
 		public void onFrame(Controller controller)
-		{		
+		{	
 			Frame capturedFrame = controller.frame();
 			
 			if(!capturedFrame.isValid())
@@ -204,7 +176,12 @@ public class LeapMotion extends Listener
 				if(debug){System.err.println("Captured image not valid!");}
 				return;
 			}
-
+			
+			if(capturedFrame.equals(lastFrame))
+			{
+				return;
+			}
+			
 			HandList detectedHands = capturedFrame.hands();
 
 			if(detectedHands.isEmpty())
@@ -285,6 +262,8 @@ public class LeapMotion extends Listener
 				//presses with the auxiliary hand by performing SWIPE gesture.
 				typeControl4(controller);
 			}
+			
+			lastFrame = capturedFrame;
 		}
 
 		/**
@@ -602,6 +581,16 @@ public class LeapMotion extends Listener
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			//////<<<<<<<---------------------------------------
+		}
+		
+		/**
+		 * Function that terminates the Leap Motion functions.
+		 * 
+		 * Note: This should only take effect after the current frame, movement and gesture are analyzed. 
+		 */
+		public void turnOff()
+		{
+			keepExecutting = false;
 		}
 
 		//For testing purposes
