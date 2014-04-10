@@ -30,7 +30,7 @@ public class LeapMotion extends Listener
 		//////<<<<<<<-----------------------------------------------******
 
 		//int teste = 0;
-		final boolean debug = false;
+		final boolean debug = true;
 		
 		/**
 		 * Constructor of Class LeapMotion.
@@ -70,7 +70,7 @@ public class LeapMotion extends Listener
 			if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 			{
 				//Extend gesture recognition time in order to detect it with more ease.
-				if(!device.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.3f) )
+				if(!device.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.7f) )
 				{
 					if(debug){System.err.println("It was not possible to alter \"Gesture.KeyTap.HistorySeconds\" configuration.");}
 					return;
@@ -103,7 +103,7 @@ public class LeapMotion extends Listener
 				device.enableGesture(Type.TYPE_SWIPE);
 			}
 
-			device.addListener(this);	
+			device.addListener(this);
 
 			//////<<<<<<<-----------------------------------------------******
 			//Since the class will be using listeners for controlling the cursor and inputing commands,
@@ -198,7 +198,7 @@ public class LeapMotion extends Listener
 		public void onFrame(Controller controller)
 		{		
 			Frame capturedFrame = controller.frame();
-
+			
 			if(!capturedFrame.isValid())
 			{
 				if(debug){System.err.println("Captured image not valid!");}
@@ -209,7 +209,7 @@ public class LeapMotion extends Listener
 
 			if(detectedHands.isEmpty())
 			{
-				if(debug) {System.err.println("No hands were detected.");}
+				if(debug){System.err.println("No hands were detected.");}
 				return;
 			}
 
@@ -253,12 +253,12 @@ public class LeapMotion extends Listener
 					auxiliaryHand = rightHand;
 				}
 			}
-			else
-			{
-				//If the device finds more than two hands, do nothing.
-				System.err.println("Three hands were detected. Only one or two can be used.");
-				return;
-			}
+			/*else
+				{
+					//If the device finds more than two hands, do nothing.
+					System.err.println("Three hands were detected. Only one or two can be used.");
+					return;
+				}*/
 
 			//Take the respective action depending on the control mode.
 			if(choosenControlMode == ControlMode.HAND_WITH_SCREENTAP_GESTURE)
@@ -305,7 +305,7 @@ public class LeapMotion extends Listener
 
 			if(availableScreens.isEmpty())
 			{
-				System.err.println("No screen has been detected.");
+				if(debug){System.err.println("No screen has been detected.");}
 				return;
 			}
 
@@ -313,7 +313,7 @@ public class LeapMotion extends Listener
 
 			if(!pointerFinger.isValid())
 			{
-				System.out.println("Invalid pointer finger!");
+				if(debug){System.out.println("Invalid pointer finger!");}
 				return;
 			}
 
@@ -332,22 +332,23 @@ public class LeapMotion extends Listener
 
 			if(!performedGesture.isValid())
 			{
-				System.out.println("The performed gesture is invalid.");
+				if(debug){System.out.println("The performed gesture is invalid.");}
 				return;
 			}
 
 			if(performedGesture.hands().count() != 1)
 			{
-				System.out.println(
-						"More than one hand has performed the SCREEN TAP gesture.\n" +
-								"Only one hand should be used and this should be the dominant hand."
-						);
+				if(debug)
+				{
+					System.out.println( "More than one hand has performed the SCREEN TAP gesture.\n" +
+										"Only one hand should be used and this should be the dominant hand." );
+				}
 				return;
 			}
 
 			if(!performedGesture.hands().get(0).equals(dominantHand))
 			{
-				System.out.println("Only the dominant hand should perform gestures.");
+				if(debug){System.out.println("Only the dominant hand should perform gestures.");}
 				return;
 			}
 
@@ -378,15 +379,15 @@ public class LeapMotion extends Listener
 
 			if(availableScreens.isEmpty())
 			{
-				System.out.println("No screen was detected.");
+				if(debug){System.err.println("No screen was detected.");}
 				return;
 			}
-
+			
 			Pointable pointerFinger = dominantHand.pointables().frontmost();
 
 			if(!pointerFinger.isValid())
 			{
-				System.out.println("Invalid pointer finger!");
+				if(debug){System.err.println("Invalid pointer finger!");}
 				return;
 			}
 
@@ -411,33 +412,34 @@ public class LeapMotion extends Listener
 			
 			if(!auxiliaryHand.isValid())
 			{
-				System.out.println("Must place your auxiliary hand over the Leap Motion device.");
+				if(debug){System.err.println("Must place your auxiliary hand over the Leap Motion device.");}
 				return;
 			}
 
 			if(!performedGesture.isValid())
 			{
-				System.out.println("The performed gesture is invalid.");
+				if(debug){System.err.println("The performed gesture is invalid.");}
 				return;
 			}
 
 			if(performedGesture.hands().count() != 1)
 			{
-				System.out.println(
-						"More than one hand has performed the KEY TAP gesture.\n" +
-								"Only the dominant hand should be used."
-						);
-
+				
+				if(debug)
+				{
+					System.err.println("More than one hand has performed the KEY TAP gesture.\n" +
+									   "Only the dominant hand should be used.");
+				}
 				return;
 			}
 
 			if(!performedGesture.hands().get(0).equals(auxiliaryHand))
 			{
-				System.out.println(
-						"Only the auxiliary hand should perform gestures.\n" +
-								"The dominant hand is used only to control the cursor movement."
-						);
-
+				if(debug)
+				{
+					System.err.println( "Only the auxiliary hand should perform gestures.\n" +
+										"The dominant hand is used only to control the cursor movement." );
+				}
 				return;
 			}
 
@@ -465,7 +467,7 @@ public class LeapMotion extends Listener
 
 			if(availableScreens.isEmpty())
 			{
-				System.out.println("No screen detected.");
+				if(debug){System.out.println("No screen detected.");}
 				return;
 			}
 
@@ -473,7 +475,7 @@ public class LeapMotion extends Listener
 
 			if(!pointerFinger.isValid())
 			{
-				System.out.println("Invalid pointer finger!");
+				if(debug){System.out.println("Invalid pointer finger!");}
 				return;
 			}
 

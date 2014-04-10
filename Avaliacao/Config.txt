@@ -1,7 +1,16 @@
-Number of circles: 16
+Number of circles (integer): 16
 
-Circle radius: 25
+Circle radius (integer): 25
 
-Distance between circles and frame center: 300
+Distance between circles and frame center (integer): 300
 
-Note: Every value should be an integer number!
+Random sequence generator (true/false): false
+
+Assigned UserID to person performing the evaluation: 12
+
+Number of the device to be used: 0
+
+//The device number are as follow:
+// 0 = Leap Motion;
+// 1 = Mouse;
+// 2 = Touch Pad;

@@ -3,6 +3,8 @@ package core;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -36,7 +38,7 @@ public class EvaluationApp extends PApplet
 	private int targetSizeY;		//the shows on the target circle
 	
 	protected boolean redrawElements;
-	
+
 	private final int backgroundColor = 255; 			//White
 	private final int HoverColorCircleRed = 183;
 	private final int HoverColorCircleGreen = 228;
@@ -47,22 +49,24 @@ public class EvaluationApp extends PApplet
 	private int currentSequenceIndex = 0;
 	
 	private Information informationFromCurrentTrial = new Information();
-	boolean createNewExperience = true;
+	private boolean isEvaluationComplete = false;
+	protected boolean acceptKeyInput = false;
 	
 	private final Chronometer chronometer = new Chronometer();
 	
-	LeapMotion leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true); //Boolean represents if user is right handed or not.
-	boolean useLeapMotion = false;
+	private LeapMotion leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true); //Boolean represents if user is right handed or not.
+	private boolean activateLeapMotion;
 	
 	//Variables related to the presentation of text on the application.
-	PFont font;
-	int displayFontSize;
-	String displayText;
+	private PFont font;
+	private int displayFontSize;
+	private String displayText;
 	
-	MouseMotionListener mouseMotionList;
+	private MouseMotionListener mouseMotionList;
 	
 	private int teste = 0;
 	private boolean debug = false;
+	private boolean testeBoolean = false;
 	
 	/**
 	 * Extended function from Processing.
@@ -75,13 +79,16 @@ public class EvaluationApp extends PApplet
 		
 		//Star Leap Motion device in its own thread
 
-		Thread lmThread = new Thread("Leap Motion Listener") {
-			public void run(){
-				leapMotionDevice.initialize();
+		if(activateLeapMotion)
+		{
+			Thread lmThread = new Thread("Leap Motion Listener") {
+				public void run(){
+					leapMotionDevice.initialize();
+				};
 			};
-		};
-		lmThread.start();
-
+			lmThread.start();
+		}
+		
 		//Some drawing parameters for Processing.
 		rectMode(PConstants.CENTER); 			// When drawing rectangles, the given coordinates are their center and not the extremes points.
 		stroke(0);								// Lines are drawn in black
@@ -128,6 +135,7 @@ public class EvaluationApp extends PApplet
 		});
 		
 		this.addMouseListener( createMouseListener() );
+		this.addKeyListener( createKeyListener() );
 		
 		//Paint the application background with desired color. Processing function.
 		background(backgroundColor);
@@ -152,14 +160,17 @@ public class EvaluationApp extends PApplet
 		
 		displayText();
 		
-		if( currentSequenceIndex == sequenceToPerform.size() )
+		if(isEvaluationComplete)
+		{
+			return;
+		}
+		
+		//To avoid errors due synchronization issues between the listener and the drawing function.
+		int readCurrentSequenceIndex = currentSequenceIndex;
+		
+		if( readCurrentSequenceIndex == sequenceToPerform.size() )
 		{	
-			System.out.println("Evaluation successfully completed!\nExiting...");
-			
-			//A little pause so the user can see the goodbye message. 
-			try {Thread.sleep(2000);}catch (InterruptedException e) {}
-			
-			System.exit(1);
+			return;
 		}
 		
 		//Draw the circles.
@@ -180,7 +191,11 @@ public class EvaluationApp extends PApplet
 			noFill();
 		}
 		
-		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
+		//If a resizing is still going, do nothing. The next "draw()" will deal with the resize.
+		if(redrawElements)
+		{ return ; }
+		
+		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
 	}
 
@@ -188,7 +203,12 @@ public class EvaluationApp extends PApplet
 	 * Handler to be called when the mouse button is pressed.
 	 */
 	protected void mouseButtonPressed() 
-	{
+	{	
+		//Error prevention. If the user performs a button press too fast on the last circle of the sequence, this action 
+		//may be called again, and error would occur when getting targetCircle.
+		if( currentSequenceIndex >= sequenceToPerform.size() )
+		{return;}
+			
 		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 		
 		if( currentSequenceIndex > 0 )
@@ -215,6 +235,7 @@ public class EvaluationApp extends PApplet
 				informationFromCurrentTrial.setTargetWidth(targetCircle.getRadius() * 2); 		//A largura do alvo é o diametro da circunferência.
 				informationFromCurrentTrial.setElapsedTime(chronometer.getTimeInMilliseconds());
 				informationFromCurrentTrial.setDistanceBetweenFrameAndCircleCenter(centerDistance);
+				informationFromCurrentTrial.setCircleID(currentSequenceIndex);
 				informationFromCurrentTrial.setDistanceBetweenCircles(
 						Information.calculateDistanceBetweenPoints(
 								lastCircle.getCenterX(), lastCircle.getCenterY(), 
@@ -226,20 +247,25 @@ public class EvaluationApp extends PApplet
 				
 				//...and start a new one.
 				informationFromCurrentTrial.resetInformation();
+
+				currentSequenceIndex++;
 				
 				//Print goodbye message
-				if( (currentSequenceIndex + 1) == sequenceToPerform.size() )
+				if( currentSequenceIndex == sequenceToPerform.size() )
 				{	
-					displayText = "Thank you very much for your time and help!\nGoodbye.";
+					isEvaluationComplete = true;
+					
+					displayText = "Well done!\nLet's rest a bit.";
+					System.out.println("Evaluation successfully completed!");
 					
 					//A little time out to make sure the system has time to present the displayText
-					try {Thread.sleep(200);}catch (InterruptedException e) {}
+					try {Thread.sleep(2000);}catch (InterruptedException e) {}
 					
-					//Force to display the message earlier otherwise it might not show up. 
-					displayText();
+					informationFromCurrentTrial.increaseBlockNumber();
+					displayText = "When ready to continue, please press the \"space\" key.";
+					acceptKeyInput = true;	
+					return;
 				}
-				
-				currentSequenceIndex++;
 			}	
 			else
 			{
@@ -430,12 +456,34 @@ public class EvaluationApp extends PApplet
 			result[1] = result[1].replace(".", "");
 			
 			//Guarda os valores lidos nas variáveis adequadas.
-			if( result[0].equals("Number of circles") )
+			if( result[0].equals("Number of circles (integer)") )
 			{ numberOfCircles = Integer.parseInt(result[1]); }
-			else if( result[0].equals("Circle radius") )
+			else if( result[0].equals("Circle radius (integer)") )
 			{ circleRadius = Integer.parseInt(result[1]); }
-			else if( result[0].equals("Distance between circles and frame center") )
+			else if( result[0].equals("Distance between circles and frame center (integer)") )
 			{ centerDistance = Integer.parseInt(result[1]); }
+			else if( result[0].equals("Random sequence generator (true/false)") )
+			{ 
+				String intendedBoolean = result[1].toLowerCase();
+				
+				if(intendedBoolean.equals("true") || intendedBoolean.equals("t"))
+				{generateRandomSequence = true;}
+				
+				//False is the default value of "generateRandomSequence". If the application is unable to read a value, it will remain false.
+			}
+			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
+			{ informationFromCurrentTrial.changeUser( Integer.parseInt(result[1]) ); }
+			else if( result[0].equals("Number of the device to be used") )
+			{
+				int value = Integer.parseInt(result[1]);
+	
+				if(value == 0) 
+				{ activateLeapMotion = true; }
+				else
+				{ activateLeapMotion = false; }
+				
+				informationFromCurrentTrial.changeDevice(value);
+			}
 		}
 		
 		//Check if the acquired values are respect the estabilished limits.
@@ -500,4 +548,146 @@ public class EvaluationApp extends PApplet
 			public void mouseReleased(MouseEvent e){}
 		};
 	}
+	
+	/**
+	 * Function that creates a key listener in order to alter the application parameters.
+	 * The keys are as follows:
+	 * 
+	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's.~
+	 * - > ["0","9"] - Keys between 0 and 9 change the device number to the one pressed.
+	 * - > "+" or "-" - Increases / decreases the current User ID.
+	 * 
+	 * Note: Remember, this function only generates the listener. It must be manually added!
+	 * 
+	 * @return THe said listener.
+	 */
+	private KeyListener createKeyListener()
+	{
+		return new KeyListener() 
+		{
+			@Override
+			public void keyReleased(KeyEvent e) 
+			{
+				switch( e.getKeyCode() )
+				{
+					//"Space" key pressed. When prompted, this key acts as the "Yes" or positive input.
+					case 32:
+						
+						if(acceptKeyInput)
+						{
+							//Restart experiment.
+							acceptKeyInput = false;
+							isEvaluationComplete = false;
+							
+							sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
+							currentSequenceIndex = 0;
+							informationFromCurrentTrial.increaseSequenceNumber();
+							
+							displayText = "Let's do it again!\nTo start press the + symbol!";
+						}
+						break;
+					
+					//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
+					//"R" key pressed.
+					case 82:
+						
+						generateRandomSequence = !generateRandomSequence;
+						
+						String message = "The sequence generator was change to:\n";
+						
+						if(generateRandomSequence)
+						{
+							message += "Random.";
+						}
+						else
+						{
+							message += "Mackenzie's style.";
+						}
+						
+						displayText = message;
+						
+						break;
+						
+					/*//Changes the Device number when the following keys are pressed.
+					//"0" key pressed.
+					case 96:
+						informationFromCurrentTrial.changeDevice(0);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"1" key pressed.
+					case 97:
+						informationFromCurrentTrial.changeDevice(1);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"2" key pressed.
+					case 98:
+						informationFromCurrentTrial.changeDevice(2);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"3" key pressed.
+					case 99:
+						informationFromCurrentTrial.changeDevice(3);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"4" key pressed.
+					case 100:
+						informationFromCurrentTrial.changeDevice(4);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"5" key pressed.
+					case 101:
+						informationFromCurrentTrial.changeDevice(5);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"6" key pressed.
+					case 102:
+						informationFromCurrentTrial.changeDevice(6);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+						
+					//"7" key pressed.
+					case 103:
+						informationFromCurrentTrial.changeDevice(7);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"8" key pressed.
+					case 104:
+						informationFromCurrentTrial.changeDevice(8);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					
+					//"9" key pressed.
+					case 105:
+						informationFromCurrentTrial.changeDevice(9);
+						displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID();  
+						break;
+					*/	
+					/*//Change User ID when the following keys are pressed.
+					//"+" key pressed.
+					case 107:
+						informationFromCurrentTrial.nextUser();
+						displayText = "The User ID was changed to: " + informationFromCurrentTrial.getUserID();  
+						break;
+					
+					//"-" key pressed.
+					case 109:
+						informationFromCurrentTrial.lastUser();
+						displayText = "The User ID was changed to: " + informationFromCurrentTrial.getUserID();  
+						break;	*/
+				}
+			}
+			
+			public void keyPressed(KeyEvent e){}
+
+			public void keyTyped(KeyEvent arg0){}
+		};
+	}
+	
 }

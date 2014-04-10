@@ -21,7 +21,8 @@ public class Information
 	private Pixel startingCircleCenter;
 	private Pixel endingCircleCenter;
 	private int targetWidth; 							//In other words, the circles' diameter. In pixels. 
-
+	private int circleId;
+	
 	private int distanceBetweenCirclesAndFrameCenter;	//In pixels.
 	private double distanceBetweenCircles;				//In pixels.
 
@@ -33,9 +34,10 @@ public class Information
 
 	private int device;									
 	private int userId;									//To be used when storing the information.	
-	private int blockNumber;								//To be used when storing the information.
-
-	private String fileToStoreInfo;  ///---------------- Fala implementar
+	private int blockNumber;							//To be used when storing the information.
+	private int sequenceNumber;
+	
+	private String fileToStoreInfo;  					
 
 
 	/**
@@ -51,7 +53,8 @@ public class Information
 	public Information() 
 	{
 		//Default values
-		this.device = 0;		this.userId = 0; 		this.blockNumber = 0;
+		this.device = 0;		this.userId = 0; 		
+		this.blockNumber = 0;   this.sequenceNumber = 0;
 
 		//Create file where results will be stored.
 		fileToStoreInfo = createStoreFile();
@@ -69,6 +72,7 @@ public class Information
 		this.setNumberOfCircles(0);			this.setDistanceBetweenFrameAndCircleCenter(0);		this.setTargetWidth(0);
 		this.setNumberOfClicks(0);			this.setStartingCircleCenter(new Pixel(0,0));		this.path = new Vector<Pixel>();
 		this.setElapsedTime(0);				this.setEndingCircleCenter(new Pixel(0,0));			this.setDistanceBetweenCircles(0.0);
+		this.circleId = 0;
 	}
 
 	/**
@@ -268,7 +272,7 @@ public class Information
 	 */
 	public int getUserID()
 	{ return userId; }
-
+	
 	/**
 	 * Function that changes the User ID to the next available. 
 	 * 
@@ -288,8 +292,8 @@ public class Information
 	public void lastUser() 
 	{
 		userId--;
-
-		if(userId < 0);
+	
+		if(userId < 0)
 		{
 			System.err.println("The UserId must not be less than 0.");
 			userId = 0;
@@ -323,7 +327,7 @@ public class Information
 
 	 * @return The ID of the device used to perform this trial.
 	 */
-	private int getDeviceID() 
+	public int getDeviceID() 
 	{ return this.device; }
 
 	/**
@@ -484,14 +488,14 @@ public class Information
 			
 			//Create the file Header.
 			writer.write(
-				"NumberDevice"            + " " +  "UserId" 			   + " " + 
-				"Block"                   + " " + "NumberClicks" 		   + " " + 
-				"NumberCircles"           + " " + "DistanceCenter" 		   + " " +
-				"PixelStartCircleX"       + " " + "PixelStartCircleY" 	   + " " +
-				"PixelEndCircleX"         + " " + "PixelEndCircleY"   	   + " " +  
-				"DistanceStartEndCircles" + " " + "TargerWidth" 		   + " " +
-				"ElapsedTime"             + " " + "DistanceFirstLastPixel" + " " +
-				"MouseX"                  + " " + "MouseY" 				   + "\n"
+				"NumberDevice"            + " " + "UserId" 			 	+ " " + 
+				"Block"                   + " " + "Sequence" 			+ " " +
+				"NumberClicks" 		  	  + " " + "NumberCircles"       + " " + 
+				"CircleID" 			  + " " + "DistanceCenter" 		+ " " +
+				 "PixelStartCircleX"      + " " + "PixelStartCircleY" 	+ " " +
+				"PixelEndCircleX"         + " " + "PixelEndCircleY"   	+ " " +  
+				"TargetWidth" 		   	  + " " + "ElapsedTime"         + " " +  
+				"MouseX"                  + " " + "MouseY" 				+ "\n"
 			);
 			
 			writer.close();
@@ -527,18 +531,16 @@ public class Information
 			//Fill the columns with the respective information
 			for(int w = 0; w < path.size(); w++)
 			{
-				double distanceBetweenFirstLastPixel = calculateDistanceBetweenPoints(path.firstElement(), path.lastElement());
 				int mousePositionX = path.get(w).getXCoordinate();
 				int mousePositionY = path.get(w).getYCoordinate();
 
 				writer.write(
 					device							 + " " + userId 								+ " " + 
-					blockNumber 					 + " " + numberOfClicks 						+ " " +
-					numberOfCircles 				 + " " + distanceBetweenCirclesAndFrameCenter 	+ " " +
-					startingCircleCenter.toString()  + " " +
-					endingCircleCenter.toString()	 + " " +
-					distanceBetweenCircles  		 + " " + targetWidth 							+ " " +
-					elapsedTime 					 + " " + distanceBetweenFirstLastPixel 			+ " " +
+					blockNumber 					 + " " + sequenceNumber 						+ " " +
+					numberOfClicks 					 + " " + numberOfCircles 				 		+ " " + 
+					circleId 						 + " " + distanceBetweenCirclesAndFrameCenter 	+ " " +
+					startingCircleCenter.toString()  + " " + endingCircleCenter.toString()	 		+ " " + 
+					targetWidth 					 + " " + elapsedTime 					 		+ " " +  			
 					mousePositionX 					 + " " + mousePositionY							+ "\n"
 				);
 			}
@@ -553,108 +555,22 @@ public class Information
 		}
 	}
 
+	public int getSequenceNumber() 
+	{return sequenceNumber;}
 
+	public void setSequenceNumber(int sequenceNumber) 
+	{this.sequenceNumber = sequenceNumber;}
+	
+	public void increaseSequenceNumber()
+	{sequenceNumber++;}
+	
+	public int getCircleID() 
+	{return circleId;}
 
-
-
-
-
-/**
- * Auxiliary function that writes all the values contained in the parameter
- * to a text file.
- * 
- * @param trialResults - Vector containing the Information to be written. 
- */
-/*public static void storeInformationInFile(Vector<Information> trialResults)
-	{
-		//Create folder where all results will be stored.
-		String nameMainFolder = "../Resultados";
-		File mainFolder = new File(nameMainFolder);
-
-		//Check to see if this directory already exists
-		if ( !mainFolder.exists() ) 
-		{
-			mainFolder.mkdir();
-		}
-
-		//Create another folder, inside the last one, where the results of trial will be stored
-		DateFormat dateHourFormat = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss");
-		Date dateHour = new Date();
-
-		String nameNewFolder = nameMainFolder+ "/" + dateHourFormat.format(dateHour).toString();
-		File newFolder = new File(nameNewFolder);
-
-		//Check if directory already exists, which is unlikely ...
-		if ( !newFolder.exists() ) 
-		{
-			newFolder.mkdir();
-		}
-
-		//Write the results from each trial
-		for(int i = 0; i < trialResults.size(); i++)
-		{
-			Information values = trialResults.get(i);
-
-			String nameResultingFile = nameNewFolder + "/trial" + i + ".txt";
-			File resultingFile = new File(nameResultingFile);
-
-			if ( !resultingFile.exists() ) 
-			{
-				try 
-				{
-					resultingFile.createNewFile();
-				} 
-				catch (IOException e) 
-				{
-					e.printStackTrace();
-					System.err.println("It was not possible to store the intended information. Error on function \"storeInformationInFile\".");
-					return;
-				}
-			}
-
-			try 
-			{
-				PrintWriter writer;
-				writer = new PrintWriter(nameResultingFile, "UTF-8");
-
-				writer.println("NDevice: " + values.getDeviceID() );
-				writer.println("UserId: " + values.getUserID() );
-				writer.println("Block: " + values.blockNumber );
-				writer.println("NClicks: " + values.getNumberOfClicks() );
-				writer.println("NCircles: " + values.getNumberOfCircles() );
-				writer.println("DistCenter: " + values.getDistanceBetweenFrameAndCircleCenter() );
-				writer.println("DistCenter: " + values.getDistanceBetweenFrameAndCircleCenter() );
-
-				Pixel temp = values.getStartingCircleCenter();
-				writer.println("PixelBeginCircle: " + temp.getXCoordinate() + " " + temp.getYCoordinate() );
-
-				temp = values.getEndingCircleCenter();
-				writer.println("PixelEndCircle: " + temp.getXCoordinate() + " " + temp.getYCoordinate() );
-
-				writer.println("DistCircles: " + values.getDistanceBetweenCircles() );
-				writer.println("TargerWidth(Pixels): " + values.getTargetWidth() );
-				writer.println("ElapsedTime: " +  values.getElapsedTime() );
-
-				Vector<Pixel> traversedPath = values.getPath();
-				writer.println("DistanceFirstLastPixel: " + calculateDistanceBetweenPoints(traversedPath.firstElement(), traversedPath.lastElement()) );
-
-				writer.println("Path: ");
-				for(int w = 0; w < traversedPath.size(); w++)
-				{
-					writer.println("<" + traversedPath.get(w).getXCoordinate() + "," + traversedPath.get(w).getYCoordinate() + ">");
-				}
-
-				writer.close();
-			} 
-			catch (FileNotFoundException e) 
-			{
-				e.printStackTrace();
-			} 
-			catch (UnsupportedEncodingException e) 
-			{
-				e.printStackTrace();
-			}
-		}
-		return;
-	}*/
+	public void setCircleID(int circleID) 
+	{this.circleId = circleID ;}
+	
+	public void increaseCircleID()
+	{circleId++;}
+	
 }
