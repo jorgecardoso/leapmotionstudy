@@ -10,7 +10,8 @@ import com.leapmotion.leap.Gesture.Type;
 
 public class LeapMotion extends Listener
 {
-	public enum ControlMode{HAND_WITHOUT_GESTURE, HAND_WITHOUT_GESTURE_INVERTED, HAND_WITH_SCREENTAP_GESTURE, HANDS_WITH_KEYTAP_GESTURE, HANDS_WITHOUT_GESTURE};
+	public enum ControlMode{HAND_WITHOUT_GESTURE, HAND_WITHOUT_GESTURE_INVERTED, HAND_WITH_SCREENTAP_GESTURE, 
+							HANDS_WITH_KEYTAP_GESTURE, HANDS_WITH_GRABBING_GESTURE};
 
 		private ControlMode choosenControlMode;
 		private boolean isRightHanded;
@@ -302,7 +303,7 @@ public class LeapMotion extends Listener
 				//touch zone.
 				typeControlTouchDistanceInverted(controller);
 			}
-			else if(choosenControlMode == ControlMode.HANDS_WITHOUT_GESTURE)
+			else if(choosenControlMode == ControlMode.HANDS_WITH_GRABBING_GESTURE)
 			{
 				//User controls the cursor using his/her dominant hand and simulates button 
 				//presses with the auxiliary hand by performing SWIPE gesture.
@@ -723,10 +724,10 @@ public class LeapMotion extends Listener
 					break;
 					
 				case HAND_WITHOUT_GESTURE_INVERTED:
-					choosenControlMode = ControlMode.HANDS_WITHOUT_GESTURE;
+					choosenControlMode = ControlMode.HANDS_WITH_GRABBING_GESTURE;
 					break;
 					
-				case HANDS_WITHOUT_GESTURE:
+				case HANDS_WITH_GRABBING_GESTURE:
 					choosenControlMode = ControlMode.HANDS_WITH_KEYTAP_GESTURE;
 					activateKeyTapGesture();
 					break;
@@ -751,7 +752,7 @@ public class LeapMotion extends Listener
 				case HAND_WITHOUT_GESTURE_INVERTED:
 					return "1 hand, distance zone, inverted";
 					
-				case HANDS_WITHOUT_GESTURE:
+				case HANDS_WITH_GRABBING_GESTURE:
 					return "2 hand, close auxiliary hand";
 			}
 			

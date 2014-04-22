@@ -72,6 +72,11 @@ public class EvaluationApp extends PApplet
 	//private boolean debug = false;
 	//private boolean testeBoolean = false;
 	
+	
+	public static void main(String args[]) {
+	    PApplet.main(new String[] { "--present", "core.EvaluationApp" });
+	}
+	
 	/**
 	 * Extended function from Processing.
 	 * This function is only executed once.
@@ -197,7 +202,7 @@ public class EvaluationApp extends PApplet
 		
 		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   ||
 			desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
-			desiredControlMethod == ControlMode.HANDS_WITHOUT_GESTURE		||
+			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE ||
 			informationFromCurrentTrial.getDeviceID() != 0 )
 		{ 
 			cursor();	
@@ -225,9 +230,7 @@ public class EvaluationApp extends PApplet
 		}
 		
 		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
-		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
-		System.out.println("Posicao alvo:" + targetCircle.getCenterPixel().toString());
-		
+		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());	
 	}
 
 	/**
@@ -811,7 +814,6 @@ public class EvaluationApp extends PApplet
 						if(!makePause)
 						{
 							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
-							System.out.println("Posicao guardada:" + mouseX + " " + mouseY);
 						}
 					}
 				}
@@ -847,9 +849,5 @@ public class EvaluationApp extends PApplet
 	private void stopStoringMousePosition() 
 	{
 		makePause = true;
-	}
-	
-	public static void main(String args[]) {
-	    PApplet.main(new String[] { "--present", "core.EvaluationApp" });
 	}
 }
