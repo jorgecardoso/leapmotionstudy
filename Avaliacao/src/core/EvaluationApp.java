@@ -415,7 +415,7 @@ public class EvaluationApp extends PApplet
 		
 		try 
 		{
-			reader = new BufferedReader( new FileReader( new File ("../Config.txt")	) );
+			reader = new BufferedReader( new FileReader( new File ("Config.txt")	) );
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -724,5 +724,9 @@ public class EvaluationApp extends PApplet
 	private void stopStoringMousePosition() 
 	{
 		makePause = true;
+	}
+	
+	public static void main(String args[]) {
+	    PApplet.main(new String[] { "--present", "core.EvaluationApp" });
 	}
 }

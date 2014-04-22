@@ -10,8 +10,8 @@ import javax.sound.sampled.Clip;
 
 public class Sound 
 {
-	static private String sucessSound =  "../Resources/sound1.wav";		
-	static private String failureSound = "../Resources/sound2.wav";
+	static private String sucessSound =  "Resources/sound1.wav";		
+	static private String failureSound = "Resources/sound2.wav";
 	
 	private static boolean playSucessSound = true;
 	private static boolean playFailureSound = true;
