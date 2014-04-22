@@ -12,8 +12,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import datastructure.*;
@@ -52,6 +50,8 @@ public class EvaluationApp extends PApplet
 	private Information informationFromCurrentTrial = new Information();
 	private boolean isEvaluationComplete = false;
 	protected boolean acceptKeyInput = false;
+	private int numberOfSequencesPerBlock;
+	private int numberOfBlocksPerExperiment;
 	
 	private final Chronometer chronometer = new Chronometer();
 	
@@ -60,15 +60,17 @@ public class EvaluationApp extends PApplet
 	private Thread lmThread;
 	protected LeapMotion leapMotionDevice;
 	private boolean activateLeapMotion;
+	private boolean rightHanded = true;
+	private ControlMode desiredControlMethod = ControlMode.HANDS_WITH_KEYTAP_GESTURE;
 	
 	//Variables related to the presentation of text on the application.
 	private PFont font;
 	private int displayFontSize;
 	private String displayText;
 	
-	private int teste = 0;
-	private boolean debug = false;
-	private boolean testeBoolean = false;
+	//private int teste = 0;
+	//private boolean debug = false;
+	//private boolean testeBoolean = false;
 	
 	/**
 	 * Extended function from Processing.
@@ -192,8 +194,40 @@ public class EvaluationApp extends PApplet
 		if(redrawElements)
 		{ return ; }
 		
+		
+		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   ||
+			desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
+			desiredControlMethod == ControlMode.HANDS_WITHOUT_GESTURE		||
+			informationFromCurrentTrial.getDeviceID() != 0 )
+		{ 
+			cursor();	
+		}
+		else
+		{ 
+			noCursor(); 
+			
+			try
+			{
+				stroke(0, (float) ( (leapMotionDevice.getTouchZone() * 50) +205), 0);
+				strokeWeight( (float) ( (1-leapMotionDevice.getTouchZone()) *1.0f + 1.0f ) );
+				drawCircle(mouseX, mouseY, ((int) (10 + leapMotionDevice.getTouchZone() * 20)) );
+				strokeWeight(1.0f);
+				noStroke();
+			}
+			catch(Exception e)
+			{
+				stroke(0, 255, 0);
+				strokeWeight( 2.0f);
+				drawCircle(mouseX, mouseY, 10);
+				strokeWeight(1.0f);
+				noStroke();
+			}
+		}
+		
 		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
+		System.out.println("Posicao alvo:" + targetCircle.getCenterPixel().toString());
+		
 	}
 
 	/**
@@ -248,18 +282,30 @@ public class EvaluationApp extends PApplet
 
 				currentSequenceIndex++;
 				
-				//Print goodbye message
+				//Check to see if the experiment is over and, if not, make a little break for the user.
 				if( currentSequenceIndex == sequenceToPerform.size() )
 				{	
 					isEvaluationComplete = true;
 					
+					//Check to see if the experiment is over.
+					if( (informationFromCurrentTrial.getBlockNumber() + 1) == numberOfBlocksPerExperiment)
+					{
+						displayText = "The experiment is complete.\nThank you so much for participating!";
+						
+						System.out.println("Experiment successfully completed!");
+						
+						//A little time out to make sure the system has time to present the displayText
+						try {Thread.sleep(4000);}catch (InterruptedException e) {}
+						
+						System.exit(1);
+					}
+					
 					displayText = "Well done!\nLet's rest a bit.";
-					System.out.println("Evaluation successfully completed!");
+					System.out.println("Sequence successfully completed!");
 					
 					//A little time out to make sure the system has time to present the displayText
 					try {Thread.sleep(2000);}catch (InterruptedException e) {}
 					
-					informationFromCurrentTrial.increaseBlockNumber();
 					displayText = "When ready to continue, please press the \"space\" key.";
 					acceptKeyInput = true;	
 					return;
@@ -452,11 +498,42 @@ public class EvaluationApp extends PApplet
 			
 			//Store the read values in the respective variable.
 			if( result[0].equals("Number of circles (integer)") )
-			{ numberOfCircles = Integer.parseInt(result[1]); }
-			else if( result[0].equals("Circle radius (integer)") )
-			{ circleRadius = Integer.parseInt(result[1]); }
+			{
+				numberOfCircles = Integer.parseInt(result[1]); 
+			}
 			else if( result[0].equals("Distance between circles and frame center (integer)") )
-			{ centerDistance = Integer.parseInt(result[1]); }
+			{ 
+				centerDistance = Integer.parseInt(result[1]); 
+			}
+			else if( result[0].equals("Circle radius (integer)") )
+			{ 
+				circleRadius = Integer.parseInt(result[1]); 
+			}
+			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
+			{ 
+				
+				informationFromCurrentTrial.changeUser( Integer.parseInt(result[1]) );
+			}
+			else if( result[0].equals("How many sequences does one block have? (integer)") )
+			{ 
+				numberOfSequencesPerBlock = Integer.parseInt(result[1]); 
+				
+				if(numberOfSequencesPerBlock <= 0)
+				{
+					System.err.println("Number of sequences per block must be greater than 0.");
+					System.exit(0);
+				}
+			}	
+			else if( result[0].equals("How many blocks does one experiment have? (integer)") )
+			{ 
+				numberOfBlocksPerExperiment = Integer.parseInt(result[1]); 
+				
+				if(numberOfBlocksPerExperiment <= 0)
+				{
+					System.err.println("Number of blocks per experiment must be greater than 0.");
+					System.exit(0);
+				}
+			}
 			else if( result[0].equals("Random sequence generator (true/false)") )
 			{ 
 				String intendedBoolean = result[1].toLowerCase();
@@ -466,8 +543,6 @@ public class EvaluationApp extends PApplet
 				
 				//False is the default value of "generateRandomSequence". If the application is unable to read a value, it will remain false.
 			}
-			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
-			{ informationFromCurrentTrial.changeUser( Integer.parseInt(result[1]) ); }
 			else if( result[0].equals("Number of the device to be used") )
 			{
 				int value = Integer.parseInt(result[1]);
@@ -478,6 +553,15 @@ public class EvaluationApp extends PApplet
 				{ activateLeapMotion = false; }
 				
 				informationFromCurrentTrial.changeDevice(value);
+			}
+			else if( result[0].equals("Is user right-handed? (true/false)") )
+			{ 
+				String intendedBoolean = result[1].toLowerCase();
+				
+				if(intendedBoolean.equals("false") || intendedBoolean.equals("f"))
+				{ rightHanded= false;}
+				
+				//True is the default value of "rightHanded".
 			}
 		}
 		
@@ -532,7 +616,7 @@ public class EvaluationApp extends PApplet
 	 */
 	private void activateLeapMotion() 
 	{
-		leapMotionDevice = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE, true);
+		leapMotionDevice = new LeapMotion(desiredControlMethod, rightHanded);
 		lmThread = new Thread("Leap Motion Listener") {
 			public void run(){
 				//Boolean represents if user is right handed or not.
@@ -585,6 +669,14 @@ public class EvaluationApp extends PApplet
 						currentSequenceIndex = 0;
 						informationFromCurrentTrial.increaseSequenceNumber();
 						
+						if(informationFromCurrentTrial.getSequenceNumber() == numberOfSequencesPerBlock)
+						{
+							informationFromCurrentTrial.resetSequenceNumber();
+							informationFromCurrentTrial.increaseBlockNumber();
+							
+							System.out.println("Block successfully completed!");
+						}
+						
 						displayText = "Let's do it again!\nTo start press the + symbol!";
 					}
 				}
@@ -600,6 +692,41 @@ public class EvaluationApp extends PApplet
 					{	message += "Random.";	}
 					else
 					{	message += "Mackenzie's style.";	}
+					
+					displayText = message;
+				}
+				//Change the cursor movement and selection controls when using the Leap Motion.
+				//"G" key pressed.
+				else if(e.getKeyCode() == 71)
+				{
+					//If the Leap Motion isn't active, do nothing.
+					if(informationFromCurrentTrial.getDeviceID() != 0)
+					{return;}
+					
+					desiredControlMethod = leapMotionDevice.changeControlMode();
+					
+					displayText = "Selection and movement were altered:\n" 
+									+ LeapMotion.controlModeToString(desiredControlMethod);
+				}
+				
+				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
+				//"H" key pressed
+				else if(e.getKeyCode() == 72)
+				{
+					//If the Leap Motion isn't active, do nothing.
+					if(informationFromCurrentTrial.getDeviceID() != 0)
+					{return;}
+					
+					rightHanded = !rightHanded;
+					
+					String message = "The user dominant is set to: ";
+					
+					if(rightHanded)
+					{	message += " Right.";	}
+					else
+					{	message += " Left.";	}
+					
+					leapMotionDevice.changeDominantHand();
 					
 					displayText = message;
 				}
@@ -632,10 +759,6 @@ public class EvaluationApp extends PApplet
 					displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID(); 
 				}
 				
-				
-				switch( e.getKeyCode() )
-				{
-					
 					/*//Change User ID when the following keys are pressed.
 					//"+" key pressed.
 					case 107:
@@ -648,7 +771,6 @@ public class EvaluationApp extends PApplet
 						informationFromCurrentTrial.lastUser();
 						displayText = "The User ID was changed to: " + informationFromCurrentTrial.getUserID();  
 						break;	*/
-				}
 			}
 			
 			public void keyPressed(KeyEvent e){}
@@ -682,13 +804,14 @@ public class EvaluationApp extends PApplet
 				{
 					while(true)
 					{
-						//Sleep 10 milliseconds.
-						sleep(10);
+						//Sleep 25 milliseconds.
+						sleep(25);
 						
 						//While changing between targets or writing values to a file, there's no need to store information.
 						if(!makePause)
 						{
 							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
+							System.out.println("Posicao guardada:" + mouseX + " " + mouseY);
 						}
 					}
 				}

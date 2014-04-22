@@ -2,13 +2,9 @@ package datastructure;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -376,12 +372,15 @@ public class Information
 		System.out.println(
 			"The device number used was: " + device + ".\n" +
 			"The User ID was: " + userId + ".\n" +
-			"This trial belonged to block: " + blockNumber + ".\n\n" +
+			"The current sequence number is: " + sequenceNumber + "\n" +
+			"and belongs to block number: " + blockNumber + ".\n\n" + 
+			
 			"In this trial " + numberOfClicks + " click(s) were performed.\n" +
 			"There were " + numberOfCircles + " circles,\n" +
 			"and were " + distanceBetweenCirclesAndFrameCenter + " pixels away from the center of the frame.\n" + 
 			"The starting circle's center was in pixel: <" + getStartingCircleCenter().getXCoordinate() + "," + getStartingCircleCenter().getYCoordinate()  + ">\n" +
-			"and the ending one was in pixel: <" + getEndingCircleCenter().getXCoordinate() + "," + getEndingCircleCenter().getYCoordinate() + ">.\n" +
+			"and the ending one was in pixel: <" + getEndingCircleCenter().getXCoordinate() + "," + getEndingCircleCenter().getYCoordinate() + ">\n" +
+			"(whose ID is: " + circleId + " ).\n" +
 			"As such, they were: " + distanceBetweenCircles + " pixels away from each other.\n" +
 			"Both had a diameter of " + targetWidth + " pixels, which means " +  ((double) targetWidth) / 2.0 + " pixels as radius.\n" +
 			"This trial took " + elapsedTime + " milisegundos to perform.\n" +
@@ -536,7 +535,7 @@ public class Information
 
 				writer.write(
 					device							 + " " + userId 								+ " " + 
-					blockNumber 					 + " " + sequenceNumber 						+ " " +
+					(blockNumber + 1)				 + " " + (sequenceNumber + 1) 					+ " " +
 					numberOfClicks 					 + " " + numberOfCircles 				 		+ " " + 
 					circleId 						 + " " + distanceBetweenCirclesAndFrameCenter 	+ " " +
 					startingCircleCenter.toString()  + " " + endingCircleCenter.toString()	 		+ " " + 
@@ -560,6 +559,9 @@ public class Information
 
 	public void setSequenceNumber(int sequenceNumber) 
 	{this.sequenceNumber = sequenceNumber;}
+	
+	public void resetSequenceNumber() 
+	{this.sequenceNumber = 0;}
 	
 	public void increaseSequenceNumber()
 	{sequenceNumber++;}
