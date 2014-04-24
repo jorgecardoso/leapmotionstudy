@@ -1,8 +1,13 @@
 Number of circles (integer): 16
 
-Circle radius (integer): 24
+Circle radius (integer): 30 
 
-Distance between circles and frame center (integer): 325
+Distance between circles and frame center (integer): 350
+
+//Nota:
+//	Para as medidas de Mackenzie os valores a colocar seriam:
+//	Circle radius = 30
+//	Distance between circles and frame center =  418-419
 
 Random sequence generator (true/false): false
 

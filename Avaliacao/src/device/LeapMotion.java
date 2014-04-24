@@ -24,7 +24,7 @@ public class LeapMotion extends Listener
 		private int cursorPositionX = 0;
 		private int cursorPositionY = 0;
 		private double touchZoneDistance = 0;
-		private static boolean pressOcurred = false;
+		private boolean pressOcurred = false;
 		
 		private boolean keepExecutting = true;
 		//////<<<<<<<-----------------------------------------------******
@@ -182,6 +182,11 @@ public class LeapMotion extends Listener
 		public int getCursorPositionY()
 		{ return this.cursorPositionY; }
 		
+		public boolean isPressedOcurred()
+		{
+			return this.pressOcurred;
+		}
+		
 		public double getTouchZone()
 		{
 			if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)
@@ -307,7 +312,7 @@ public class LeapMotion extends Listener
 			{
 				//User controls the cursor using his/her dominant hand and simulates button 
 				//presses with the auxiliary hand by performing SWIPE gesture.
-				typeControlHandsWithoutGesture(controller);
+				typeControlHandsWithGrabbingGesture(controller);
 			}
 			
 			lastFrame = capturedFrame;
@@ -562,7 +567,7 @@ public class LeapMotion extends Listener
 				//////<<<<<<<-----------------------------------------------******
 				pressOcurred = true;
 			}
-			else if(pressOcurred && (touchZoneDistance > 0.0) )
+			else if(pressOcurred && (touchZoneDistance >= 0.27) )
 			{
 				pressOcurred = false;
 			}
@@ -618,14 +623,14 @@ public class LeapMotion extends Listener
 				//////<<<<<<<-----------------------------------------------******
 				pressOcurred = true;
 			}
-			else if(pressOcurred && (touchZoneDistance < 0.0) )
+			else if(pressOcurred && (touchZoneDistance < -0.10) )
 			{
 				pressOcurred = false;
 			}
 		}
 		
 		
-		private void typeControlHandsWithoutGesture(Controller controller)
+		private void typeControlHandsWithGrabbingGesture(Controller controller)
 		{
 			ScreenList availableScreens = controller.locatedScreens();
 
@@ -676,6 +681,7 @@ public class LeapMotion extends Listener
 			//cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			//////<<<<<<<---------------------------------------
 		}
+		
 		/**
 		 * Function that terminates the Leap Motion functions.
 		 * 
@@ -686,6 +692,11 @@ public class LeapMotion extends Listener
 			keepExecutting = false;
 		}
 
+		public void turnOn()
+		{
+			keepExecutting = true;
+		}
+		
 		/**
 		 * Function that cancels the "mouse button click".
 		 */

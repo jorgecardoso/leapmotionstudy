@@ -199,25 +199,45 @@ public class EvaluationApp extends PApplet
 		if(redrawElements)
 		{ return ; }
 		
-		
+		//Depending on the controlling gesture change the cursor.
 		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   ||
 			desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
 			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE ||
 			informationFromCurrentTrial.getDeviceID() != 0 )
 		{ 
+			//Default cursor image.
 			cursor();	
 		}
 		else
 		{ 
+			//Remove the default cursor image...
 			noCursor(); 
 			
+			//... and substitute it for a circle.
 			try
 			{
-				stroke(0, (float) ( (leapMotionDevice.getTouchZone() * 50) +205), 0);
-				strokeWeight( (float) ( (1-leapMotionDevice.getTouchZone()) *1.0f + 1.0f ) );
+				strokeWeight(4.0f);
+				
+				if(!leapMotionDevice.isPressedOcurred())
+				{
+					//If the user is far away from the touch zone or a press has already happened,
+					//the circle will be drawn blue.
+					float redValue = (float) ( (leapMotionDevice.getTouchZone() * 205.0f));
+					float greenValue = (float) ( ( 1 - leapMotionDevice.getTouchZone() ) * 205.0f);
+					
+					stroke(redValue, greenValue, 0.0f);
+				}
+				else
+				{
+					stroke(0,0,0);
+				}
+				
+				//The drawn circle radius will change according to the touch zone (the farther, the bigger).
 				drawCircle(mouseX, mouseY, ((int) (10 + leapMotionDevice.getTouchZone() * 20)) );
-				strokeWeight(1.0f);
 				noStroke();
+				strokeWeight(1.0f);
+				
+				
 			}
 			catch(Exception e)
 			{
@@ -334,29 +354,28 @@ public class EvaluationApp extends PApplet
 		else if( currentSequenceIndex == 0 )
 		{
 			//The experience should only be started when the user presses with success the first default target.
-			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
+			Circle selectedCircle = circles.get(sequenceToPerform.get(0));
 			
 			Boolean wasRightCirclePressed = selectedCircle.doesPointBelongToCircle(mouseX, mouseY);
 			
-			if( wasRightCirclePressed )
+			if(! wasRightCirclePressed)
 			{
-				Sound.playSucessSound();
-				currentSequenceIndex++;
-			}	
+				return;
+			}
+			
+			Sound.playSucessSound();
+			currentSequenceIndex++;
 			
 			//A little pause to avoid several "button presses" if the user remains with the button pressed. 
 			try {Thread.sleep(200);}catch (InterruptedException e) {}
 			
-			if( wasRightCirclePressed )
-			{
-				//Don't print anything in the screen.
-				displayText = "";
+			//Don't print anything in the screen.
+			displayText = "";
 				
-				//Start saving the mouse position over time.
-				startStoringMousePosition();
+			//Start saving the mouse position over time.
+			startStoringMousePosition();
 				
-				chronometer.start();
-			}
+			chronometer.start();
 		}
 	}
 
@@ -619,14 +638,21 @@ public class EvaluationApp extends PApplet
 	 */
 	private void activateLeapMotion() 
 	{
-		leapMotionDevice = new LeapMotion(desiredControlMethod, rightHanded);
-		lmThread = new Thread("Leap Motion Listener") {
-			public void run(){
-				//Boolean represents if user is right handed or not.
-				leapMotionDevice.initialize();
+		if(leapMotionDevice == null)
+		{
+			leapMotionDevice = new LeapMotion(desiredControlMethod, rightHanded);
+			lmThread = new Thread("Leap Motion Listener") {
+				public void run(){
+					//Boolean represents if user is right handed or not.
+					leapMotionDevice.initialize();
+				};
 			};
-		};
-		lmThread.start();
+			lmThread.start();
+		}
+		else
+		{
+			leapMotionDevice.turnOn();
+		}
 	}
 	
 	/**
@@ -636,8 +662,8 @@ public class EvaluationApp extends PApplet
 	private void turnOffLeapMotion() 
 	{
 		leapMotionDevice.turnOff();
-		leapMotionDevice = null;
-		lmThread = null;
+		//leapMotionDevice = null;
+		//lmThread = null;
 	}
 	
 	/**
@@ -759,7 +785,24 @@ public class EvaluationApp extends PApplet
 						turnOffLeapMotion();
 					}
 					
-					displayText = "The device number was changed to: " + informationFromCurrentTrial.getDeviceID(); 
+					String message = "The device was changed to:\n";					
+					
+					switch(informationFromCurrentTrial.getDeviceID())
+					{
+						case 0:
+							message += "Leap Motion device";
+							break;
+							
+						case 1:
+							message += "Mouse";
+							break;
+							
+						case 2:
+							message += "Touch Pad";
+							break;
+					}
+					
+					displayText = message; 
 				}
 				
 					/*//Change User ID when the following keys are pressed.
