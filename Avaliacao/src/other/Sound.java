@@ -36,6 +36,7 @@ public class Sound
 	        clip.open(audioInputStream);	
 	        clip.start();
 	        
+	        //TimerTask responsible for allowing the sound to be played again.
 	        timer.schedule( actionPlaySucessSound(), 200);
 	
 	        playSucessSound = false;
@@ -65,6 +66,7 @@ public class Sound
 	        clip.open(audioInputStream);
 	        clip.start();
 	        
+	        //TimerTask responsible for allowing the sound to be played again.
 	        timer.schedule( actionPlayFailureSound(), 200);
 	        
 	        playFailureSound = false;
@@ -77,22 +79,9 @@ public class Sound
 	}
 	
 	/**
-	 * Function that prepares a default timer task that allows the "Failure sound" to be played again.
-	 * Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
-	 * @return TimerTask allowing the repetition of the "Failure sound".
-	 */
-	private static TimerTask actionPlayFailureSound() 
-	{
-		return new TimerTask() 
-	    { 
-	    	public void run() 
-	    	{ playFailureSound = true; }
-	    };
-	}
-
-	/**
 	 * Function that prepares a default timer task that allows the "Sucess sound" to be played again.
 	 * Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
+	 * 
 	 * @return TimerTask allowing the repetition of the "Sucess sound".
 	 */
 	private static TimerTask actionPlaySucessSound() 
@@ -102,5 +91,20 @@ public class Sound
 			public void run() 
 			{playSucessSound = true;}
 		};
+	}
+	
+	/**
+	 * Function that prepares a default timer task that allows the "Failure sound" to be played again.
+	 * Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
+	 * 
+	 * @return TimerTask allowing the repetition of the "Failure sound".
+	 */
+	private static TimerTask actionPlayFailureSound() 
+	{
+		return new TimerTask() 
+	    { 
+	    	public void run() 
+	    	{ playFailureSound = true; }
+	    };
 	}
 }

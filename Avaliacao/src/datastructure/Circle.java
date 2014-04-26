@@ -23,6 +23,7 @@ public class Circle
 
 	/**
 	 * Function that returns the circle's center X coordinate.
+	 *
 	 * @return The X axis coordinate of the circle's center.
 	 */
 	public int getCenterX() 

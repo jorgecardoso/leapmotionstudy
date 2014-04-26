@@ -9,10 +9,10 @@ public class Sequence
 	
 	/**
 	 * Constructor of the Class Sequence.
-	 * Creates an array of integers representing the order in which the circles should be traveled during the experience.
+	 * Creates an array of integers representing the order (or index) in which the circles should be traveled during the experiment.
 	 * 
-	 * @param numberOfCircles - Number of circles to be used in the experience. 
-	 * @param random - Is the sequence to be randomly generated (true) or should it follow Mackenzie's paper (false).
+	 * @param numberOfCircles - Number of circles to be used in the experiment. 
+	 * @param random - Boolean indicating if the sequence is to be randomly generated (true) or should if it should follow Mackenzie's Paper (false).
 	 */
 	public Sequence(int numberOfCircles, boolean random)
 	{
@@ -44,6 +44,7 @@ public class Sequence
 		//Trying to follow a pattern similiar to Mackenzie's if the number of circles is different than 16.
 		if( (numberOfCircles != 16) && !random )
 		{
+			//NOTE: The sequence generated won't be ISO (ISO 9241-9:2000) complaint.
 			int beginCounter, beginCounterIterator, endCounter, endCounterIterator;
 			
 			if( even(numberOfCircles) )
@@ -90,7 +91,7 @@ public class Sequence
 			return;
 		}
 		
-		//If none of the last cases occur (in other words, the generation is random) a ramdom sequence with the requested number of circles will be created.
+		//If none of the last cases occurred (in other words, the generation is random) an arbitrary sequence with the requested number of circles will be created.
 		for(int i = 0; i< numberOfCircles; i++)
 		{
 			sequenceOfCircles.add(i);
@@ -126,7 +127,7 @@ public class Sequence
 	 * Function that returns the number of the sequence stored on the requested position. 
 	 * 
 	 * @param index - Position to be read. 
-	 * @return Integer representing the index of the circle stored on the position. 
+	 * @return Integer representing the index of the circle stored on the requested position. 
 	 */
 	public int get(int index)
 	{ return sequenceOfCircles.get(index);}

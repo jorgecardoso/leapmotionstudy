@@ -16,7 +16,7 @@ public class Information
 	private int numberOfCircles;
 	private Pixel startingCircleCenter;
 	private Pixel endingCircleCenter;
-	private int targetWidth; 							//In other words, the circles' diameter. In pixels. 
+	private int targetWidth; 							//In other words, the circles' diameter, in pixels. 
 	private int circleId;
 	
 	private int distanceBetweenCirclesAndFrameCenter;	//In pixels.
@@ -24,17 +24,16 @@ public class Information
 
 	private int numberOfClicks;							//In pixels.
 
-	private Vector<Pixel> path;							//Sequence of pixels traveled by the cursor.
+	private Vector<Pixel> path;							//Sequence (and order) of pixels to be traveled during the experiment.
 
 	private long elapsedTime;
 
 	private int device;									
-	private int userId;									//To be used when storing the information.	
-	private int blockNumber;							//To be used when storing the information.
-	private int sequenceNumber;
-	
-	private String fileToStoreInfo;  					
+	private int userId;										
+	private int sequenceNumber;							
+	private int blockNumber;							
 
+	private String fileToStoreInfo;  					
 
 	/**
 	 * Constructor of the Class Information.
@@ -43,8 +42,7 @@ public class Information
 	 * It also contains some static auxiliary functions that calculate the distance between two points.
 	 *
 	 * Note: This class only stores information. Altering values in this class won't alter
-	 * 		 the application parameters. To do this, change the values in "Config.txt".
-	 *
+	 * 		 the application parameters. For that, the "Config.txt" file should be altered.
 	 */
 	public Information() 
 	{
@@ -59,9 +57,9 @@ public class Information
 	}
 
 	/**
-	 * Function that resets all the changeable values to their default values.
+	 * Function that resets all the class' changeable values to their default values.
 	 * 
-	 * Note: Device number, User ID, block number and path to where the results are stored WILL NOT be changed.
+	 * Note: Device number, User ID, block number and path, to where the results are stored, WILL NOT suffer any change.
 	 */
 	public void resetInformation()
 	{
@@ -74,7 +72,7 @@ public class Information
 	/**
 	 * Function that returns the number of circles drawn in the application.
 	 * 
-	 * @return NUmber of circles drawn as integer value.
+	 * @return Number of circles drawn as integer value.
 	 */
 	public int getNumberOfCircles() 
 	{ return numberOfCircles; }
@@ -104,8 +102,8 @@ public class Information
 	/**
 	 * Functions that sets this trial's starting Circle's center. 
 	 * 
-	 * Note: This function can't be used to create a circle on the application. It's should
-	 * 		 only be used by the application to fill this class variables. 
+	 * Note: This function can't be used to create a circle on the application. It should
+	 * 		 only be used by the application to fill this class' variables. 
 	 * 
 	 * @param StartingCircleCenter - Pixel where the starting circle's center is.
 	 */
@@ -113,7 +111,7 @@ public class Information
 	{ this.startingCircleCenter = StartingCircleCenter; }
 
 	/**
-	 * Function that returns this trial's ending Circle's center. The ending circle is also this trial's target circle. 
+	 * Function that returns this trial's ending Circle's center. The ending circle is also the next trial's starting circle. 
 	 * 
 	 * Note: The result is a value of the Class Pixel.
 	 * 
@@ -134,75 +132,13 @@ public class Information
 	{ this.endingCircleCenter = endingCircleCenter; }
 
 	/**
-	 * Function that returns the time it took the user to perform this trial.
-	 * 
-	 * @return A Long value with time elapsed in milliseconds.
-	 */
-	public long getElapsedTime() 
-	{ return elapsedTime; }
-
-	/**
-	 * Function that sets the time it took the user to perform this trial.
-	 * 
-	 * @param elapsedTime - The time the user took to perform the trial.
-	 */
-	public void setElapsedTime(long elapsedTime) 
-	{ this.elapsedTime = elapsedTime; }
-
-	/**
-	 * Function that returns the number of clicks performed by user to perform this trial.
-	 * 
-	 * Note: A successful trial only takes one click to perform. If more, the trial
-	 * 		 is considered unsuccessful.
-	 * 
-	 * @return An integer with number of clicks performed by the user.
-	 */
-	public int getNumberOfClicks() 
-	{ return numberOfClicks; }
-
-	/**
-	 * Function that sets the number of clicks the user performed during the trial.
-	 * 
-	 * Note: A successful trial only takes one click to perform. If more, the trial
-	 * 		 is considered unsuccessful.
-	 * 
-	 * @param numberOfClicks - Number of clicks performed by the user.
-	 */
-	public void setNumberOfClicks(int numberOfClicks) 
-	{ this.numberOfClicks = numberOfClicks; }
-
-	/**
-	 * Function that informs this class that a click occurred, incrementing the number of
-	 * clicks by one.
-	 * 
-	 * A possible substitute for the "setNumberOfClicks(...)" function.
-	 */
-	public void clickedOccurred()
-	{ this.numberOfClicks++; }
-
-	/**
-	 * Function that returns this trial's distance between the starting and ending 
-	 * circles' center.
-	 * 
-	 * @return A Double with the distance between both circles' center.
-	 */
-	public double getDistanceBetweenCircles() 
-	{ return distanceBetweenCircles; }
-
-	/**
-	 * Function that sets this trial's distance between the starting and ending circles' center.
-	 * 
-	 * @param distanceBetweenCircles - A Double with the distance between both circles' center.
-	 */
-	public void setDistanceBetweenCircles(double distanceBetweenCircles) 
-	{ this.distanceBetweenCircles = distanceBetweenCircles; }
-
-	/**
 	 * Function that returns this trial's circles' width.
 	 * 
-	 * Note: The width is the circle radius * 2.
+	 * NOTE: The width is the circle radius * 2.
 	 * 
-	 * @return A integer with the circles' radius.
+	 * NOTE2: The width is the same for every circle on the experiment.
+	 * 
+	 * @return A integer with the circle's radius.
 	 */
 	public int getTargetWidth() 
 	{ return targetWidth; }
@@ -217,30 +153,32 @@ public class Information
 	 */
 	public void setTargetWidth(int targetWidth) 
 	{ this.targetWidth = targetWidth; }
+	
+	/**
+	 * Function that returns the current circle ID.
+	 * 
+	 * @return THe actual circle ID on the current trial.
+	 */
+	public int getCircleID() 
+	{return circleId;}
 
 	/**
-	 * Function that stores the current cursor position (coordinates) on the application.
+	 * Function that sets the current circle ID.
 	 * 
-	 * @param xCoordinate - The current mouse X coordinates. 
-	 * @param yCoordinate - The current mouse Y coordinates.
+	 * @param circleID - The intended new circle ID.
 	 */
-	public void storeCursorPosition(int xCoordinate, int yCoordinate)
-	{ path.add(new Pixel(xCoordinate, yCoordinate) ); }
-
+	public void setCircleID(int circleID) 
+	{this.circleId = circleID ;}
+	
 	/**
-	 * Function that returns the path traveled by the cursor during the trial.
-	 * 
-	 * The path is the successive pixels occupied by the mouse when moving from the starting
-	 * circle to the ending circle.
-	 * 
-	 * @return The path performed by the cursor.
+	 * Function that increases the current circle ID by one.
 	 */
-	public Vector<Pixel> getPath() 
-	{ return this.path; }
-
+	public void increaseCircleID()
+	{circleId++;}
+	
 	/**
 	 * Function that returns the distance between the center of one circle and the application's
-	 * frame center.
+	 * frame center, in pixels.
 	 * 
 	 * Note: This distance is the same for all circles.
 	 * 
@@ -258,20 +196,115 @@ public class Information
 	 */
 	public void setDistanceBetweenFrameAndCircleCenter(int distance) 
 	{ this.distanceBetweenCirclesAndFrameCenter = distance; }
+	
+	/**
+	 * Function that returns this trial's distance between the starting and ending 
+	 * circles' center.
+	 * 
+	 * @return A Double with the distance between both circles' center.
+	 */
+	public double getDistanceBetweenCircles() 
+	{ return distanceBetweenCircles; }
+
+	/**
+	 * Function that sets this trial's distance between the starting and ending circles' center.
+	 * 
+	 * @param distanceBetweenCircles - A Double with the distance between both circles' center.
+	 */
+	public void setDistanceBetweenCircles(double distanceBetweenCircles) 
+	{ this.distanceBetweenCircles = distanceBetweenCircles; }
+	
+	/**
+	 * Function that returns the number of clicks performed by user to during the current trial.
+	 * 
+	 * Note: A successful trial only takes one click to perform. If more, the trial
+	 * 		 should be considered unsuccessful.
+	 * 
+	 * @return An integer with number of clicks performed by the user.
+	 */
+	public int getNumberOfClicks() 
+	{ return numberOfClicks; }
+
+	/**
+	 * Function that sets the number of clicks the user performed during the trial.
+	 * 
+	 * Note: A successful trial only takes one click to perform. If more, the trial
+	 * 		 should be considered unsuccessful.
+	 * 
+	 * @param numberOfClicks - Number of clicks performed by the user.
+	 */
+	public void setNumberOfClicks(int numberOfClicks) 
+	{ this.numberOfClicks = numberOfClicks; }
+
+	/**
+	 * Function that informs this class that a click occurred, incrementing the number of
+	 * clicks by one.
+	 * 
+	 * A possible substitute to a would be "setNumberOfClicks(...)" function.
+	 */
+	public void clickedOccurred()
+	{ this.numberOfClicks++; }
+	
+	/**
+	 * Function that returns the path traveled by the cursor during the trial.
+	 * 
+	 * The path is the successive pixels occupied by the mouse when moving from the starting
+	 * circle to the ending circle.
+	 * 
+	 * @return The path performed by the cursor.
+	 */
+	public Vector<Pixel> getPath() 
+	{ return this.path; }
+	
+	/**
+	 * Function that returns the time it took the user to perform this trial.
+	 * 
+	 * @return A Long value with time elapsed in milliseconds.
+	 */
+	public long getElapsedTime() 
+	{ return elapsedTime; }
+
+	/**
+	 * Function that sets the time it took the user to perform this trial.
+	 * 
+	 * @param elapsedTime - The time the user took to perform the trial.
+	 */
+	public void setElapsedTime(long elapsedTime) 
+	{ this.elapsedTime = elapsedTime; }
+
+	/**
+	 * Function returns the number (or ID) of the device being used.
+	 * 
+	 * NOTE: The device number, or ID, are as follow:
+	 *         -> 0 = Leap Motion;
+	 *         -> 1 = Mouse;
+	 *         -> 2 = Touch Pad;
+	 * 
+	 * @return The ID of the device used to perform this trial.
+	 */
+	public int getDeviceID() 
+	{ return this.device; }
+
+	/**
+	 * Function that changes the Device ID to the one desired.
+	 * 
+	 * @param deviceNumber - The desired device ID.
+	 */
+	public void changeDevice(int deviceNumber)
+	{ this.device = deviceNumber; }
 
 	/**
 	 * Function that returns the trial's User ID. 
 	 * 
 	 * The ID represents the user that's performing the trial.
 	 * 
-	 * @return The trial's User ID.
+	 * @return The current experiment's User ID.
 	 */
 	public int getUserID()
 	{ return userId; }
 	
 	/**
 	 * Function that changes the User ID to the next available. 
-	 * 
 	 * Basically, the function increases the ID by one.
 	 */
 	public void nextUser() 
@@ -314,30 +347,40 @@ public class Information
 			this.userId = userId;
 		}
 	}
+	
+	/**
+	 * Function that returns the actual sequence number.
+	 * In other words, the ID of the current target circle.
+	 * 
+	 * @return A number (or ID) of the current sequence number.
+	 */
+	public int getSequenceNumber() 
+	{return sequenceNumber;}
 
 	/**
-	 * Function returns the number (or ID) of the device being used.
+	 * Function that sets the current sequence number.
 	 * 
-	 * Note: The ID alone means nothing. It represents a device, but its up to the user
-	 * 		 to give it meaning. For example, 0 could mean a mouse and a 1 could mean a Touchpad.
-
-	 * @return The ID of the device used to perform this trial.
-	 */
-	public int getDeviceID() 
-	{ return this.device; }
-
+	 * @param sequenceNumber - The intended sequence number.
+	 */	
+	public void setSequenceNumber(int sequenceNumber) 
+	{this.sequenceNumber = sequenceNumber;}
+	
 	/**
-	 * Function that changes the Device ID to the one desired.
-	 * 
-	 * @param deviceNumber - The desired device ID.
+	 * Function that sets the current sequence number to 0.
 	 */
-	public void changeDevice(int deviceNumber)
-	{ this.device = deviceNumber; }
-
+	public void resetSequenceNumber() 
+	{this.sequenceNumber = 0;}
+	
+	/**
+	 * Function that changes the sequence number to the next available.
+	 * In other words, sequence number is increased by one.
+	 */
+	public void increaseSequenceNumber()
+	{sequenceNumber++;}
+	
 	/**
 	 * Function that returns the actual block number.
-	 * 
-	 * A block symbolizes all the trials performed during a sequence.
+	 * Remembering, a block symbolizes a set of one or more sequences.
 	 * 
 	 * @return The actual block number.
 	 */
@@ -347,7 +390,7 @@ public class Information
 	/**
 	 * Function that changes the block number to the next available.
 	 * 
-	 * In other words, the block number increases by one.
+	 * In other words, the block number is increased by one.
 	 */
 	public void increaseBlockNumber()
 	{ blockNumber++; }
@@ -383,6 +426,7 @@ public class Information
 			"(whose ID is: " + circleId + " ).\n" +
 			"As such, they were: " + distanceBetweenCircles + " pixels away from each other.\n" +
 			"Both had a diameter of " + targetWidth + " pixels, which means " +  ((double) targetWidth) / 2.0 + " pixels as radius.\n" +
+			
 			"This trial took " + elapsedTime + " milisegundos to perform.\n" +
 			"The first and last point recovered were " + distancePoints + " pixels away from each other.\n"
 		);	
@@ -403,53 +447,21 @@ public class Information
 			System.out.println( "< " + ponto.getXCoordinate() + " , " + ponto.getYCoordinate() + " > ->" );
 		}
 	}
-
-	/**
-	 * Auxiliary function that calculates the distance between to points.
-	 * 
-	 * @param x1 - X coordinate of the first point.
-	 * @param y1 - Y coordinate of the first point.
-	 * @param x2 - X coordinate of the last point.
-	 * @param y2 - Y coordinate of the last point.
-	 * 
-	 * @return The distance, in pixels, between the two given points.
-	 */
-	public static double calculateDistanceBetweenPoints(int x1, int y1, int x2, int y2)
-	{
-		/**
-		 * Distance's formula:
-		 *
-		 * distance  = SquareRoot(  (x1 - x2)^2 + (y1 - y2)^2  )
-		 */
-		return Math.sqrt( Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2) );
-	}
-
-	/**
-	 * Auxiliary function that calculates the distance between to pixels.
-	 * 
-	 * @param p1 - One pixel.
-	 * @param p2 - Other pixel.
-	 * 
-	 * @return The distance, in pixels, between the two given points.
-	 */
-	public static double calculateDistanceBetweenPoints(Pixel p1, Pixel p2)
-	{
-		return calculateDistanceBetweenPoints(p1.getXCoordinate(), p1.getYCoordinate(), p2.getXCoordinate(), p2.getYCoordinate());
-	}
-
+	
 	/**
 	 * Function that creates a file where the results extracted from the experience will be stored.
 	 * 
-	 * Note: The file name is based on the day, month, year, hour, minutes and seconds of the computer clock.
+	 * Note: The filename is based on the day, month, year, hour, minutes and seconds of the machine's clock.
 	 * 
 	 * @return A string containing the path of the created file.
 	 */
 	private String createStoreFile()
 	{
 		//Check if the "Results" folder (the folder where all results will be stored) already exists.
-		String nameMainFolder = "../Results";
+		String nameMainFolder = "Results";
 		File mainFolder = new File(nameMainFolder);
 
+		System.out.println(mainFolder.exists());
 		if ( !mainFolder.exists() ) 
 		{
 			//If it does not exist create it.
@@ -463,7 +475,7 @@ public class Information
 		String nameStoreFile = nameMainFolder+ "/" + dateHourFormat.format(dateHour).toString();
 		File storeFile = new File(nameStoreFile);
 
-		//Check if store file exists, which is unlikely, due to how the names are generated...
+		//Check if the file where results will be stored exists, which is unlikely, due to how the names are generated...
 		if(storeFile.exists())
 		{
 			System.err.println("File where results should be stored already exists. This should not happen.\nShutting down.");
@@ -510,7 +522,7 @@ public class Information
 	}
 
 	/**
-	 * Function that stores the file results on the intended file.
+	 * Function that stores the trial's results on the correct file.
 	 * This file is created in the constructor of this class.
 	 */
 	public void storeInformationInFile()
@@ -553,26 +565,46 @@ public class Information
 			System.exit(0);
 		}
 	}
+	
+	/**
+	 * Function that stores the current cursor position (coordinates) on the application.
+	 * 
+	 * @param xCoordinate - The current mouse X coordinates. 
+	 * @param yCoordinate - The current mouse Y coordinates.
+	 */
+	public void storeCursorPosition(int xCoordinate, int yCoordinate)
+	{ path.add(new Pixel(xCoordinate, yCoordinate) ); }
 
-	public int getSequenceNumber() 
-	{return sequenceNumber;}
+	/**
+	 * Auxiliary function that calculates the distance between two points.
+	 * 
+	 * @param x1 - X coordinate of the first point.
+	 * @param y1 - Y coordinate of the first point.
+	 * @param x2 - X coordinate of the last point.
+	 * @param y2 - Y coordinate of the last point.
+	 * 
+	 * @return The distance, in pixels, between the two given points.
+	 */
+	public static double calculateDistanceBetweenPoints(int x1, int y1, int x2, int y2)
+	{
+		/**
+		 * Distance's formula:
+		 *
+		 * distance  = SquareRoot(  (x1 - x2)^2 + (y1 - y2)^2  )
+		 */
+		return Math.sqrt( Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2) );
+	}
 
-	public void setSequenceNumber(int sequenceNumber) 
-	{this.sequenceNumber = sequenceNumber;}
-	
-	public void resetSequenceNumber() 
-	{this.sequenceNumber = 0;}
-	
-	public void increaseSequenceNumber()
-	{sequenceNumber++;}
-	
-	public int getCircleID() 
-	{return circleId;}
-
-	public void setCircleID(int circleID) 
-	{this.circleId = circleID ;}
-	
-	public void increaseCircleID()
-	{circleId++;}
-	
+	/**
+	 * Auxiliary function that calculates the distance between two points.
+	 * 
+	 * @param p1 - One pixel.
+	 * @param p2 - Other pixel.
+	 * 
+	 * @return The distance, in pixels, between the two given points.
+	 */
+	public static double calculateDistanceBetweenPoints(Pixel p1, Pixel p2)
+	{
+		return calculateDistanceBetweenPoints(p1.getXCoordinate(), p1.getYCoordinate(), p2.getXCoordinate(), p2.getYCoordinate());
+	}
 }

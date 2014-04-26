@@ -1,7 +1,6 @@
 package other;
 
 //The following code was based on: http://silveiraneto.net/2008/03/15/simple-java-chronometer/
-
 public class Chronometer 
 {
 	private long startTime;
@@ -15,7 +14,7 @@ public class Chronometer
 	 * Note: In order to start the chronometer the "start" function should be used.
 	 * 		 otherwise, the time returned will be 0.
 	 * 
-	 * Note2: In order to reset the chronometer, the function "reset" can be used.
+	 * Note2: In order to reset the chronometer, the function "reset" should be used.
 	 */
 	public Chronometer()
 	{
@@ -25,8 +24,8 @@ public class Chronometer
 	/**
 	 * Function that starts the chronometer.
 	 * 
-	 * Note: This function must be used in order to start the chronometer, otherwise the 
-	 *       time obtained will always be 0.
+	 * Note: This function must be used in order to start the chronometer, otherwise the value obtained 
+	 * 		 when the time is requested will always be 0.
 	 */
 	public void start()
 	{
@@ -66,7 +65,7 @@ public class Chronometer
 	 * Function that returns the elapsed time in seconds.
 	 * This function also stops the chronometer in case it was still running.
 	 * 
-	 * @return A Long value with the time elapsed, in milliseconds.
+	 * @return A Long value with the time elapsed, in seconds.
 	 */
 	public long getTimeInSeconds()
 	{

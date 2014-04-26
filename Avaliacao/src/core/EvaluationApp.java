@@ -72,7 +72,6 @@ public class EvaluationApp extends PApplet
 	//private boolean debug = false;
 	//private boolean testeBoolean = false;
 	
-	
 	public static void main(String args[]) {
 	    PApplet.main(new String[] { "--present", "core.EvaluationApp" });
 	}
@@ -80,6 +79,9 @@ public class EvaluationApp extends PApplet
 	/**
 	 * Extended function from Processing.
 	 * This function is only executed once.
+	 * 
+	 * This function is responsible for setting the initial parameters of Processing, reading the configuration file 
+	 * and starting the adequate listneres.
 	 */
 	public void setup()
 	{
@@ -107,16 +109,16 @@ public class EvaluationApp extends PApplet
 		//Window will occupy all the available screen area. Some OSes restrict this area.
 		size(windowWidth,windowHeight);
 		
-		//The occupied screen area is always inferior to the resolution of the screen ( window may not overlap certain bars).
+		//Determine the center of the application frame.
 		centralPositionX = (int) (windowWidth / 2);
 		centralPositionY = (int) (windowHeight / 2);
 		
 		//Set text font size
 		displayFontSize = ( 25 * windowWidth * windowHeight ) / ( 1280*960 );
 		
+		//Calculate, create and/or redraw the circles required for the evaluation of the device.
 		double angle = 360.0 / ( (double) numberOfCircles);
 		
-		//Calculate, create and/or redraw the circles required for the evaluation of the device.
 		for(int i = 0; i < numberOfCircles; i++)
 		{
 			double currentAngle = Math.toRadians(angle * i);
@@ -130,6 +132,7 @@ public class EvaluationApp extends PApplet
 			);
 		}
 		
+		//Listener responsible for recalculating certain elements when the window application is resized.
 		this.addComponentListener( new ComponentAdapter() {
 			public void componentResized(ComponentEvent e)
 			{	redrawElements = true;	 }
@@ -138,7 +141,10 @@ public class EvaluationApp extends PApplet
 		//Create and start the thread that will save the mouse position over time
 		createMouseMovementThread().start();
 		
+		//Listener responsible for storing the mouse position over time.
 		this.addMouseListener( createMouseListener() );
+		
+		//Listener responsible for performing the correct action when certain keys are pressed.
 		this.addKeyListener( createKeyListener() );
 		
 		//Paint the application background with desired color. Processing function.
@@ -147,11 +153,13 @@ public class EvaluationApp extends PApplet
 
 	/**
 	 * Extended function from Processing.
-	 * This function is executed in Loop by the processing. In other words, when it ends, it is executed again.
+	 * This function is executed ad aeternum by Processing. In other words, when it ends, it is executed again.
+	 * 
+	 * THis function is responsible for drawing and refreshing the Graphical User Interface.
 	 */
 	public void draw() 
 	{  
-		//When the application is resized the center of the frame and respective circles must be recalculated.
+		//When the application is resized, the center of the frame and respective circles must be recalculated.
 		if(redrawElements)
 		{ redrawElements(); }
 		
@@ -162,8 +170,10 @@ public class EvaluationApp extends PApplet
 		//Paint background with the selected color. Processing function. Processing function.
 		background(backgroundColor);
 		
+		//Draw the respective message on the application.
 		displayText();
 		
+		//If the evaluation is complete there is no need to draw the remaining elements.
 		if(isEvaluationComplete)
 		{
 			return;
@@ -172,6 +182,7 @@ public class EvaluationApp extends PApplet
 		//To avoid errors due synchronization issues between the listener and the drawing function.
 		int readCurrentSequenceIndex = currentSequenceIndex;
 		
+		//If the sequence is complete, there is no need to draw the remaning elements.
 		if( readCurrentSequenceIndex == sequenceToPerform.size() )
 		{	
 			return;
@@ -199,7 +210,8 @@ public class EvaluationApp extends PApplet
 		if(redrawElements)
 		{ return ; }
 		
-		//Depending on the controlling gesture change the cursor.
+		//Depending on the device being used or Leap Motion device's control mode, change the cursor
+		//to the correct cursor.
 		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   ||
 			desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
 			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE ||
@@ -220,8 +232,7 @@ public class EvaluationApp extends PApplet
 				
 				if(!leapMotionDevice.isPressedOcurred())
 				{
-					//If the user is far away from the touch zone or a press has already happened,
-					//the circle will be drawn blue.
+					//Depending on the distance to the touch zone, draw the cursor circle with a different colour.
 					float redValue = (float) ( (leapMotionDevice.getTouchZone() * 205.0f));
 					float greenValue = (float) ( ( 1 - leapMotionDevice.getTouchZone() ) * 205.0f);
 					
@@ -229,21 +240,25 @@ public class EvaluationApp extends PApplet
 				}
 				else
 				{
+					//Draw the cursor circle black.
 					stroke(0,0,0);
 				}
 				
 				//The drawn circle radius will change according to the touch zone (the farther, the bigger).
 				drawCircle(mouseX, mouseY, ((int) (10 + leapMotionDevice.getTouchZone() * 20)) );
-				noStroke();
-				strokeWeight(1.0f);
 				
-				
+				noStroke();					//Processing function.
+				strokeWeight(1.0f);			//Processing function.
 			}
 			catch(Exception e)
 			{
+				//If the application fails to initialize the Leap Motion when the try{} code happens,
+				//use a pre-defined cursor.
 				stroke(0, 255, 0);
-				strokeWeight( 2.0f);
+				strokeWeight(2.0f);
+				
 				drawCircle(mouseX, mouseY, 10);
+				
 				strokeWeight(1.0f);
 				noStroke();
 			}
@@ -258,13 +273,14 @@ public class EvaluationApp extends PApplet
 	 */
 	protected void mouseButtonPressed() 
 	{	
-		//Error prevention. If the user performs a button press too fast on the last circle of the sequence, this action 
+		//Error prevention. If the user performs two button presses too fast on the last circle of the sequence, this handler 
 		//may be called again, and error would occur when getting targetCircle.
 		if( currentSequenceIndex >= sequenceToPerform.size() )
 		{return;}
 			
 		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
 		
+		//If the current sequence index is different than the first element of the sequence...
 		if( currentSequenceIndex > 0 )
 		{
 			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
@@ -305,7 +321,7 @@ public class EvaluationApp extends PApplet
 
 				currentSequenceIndex++;
 				
-				//Check to see if the experiment is over and, if not, make a little break for the user.
+				//Check to see if the experiment is over and, if not, make a little pause for the user.
 				if( currentSequenceIndex == sequenceToPerform.size() )
 				{	
 					isEvaluationComplete = true;
@@ -330,7 +346,8 @@ public class EvaluationApp extends PApplet
 					try {Thread.sleep(2000);}catch (InterruptedException e) {}
 					
 					displayText = "When ready to continue, please press the \"space\" key.";
-					acceptKeyInput = true;	
+					acceptKeyInput = true;
+					
 					return;
 				}
 			}	
@@ -351,6 +368,7 @@ public class EvaluationApp extends PApplet
 			}
 			
 		}
+		//If the current sequence index is the first element of the sequence...
 		else if( currentSequenceIndex == 0 )
 		{
 			//The experience should only be started when the user presses with success the first default target.
@@ -364,6 +382,7 @@ public class EvaluationApp extends PApplet
 			}
 			
 			Sound.playSucessSound();
+			
 			currentSequenceIndex++;
 			
 			//A little pause to avoid several "button presses" if the user remains with the button pressed. 
@@ -613,28 +632,10 @@ public class EvaluationApp extends PApplet
 	}
 	
 	/**
-	 * Function that creates a listener that will store the mouse position over time.
-	 * 
-	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
-	 * 
-	 * @return The said listener.
-	 */
-	private MouseListener createMouseListener()
-	{
-		return new MouseListener() 
-		{
-			@Override
-			public void mousePressed(MouseEvent e) { mouseButtonPressed(); }
-			public void mouseClicked(MouseEvent e) {}
-			public void mouseEntered(MouseEvent e) {}
-			public void mouseExited(MouseEvent e){}
-			public void mouseReleased(MouseEvent e){}
-		};
-	}
-	
-	/**
 	 * Function that starts the Leap Motion device (and respective functions) and creates a new thread 
 	 * for it to run exclusively.
+	 * 
+	 * If the Leap Motion is already started but has been stopped, this function will restart it.
 	 */
 	private void activateLeapMotion() 
 	{
@@ -656,25 +657,118 @@ public class EvaluationApp extends PApplet
 	}
 	
 	/**
-	 * Function that starts the Leap Motion device (and respective functions) and creates a new thread 
-	 * for it to run exclusively.
+	 * Function that stops the Leap Motion device.
+	 * 
+	 * NOTE: Stopping the Leap Motion does not kill the thread or terminates the Leap Motion. It just stops
+	 * 		 the Leap Motion from moving the cursor.
+	 * 		 By using listener in the Leap Motion, it was not possible to terminate the device.
 	 */
 	private void turnOffLeapMotion() 
 	{
 		leapMotionDevice.turnOff();
-		//leapMotionDevice = null;
-		//lmThread = null;
+	}
+
+	/**
+	 * Function responsible for creating a Thread that, when allowed, will store the mouse position
+	 * (x and y coordinates) in the respective variable.
+	 * 
+	 * Note: This function only creates a Thread, doesn't start it. That must be done manually by the
+	 * 		 by the programmer.
+	 * 
+	 * Note2: To start storing the values the function "startStoringMousePosition()" must be called otherwise
+	 * 		  no value will be stored.
+	 * 
+	 * @return Thread that stores the mouse position.
+	 */
+	private Thread createMouseMovementThread()
+	{
+		return new Thread("Mouse Movement Listener") 
+		{	
+			public void run()
+			{
+				//Set priority to max as the values read in the Thread are of special importance.
+				setPriority(Thread.MAX_PRIORITY);
+
+				try 
+				{
+					while(true)
+					{
+						//Sleep 25 milliseconds. This allows the sample rate to be 40 samples per second.
+						sleep(25);
+						
+						//While changing between targets or writing values to a file, there's no need to store information.
+						if(!makePause)
+						{
+							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
+						}
+					}
+				}
+				catch (InterruptedException e) 
+				{ e.printStackTrace(); }
+			}
+		};
+	}
+	
+	/**
+	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
+	 * to start saving values.
+	 * 
+	 * Note: To stop registering values, use the function "stopStoringMousePosition()". 
+	 * 
+	 * Note2: Calling this function again without changing the behavior won't produce any effects. 
+	 */
+	private void startStoringMousePosition() 
+	{
+		makePause = false;
+	}
+	
+	/**
+	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
+	 * to stop saving values.
+	 * 
+	 * Note: To start registering values, use the function "startStoringMousePosition()". 
+	 * 
+	 * Note2: Calling this function again without changing the behavior won't produce any effects.
+	 * 
+	 * Note3: This is the default behavior of the Thread.
+	 */
+	private void stopStoringMousePosition() 
+	{
+		makePause = true;
+	}
+	
+	/**
+	 * Function that creates a listener that will store the mouse position over time.
+	 * 
+	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
+	 * 
+	 * @return The said listener.
+	 */
+	private MouseListener createMouseListener()
+	{
+		return new MouseListener() 
+		{
+			@Override
+			public void mousePressed(MouseEvent e) { mouseButtonPressed(); }
+			
+			//Not in use.
+			public void mouseClicked(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {}
+			public void mouseExited(MouseEvent e){}
+			public void mouseReleased(MouseEvent e){}
+		};
 	}
 	
 	/**
 	 * Function that creates a key listener in order to alter the application parameters.
 	 * The keys are as follows:
+	 * - > "Space" key. When prompted, this key acts as the "Yes" or positive input.
+	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's.
+	 * - > "G" key - Changes the gesture being used by the Leap Motion to interact with the application.
+	 * - > "H" key - Changes if the user is right-handed or left-handed.		
+	 *  > ["0","9"] - Keys between 0 and 9 change the device number to the one pressed.
 	 * 
-	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's.~
-	 * - > ["0","9"] - Keys between 0 and 9 change the device number to the one pressed.
-	 * - > "+" or "-" - Increases / decreases the current User ID.
-	 * 
-	 * Note: Remember, this function only generates the listener. It must be manually added!
+	 * Note: Remember, this function only generates the listener. It must be added manually!
 	 * 
 	 * @return THe said listener.
 	 */
@@ -735,7 +829,7 @@ public class EvaluationApp extends PApplet
 					desiredControlMethod = leapMotionDevice.changeControlMode();
 					
 					displayText = "Selection and movement were altered:\n" 
-									+ LeapMotion.controlModeToString(desiredControlMethod);
+								  + LeapMotion.controlModeToString(desiredControlMethod);
 				}
 				
 				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
@@ -804,8 +898,7 @@ public class EvaluationApp extends PApplet
 					
 					displayText = message; 
 				}
-				
-					/*//Change User ID when the following keys are pressed.
+				/*//Change User ID when the following keys are pressed.
 					//"+" key pressed.
 					case 107:
 						informationFromCurrentTrial.nextUser();
@@ -819,78 +912,10 @@ public class EvaluationApp extends PApplet
 						break;	*/
 			}
 			
+			//Not in use.
 			public void keyPressed(KeyEvent e){}
-
 			public void keyTyped(KeyEvent arg0){}
 		};
 	}
 	
-	/**
-	 * Function responsible for creating a Thread that, when allowed, will store the mouse position
-	 * (x and y coordinates) in the respective variable.
-	 * 
-	 * Note: This function only creates a Thread, doesn't start it. That must be done manually by the
-	 * 		 by the programmer.
-	 * 
-	 * Note2: To start storing the values the function "startStoringMousePosition()" must be called otherwise
-	 * 		  no value will be stored.
-	 * 
-	 * @return Thread that stores the mouse position.
-	 */
-	private Thread createMouseMovementThread()
-	{
-		return new Thread("Mouse Movement Listener") 
-		{	
-			public void run()
-			{
-				//Set priority to max as the values read in the Thread are of special importance.
-				setPriority(Thread.MAX_PRIORITY);
-
-				try 
-				{
-					while(true)
-					{
-						//Sleep 25 milliseconds.
-						sleep(25);
-						
-						//While changing between targets or writing values to a file, there's no need to store information.
-						if(!makePause)
-						{
-							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
-						}
-					}
-				}
-				catch (InterruptedException e) 
-				{ e.printStackTrace(); }
-			}
-		};
-	}
-	
-	/**
-	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
-	 * to start saving values.
-	 * 
-	 * Note: To stop registering values, use the function "stopStoringMousePosition()". 
-	 * 
-	 * Note2: Calling this function again without changing the behavior won't produce any effects. 
-	 */
-	private void startStoringMousePosition() 
-	{
-		makePause = false;
-	}
-	
-	/**
-	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
-	 * to stop saving values.
-	 * 
-	 * Note: To start registering values, use the function "startStoringMousePosition()". 
-	 * 
-	 * Note2: Calling this function again without changing the behavior won't produce any effects.
-	 * 
-	 * Note3: This is the default behavior of the Thread.
-	 */
-	private void stopStoringMousePosition() 
-	{
-		makePause = true;
-	}
 }
