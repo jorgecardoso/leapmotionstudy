@@ -461,7 +461,6 @@ public class Information
 		String nameMainFolder = "Results";
 		File mainFolder = new File(nameMainFolder);
 
-		System.out.println(mainFolder.exists());
 		if ( !mainFolder.exists() ) 
 		{
 			//If it does not exist create it.

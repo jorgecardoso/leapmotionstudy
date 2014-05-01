@@ -61,7 +61,7 @@ public class EvaluationApp extends PApplet
 	protected LeapMotion leapMotionDevice;
 	private boolean activateLeapMotion;
 	private boolean rightHanded = true;
-	private ControlMode desiredControlMethod = ControlMode.HANDS_WITH_KEYTAP_GESTURE;
+	private ControlMode desiredControlMethod = ControlMode.HANDS_WITH_GRABBING_GESTURE;
 	
 	//Variables related to the presentation of text on the application.
 	private PFont font;
@@ -326,8 +326,8 @@ public class EvaluationApp extends PApplet
 				{	
 					isEvaluationComplete = true;
 					
-					//Check to see if the experiment is over.
-					if( (informationFromCurrentTrial.getBlockNumber() + 1) == numberOfBlocksPerExperiment)
+					//Check to see if the experiment is over. 
+					if(	informationFromCurrentTrial.getBlockNumber() == (numberOfBlocksPerExperiment - 1) && informationFromCurrentTrial.getSequenceNumber() == (numberOfSequencesPerBlock - 1) )
 					{
 						displayText = "The experiment is complete.\nThank you so much for participating!";
 						
@@ -609,17 +609,17 @@ public class EvaluationApp extends PApplet
 		//Check if the acquired values are respect the established limits.
 		if( !(numberOfCircles >= 2 && numberOfCircles <= 32) )
 		{
-			System.out.println("\"Number of circles\" can only vary between 2 and 32.");
+			System.err.println("\"Number of circles\" can only vary between 2 and 32.");
 			System.exit(3);
 		}
 		else if( !(circleRadius >= 1 && circleRadius <= 200) )
 		{
-			System.out.println("\"Circle radius\" can only vary between 1 and 200.");
+			System.err.println("\"Circle radius\" can only vary between 1 and 200.");
 			System.exit(4);
 		}
 		else if( !(centerDistance >= 0 && centerDistance <= 800) )
 		{
-			System.out.println("\"Distance between circles and frame center\" can only vary between 0 and 800.");
+			System.err.println("\"Distance between circles and frame center\" can only vary between 0 and 800.");
 			System.exit(5);
 		}
 		
@@ -820,7 +820,7 @@ public class EvaluationApp extends PApplet
 				}
 				//Change the cursor movement and selection controls when using the Leap Motion.
 				//"G" key pressed.
-				else if(e.getKeyCode() == 71)
+				/*else if(e.getKeyCode() == 71)
 				{
 					//If the Leap Motion isn't active, do nothing.
 					if(informationFromCurrentTrial.getDeviceID() != 0)
@@ -830,8 +830,7 @@ public class EvaluationApp extends PApplet
 					
 					displayText = "Selection and movement were altered:\n" 
 								  + LeapMotion.controlModeToString(desiredControlMethod);
-				}
-				
+				}*/
 				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
 				//"H" key pressed
 				else if(e.getKeyCode() == 72)
