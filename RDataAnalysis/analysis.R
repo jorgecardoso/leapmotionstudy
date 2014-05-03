@@ -6,40 +6,6 @@ library(reshape)
 
 
 # Functions
-SIZE = 100000
-sinTable <- sin(0:SIZE / SIZE * 2 * pi);
-
-
-fastSin <- function(theta) {
-   index <- floor(theta / (2 * pi) * SIZE) %% SIZE
-  return ( sinTable[index+1]);
-}
-fastCos <- function(theta) {
-  return (fastSin(theta+pi/2))
-}
-errorSin <- c()
-errorCos <- c()
-for (i in seq(0, 2*pi, by=0.1) ) {
-  fastS <- fastSin(i)
-  s <- sin(i)
-  c <- cos(i)
-  fastC <- fastCos(i)
-  
-  #print(paste(n, " ", fast, " ", abs(fast-n)))
-  errorSin <- append(error, abs(fastS-s))
-  errorCos <- append(error, abs(fastC-c))
-}
-max(errorSin)
-max(errorCos)
-
-fastCos(theta) {
-  return fastSin(theta + Math.PI / 2);
-}
-
-fastrotationMatrix <- function(angle) {
-  matrix <- matrix(c(fastCos(angle), fastSin(angle), -fastSin(angle), fastCos(angle)), nrow = 2, ncol = 2)
-  return(matrix)
-}
 rotationMatrix <- function(angle) {
 	matrix <- matrix(c(cos(angle), sin(angle), -sin(angle), cos(angle)), nrow = 2, ncol = 2)
 	return(matrix)
