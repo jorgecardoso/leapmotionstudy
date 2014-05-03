@@ -1,8 +1,3 @@
-require(RCurl) # web
-require(ggplot2)
-library("stringr") # for first word
-library(reshape)
-#theme_set(theme_bw())
 
 
 # Functions
@@ -47,16 +42,18 @@ toDegrees <- function(radians) {
 
 
 ############################ data
-filename <- "mouse.txt"
-filenameTransformed <- "mouse-transformed.txt"
-filenameMeasures <- "mouse-measures.txt"
+device <- "mouse"
+filename <- paste("data/",device,".txt", sep="")
+filenameTransformed <- paste("data/", device,"-transformed.txt", sep="")
+filenameMeasures <- paste("data/", device,"-measures.txt", sep="")
 dataRaw <- read.csv(file=filename, head=TRUE, sep="")
 
+#dataRaw <- dataRaw[dataRaw$Block == 1 & dataRaw$Sequence == 1, ]
 #edit(dataRaw)
 
 dataMeasures <- data.frame()#NumberDevice=numeric(0), UserId=numeric(0), Block=numeric(0), Sequence=numeric(0), ErrorRate=numeric(0))
 
-date()
+startTime <- Sys.time()
 for (block in 1:max(dataRaw$Block) ) {
 #for (block in 1:1 ) {
     print(paste("Block: ", block))
@@ -66,7 +63,7 @@ for (block in 1:max(dataRaw$Block) ) {
         print(paste("Sequence: ", sequence))
         
         for (cid in 1:max(dataRaw$CircleID) ) {
-        #for (cid in 3 ) {
+        #for (cid in 1 ) {
             print(paste("CircleID: ", cid))
             
             #indexes for the current target selection
@@ -97,7 +94,10 @@ for (block in 1:max(dataRaw$Block) ) {
             target <- rotate(point, angle )
             dataRaw$targetx[indexes[1]]<-target[1,1]
             dataRaw$targety[indexes[1]]<-target[1,2]
-            #print(target)
+            
+            # calculated distance (first click - target)
+            calculatedDistance <- dist(rbind(target, c(0,0)))[1]
+            
             
             # go through all coordinates, transform them and calculate the various measures.
             errorRate <- (partial[1,]$NumberClicks-1)/partial[1,]$NumberClicks
@@ -123,16 +123,17 @@ for (block in 1:max(dataRaw$Block) ) {
             
             ME <- 0
             
-            # will hold the click point (transformed)
+            # will hold the click point (transformed) this is the last coordinate found in the selection movement
             clickPointX <- 0
             clickPointY <- 0
+            
             for (n in indexes ) {
                 
                 dataRaw$targetx[n]<-target[1,1]
                 dataRaw$targety[n]<-target[1,2]
                 
                 # transform the coordinate
-                point <- c(dataRaw[n,]$MouseX, dataRaw[n,]$MouseY)-axisStart #-c(partial[1,]$MouseX, partial[1,]$MouseY)
+                point <- c(dataRaw[n,]$MouseX, dataRaw[n,]$MouseY)-axisStart 
                 newPoint <- rotate(point, angle )
                 dataRaw$rx[n]<-newPoint[1,1]
                 dataRaw$ry[n]<-newPoint[1,2]
@@ -179,10 +180,8 @@ for (block in 1:max(dataRaw$Block) ) {
                 #ODC        
                 curX <- newPoint[1, 1]
                 curDif <- curX-prevODCX
-                #print(paste("prevMDCDif:", prevMDCDif ,"prevMDCY: ", prevMDCY, " curDif:", curDif))
                 if ( prevODCDif * curDif < 0 ) {
                     ODC <- ODC +1
-                    #print("+1")
                 }
                 if ( curDif != 0 ) {
                     prevODCDif <- curDif
@@ -197,6 +196,9 @@ for (block in 1:max(dataRaw$Block) ) {
                 ys <- append(ys, curY)
                 
             }
+            
+            #dataRaw$targety[indexes] <- targetsY
+            #dataRaw$targetx[indexes] <- targetsX
             
             #MO
             MO <- MO / length(indexes)
@@ -224,14 +226,17 @@ for (block in 1:max(dataRaw$Block) ) {
             
             #print(paste("MO: ", MO))
             
-            row <- c(partial[1,]$NumberDevice, partial[1,]$UserId, partial[1,]$Block, partial[1,]$Sequence, partial[1,]$CircleID, errorRate, TRE, TAC, MDC, ODC, MV, ME, MO, clickPointX, clickPointY, partial[1,]$ElapsedTime/1000, partial[1,]$TargetWidth, partial[1,]$DistanceCenter*2)
+            row <- c(partial[1,]$NumberDevice, partial[1,]$UserId, partial[1,]$Block, partial[1,]$Sequence, partial[1,]$CircleID, errorRate, TRE, TAC, MDC, ODC, MV, ME, MO, clickPointX, clickPointY, partial[1,]$ElapsedTime/1000, partial[1,]$TargetWidth, partial[1,]$DistanceCenter*2, calculatedDistance)
             dataMeasures <- rbind(dataMeasures, row)
             
         }
     }
 }
 
-names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance")
+names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
+
+# Plot the calculated distances 
+plot(dataMeasures$CalculatedDistance)
 
 #Calculate throughput
 meanX <- mean(dataMeasures$ClickPointX)
@@ -248,8 +253,11 @@ We <- 4.133*SD
 IDe <- log(dataMeasures[1,]$Distance/We + 1)
 Throughput <- IDe/dataMeasures$MovementTime
 
-date()
-summary(dataMeasures)
+endTime <- Sys.time()
+
+print(paste("Total time: ", endTime-startTime))
+
+#summary(dataMeasures)
 
 write.table(dataRaw, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
@@ -261,9 +269,6 @@ toplot <- dataRaw[dataRaw$Block == 1 & dataRaw$Sequence == 1 & dataRaw$CircleID 
 plot(toplot$rx, 
      toplot$ry, type='l')
 
-plot(partial$x, partial$y)
-plot(partial$rx, partial$ry)
-edit(partial)
 
 
 
