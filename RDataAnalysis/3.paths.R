@@ -143,12 +143,6 @@ for (device in levels(dataTransformed$Device) ) {
 }
 
 
-# plot the movement offset over the TRE for each device
-p <- ggplot(s, aes(x=TRE.mean, y=abs(MO.mean), group=Device, colour=Device ))
-p + geom_point(size=5, aes(shape=Device)) + coord_cartesian(xlim = c(0, 0.4), ylim=c(0, 8)) + 
-    ylab("Movement offset (pixels)") +
-    xlab("Target Re-Entry") 
-ggsave(file = "charts/MO-TRE.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
 
