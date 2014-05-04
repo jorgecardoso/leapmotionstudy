@@ -47,13 +47,15 @@ public class Information
 	public Information() 
 	{
 		//Default values
-		this.device = 0;		this.userId = 0; 		
-		this.blockNumber = 0;   this.sequenceNumber = 0;
-
-		//Create file where results will be stored.
-		fileToStoreInfo = createStoreFile();
-
+		this.device = 0;			this.userId = 0;		
+		this.sequenceNumber = 0;	this.blockNumber = 0;   
+		this.fileToStoreInfo = "";
+		
+		//Default values for the variables whose information is altered more frequently.
 		resetInformation();
+		
+		//Create a folder, named "Results", where the results from the experiment will be stored. 
+		createResultsFolder();
 	}
 
 	/**
@@ -449,13 +451,9 @@ public class Information
 	}
 	
 	/**
-	 * Function that creates a file where the results extracted from the experience will be stored.
-	 * 
-	 * Note: The filename is based on the day, month, year, hour, minutes and seconds of the machine's clock.
-	 * 
-	 * @return A string containing the path of the created file.
+	 * Function that creates a folder, named "Results", where all the results from the evaluation will be stored.
 	 */
-	private String createStoreFile()
+	private void createResultsFolder()
 	{
 		//Check if the "Results" folder (the folder where all results will be stored) already exists.
 		String nameMainFolder = "Results";
@@ -466,56 +464,62 @@ public class Information
 			//If it does not exist create it.
 			mainFolder.mkdir();
 		}
-
-		//Create the file where this experience's results will be store.
-		DateFormat dateHourFormat = new SimpleDateFormat("dd_MM_yyyy_HH_mm_ss");
-		Date dateHour = new Date();
-
-		String nameStoreFile = nameMainFolder+ "/" + dateHourFormat.format(dateHour).toString();
+	}
+	
+	/**
+	 * Function that creates a file where the results extracted from the experience will be stored.
+	 * 
+	 * Note: The filename is based on the day, month, year, hour, minutes and seconds of the machine's clock.
+	 * 
+	 * @return A string containing the path of the created file.
+	 */
+	private String createStoreFile()
+	{
+		//Discover the path where the file will be stored.
+		String nameStoreFile = "Results"+ "/" + this.userId + ".txt";
 		File storeFile = new File(nameStoreFile);
 
-		//Check if the file where results will be stored exists, which is unlikely, due to how the names are generated...
-		if(storeFile.exists())
+		//If the file doesn't exist, create it. 
+		if(	!storeFile.exists() )
 		{
-			System.err.println("File where results should be stored already exists. This should not happen.\nShutting down.");
-			System.exit(0);
+			//Create the file.
+			try 
+			{
+				storeFile.createNewFile();
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+				System.err.println("It was not possible to create a file where to store the results.");
+				System.exit(0);
+			}
+	
+			try 
+			{
+				//Write the header.
+				Writer writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(storeFile,true), "UTF8"));
+	
+				//Create the file Header.
+				writer.write(
+						"NumberDevice"       + " " + "UserId" 			  + " " + 
+						"Block"              + " " + "Sequence" 		  + " " +
+						"NumberClicks" 		 + " " + "NumberCircles"      + " " + 
+						"CircleID" 			 + " " + "DistanceCenter" 	  + " " +
+						"PixelStartCircleX"  + " " + "PixelStartCircleY"  + " " +
+						"PixelEndCircleX"    + " " + "PixelEndCircleY"    + " " +  
+						"TargetWidth" 		 + " " + "ElapsedTime"        + " " +  
+						"MouseX"             + " " + "MouseY" 			  + "\n"
+				);
+	
+				writer.close();
+			}
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+				System.err.println("It was not possible to generate the header.\nNow exitting.");
+				System.exit(0);
+			}
 		}
-
-		try 
-		{
-			storeFile.createNewFile();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-			System.err.println("It was not possible to create a file where to store the results.");
-			System.exit(0);
-		}
-		
-		try 
-		{
-			Writer writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(storeFile,true), "UTF8"));
-			
-			//Create the file Header.
-			writer.write(
-				"NumberDevice"            + " " + "UserId" 			 	+ " " + 
-				"Block"                   + " " + "Sequence" 			+ " " +
-				"NumberClicks" 		  	  + " " + "NumberCircles"       + " " + 
-				"CircleID" 			  + " " + "DistanceCenter" 		+ " " +
-				 "PixelStartCircleX"      + " " + "PixelStartCircleY" 	+ " " +
-				"PixelEndCircleX"         + " " + "PixelEndCircleY"   	+ " " +  
-				"TargetWidth" 		   	  + " " + "ElapsedTime"         + " " +  
-				"MouseX"                  + " " + "MouseY" 				+ "\n"
-			);
-			
-			writer.close();
-		}
-		catch (Exception e) 
-		{
-			e.printStackTrace();
-			System.err.println("It was not possible to generate the header.\nNow exitting.");
-			System.exit(0);
-		} 
 		
 		return nameStoreFile;
 	}
@@ -526,6 +530,13 @@ public class Information
 	 */
 	public void storeInformationInFile()
 	{
+		//Check to see if the file where the results will be stored already exists.
+		if( fileToStoreInfo.equals("") )
+		{
+			//Create file
+			fileToStoreInfo = createStoreFile();
+		}
+		
 		File fileToWrite = new File(fileToStoreInfo);
 
 		if ( !fileToWrite.exists() ) 

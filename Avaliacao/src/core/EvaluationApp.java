@@ -38,11 +38,16 @@ public class EvaluationApp extends PApplet
 	
 	protected boolean redrawElements;
 
-	private final int backgroundColor = 255; 			//White
+	private final int backgroundColor = 255; 			
 	private final int HoverColorCircleRed = 183;
 	private final int HoverColorCircleGreen = 228;
 	private final int HoverColorCircleBlue = 240;
 	
+	//Variables related to the presentation of text on the application.
+	private PFont font;
+	private int displayFontSize;
+	private String displayText;
+
 	private Sequence sequenceToPerform;
 	private boolean generateRandomSequence = false;
 	private int currentSequenceIndex = 0;
@@ -62,11 +67,9 @@ public class EvaluationApp extends PApplet
 	private boolean activateLeapMotion;
 	private boolean rightHanded = true;
 	private ControlMode desiredControlMethod = ControlMode.HANDS_WITH_GRABBING_GESTURE;
-	
-	//Variables related to the presentation of text on the application.
-	private PFont font;
-	private int displayFontSize;
-	private String displayText;
+
+	//Playing mode. The user can interact and experiment with application without sequence or block limitations. The results will not be stored.
+	private boolean playingMode = false;
 	
 	//private int teste = 0;
 	//private boolean debug = false;
@@ -299,26 +302,30 @@ public class EvaluationApp extends PApplet
 					
 				Circle lastCircle = circles.get(sequenceToPerform.get(currentSequenceIndex - 1));
 				
-				//Save collected data.
-				informationFromCurrentTrial.setNumberOfCircles(numberOfCircles);
-				informationFromCurrentTrial.setStartingCircleCenter(lastCircle.getCenterPixel());
-				informationFromCurrentTrial.setEndingCircleCenter(targetCircle.getCenterPixel());
-				informationFromCurrentTrial.setTargetWidth(targetCircle.getRadius() * 2); 		//A largura do alvo é o diametro da circunferência.
-				informationFromCurrentTrial.setElapsedTime(chronometer.getTimeInMilliseconds());
-				informationFromCurrentTrial.setDistanceBetweenFrameAndCircleCenter(centerDistance);
-				informationFromCurrentTrial.setCircleID(currentSequenceIndex);
-				informationFromCurrentTrial.setDistanceBetweenCircles(
-						Information.calculateDistanceBetweenPoints(
-								lastCircle.getCenterX(), lastCircle.getCenterY(), 
-								targetCircle.getCenterX(), targetCircle.getCenterY())
-				);
+				//On playing mode, no results will be saved.
+				if(!playingMode)
+				{
+					//Save collected data.
+					informationFromCurrentTrial.setNumberOfCircles(numberOfCircles);
+					informationFromCurrentTrial.setStartingCircleCenter(lastCircle.getCenterPixel());
+					informationFromCurrentTrial.setEndingCircleCenter(targetCircle.getCenterPixel());
+					informationFromCurrentTrial.setTargetWidth(targetCircle.getRadius() * 2); 		//A largura do alvo é o diametro da circunferência.
+					informationFromCurrentTrial.setElapsedTime(chronometer.getTimeInMilliseconds());
+					informationFromCurrentTrial.setDistanceBetweenFrameAndCircleCenter(centerDistance);
+					informationFromCurrentTrial.setCircleID(currentSequenceIndex);
+					informationFromCurrentTrial.setDistanceBetweenCircles(
+							Information.calculateDistanceBetweenPoints(
+									lastCircle.getCenterX(), lastCircle.getCenterY(), 
+									targetCircle.getCenterX(), targetCircle.getCenterY())
+					);
+					
+					//Store trial results...
+					informationFromCurrentTrial.storeInformationInFile();
+					
+					//...and start a new one.
+					informationFromCurrentTrial.resetInformation();
+				}
 				
-				//Store trial results...
-				informationFromCurrentTrial.storeInformationInFile();
-				
-				//...and start a new one.
-				informationFromCurrentTrial.resetInformation();
-
 				currentSequenceIndex++;
 				
 				//Check to see if the experiment is over and, if not, make a little pause for the user.
@@ -327,7 +334,9 @@ public class EvaluationApp extends PApplet
 					isEvaluationComplete = true;
 					
 					//Check to see if the experiment is over. 
-					if(	informationFromCurrentTrial.getBlockNumber() == (numberOfBlocksPerExperiment - 1) && informationFromCurrentTrial.getSequenceNumber() == (numberOfSequencesPerBlock - 1) )
+					if(	informationFromCurrentTrial.getBlockNumber() == (numberOfBlocksPerExperiment - 1) && 
+						informationFromCurrentTrial.getSequenceNumber() == (numberOfSequencesPerBlock - 1) &&
+						!playingMode)
 					{
 						displayText = "The experiment is complete.\nThank you so much for participating!";
 						
@@ -376,8 +385,13 @@ public class EvaluationApp extends PApplet
 			
 			Boolean wasRightCirclePressed = selectedCircle.doesPointBelongToCircle(mouseX, mouseY);
 			
-			if(! wasRightCirclePressed)
+			if( !wasRightCirclePressed )
 			{
+				if(playingMode)
+				{
+					Sound.playFailureSound();
+				}
+				
 				return;
 			}
 			
@@ -552,7 +566,6 @@ public class EvaluationApp extends PApplet
 			}
 			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
 			{ 
-				
 				informationFromCurrentTrial.changeUser( Integer.parseInt(result[1]) );
 			}
 			else if( result[0].equals("How many sequences does one block have? (integer)") )
@@ -790,7 +803,12 @@ public class EvaluationApp extends PApplet
 						
 						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
 						currentSequenceIndex = 0;
-						informationFromCurrentTrial.increaseSequenceNumber();
+						
+						//If in playing mode
+						if(!playingMode)
+						{
+							informationFromCurrentTrial.increaseSequenceNumber();
+						}
 						
 						if(informationFromCurrentTrial.getSequenceNumber() == numberOfSequencesPerBlock)
 						{
@@ -803,7 +821,7 @@ public class EvaluationApp extends PApplet
 						displayText = "Let's do it again!\nTo start press the + symbol!";
 					}
 				}
-				//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
+				/*//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
 				//"R" key pressed.
 				else if(e.getKeyCode() == 32)
 				{
@@ -817,19 +835,6 @@ public class EvaluationApp extends PApplet
 					{	message += "Mackenzie's style.";	}
 					
 					displayText = message;
-				}
-				//Change the cursor movement and selection controls when using the Leap Motion.
-				//"G" key pressed.
-				/*else if(e.getKeyCode() == 71)
-				{
-					//If the Leap Motion isn't active, do nothing.
-					if(informationFromCurrentTrial.getDeviceID() != 0)
-					{return;}
-					
-					desiredControlMethod = leapMotionDevice.changeControlMode();
-					
-					displayText = "Selection and movement were altered:\n" 
-								  + LeapMotion.controlModeToString(desiredControlMethod);
 				}*/
 				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
 				//"H" key pressed
@@ -851,6 +856,21 @@ public class EvaluationApp extends PApplet
 					leapMotionDevice.changeDominantHand();
 					
 					displayText = message;
+				}
+				//Changes the application to playing mode. In other words, the user can practice, and no result will be saved.
+				//"P" key pressed
+				else if(e.getKeyCode() == 80)
+				{
+					playingMode = !playingMode;
+					
+					if(playingMode)
+					{
+						displayText = "Play mode is active";
+					}
+					else
+					{
+						displayText = "";
+					}	
 				}
 				//Changes the Device number when the "0", "1" or "2" keys are pressed.
 				else if(e.getKeyCode() >= 96 && e.getKeyCode() <= 98)
@@ -897,6 +917,22 @@ public class EvaluationApp extends PApplet
 					
 					displayText = message; 
 				}
+				
+				
+				//Change the cursor movement and selection controls when using the Leap Motion.
+				//"G" key pressed.
+				/*else if(e.getKeyCode() == 71)
+				{
+					//If the Leap Motion isn't active, do nothing.
+					if(informationFromCurrentTrial.getDeviceID() != 0)
+					{return;}
+					
+					desiredControlMethod = leapMotionDevice.changeControlMode();
+					
+					displayText = "Selection and movement were altered:\n" 
+								  + LeapMotion.controlModeToString(desiredControlMethod);
+				}*/
+				
 				/*//Change User ID when the following keys are pressed.
 					//"+" key pressed.
 					case 107:
