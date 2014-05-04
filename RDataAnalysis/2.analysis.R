@@ -7,7 +7,6 @@ require(doBy)
 
 
 ############################ data
-filename <- "leapmotion-measures.txt"
 dataMeasuresLeap <- read.csv(file="data/leapmotion-measures.txt", head=TRUE, sep="")
 dataMeasuresTouch <- read.csv(file="data/touchpad-measures.txt", head=TRUE, sep="")
 dataMeasuresMouse <- read.csv(file="data/mouse-measures.txt", head=TRUE, sep="")
