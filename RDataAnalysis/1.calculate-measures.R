@@ -44,14 +44,15 @@ toDegrees <- function(radians) {
 ############################ data
 device <- "mouse"
 filename <- paste("data/",device,".txt", sep="")
-filenameTransformed <- paste("data/", device,"-transformed.txt", sep="")
-filenameMeasures <- paste("data/", device,"-measures.txt", sep="")
+filenameTransformed <- paste("data/", device,"-transformed1.txt", sep="")
+filenameMeasures <- paste("data/", device,"-measures1.txt", sep="")
 dataRaw <- read.csv(file=filename, head=TRUE, sep="")
 
-#dataRaw <- dataRaw[dataRaw$Block == 1 & dataRaw$Sequence == 1, ]
-#edit(dataRaw)
 
-dataMeasures <- data.frame()#NumberDevice=numeric(0), UserId=numeric(0), Block=numeric(0), Sequence=numeric(0), ErrorRate=numeric(0))
+
+dataMeasures <- data.frame()
+
+newData <- data.frame()
 
 startTime <- Sys.time()
 for (block in 1:max(dataRaw$Block) ) {
@@ -62,13 +63,16 @@ for (block in 1:max(dataRaw$Block) ) {
     #for (sequence in 1:1 ) {
         print(paste("Sequence: ", sequence))
         
+        
         for (cid in 1:max(dataRaw$CircleID) ) {
         #for (cid in 1 ) {
-            print(paste("CircleID: ", cid))
+            
             
             #indexes for the current target selection
             indexes <- which(dataRaw$Block == block & dataRaw$Sequence == sequence & dataRaw$CircleID == cid)
             partial <- dataRaw[indexes, ]
+            
+            print(paste("CircleID: ", cid, " samples: ", length(indexes)))
             
             # we consider the movement axis as a line goind from the first point to the center of the target
             axisStart <- c(partial[1,]$MouseX, partial[1,]$MouseY)
@@ -127,33 +131,40 @@ for (block in 1:max(dataRaw$Block) ) {
             clickPointX <- 0
             clickPointY <- 0
             
-            for (n in indexes ) {
+            #tmpData <- dataRaw[dataRaw$Block == block & dataRaw$Sequence == sequence & dataRaw$CircleID == cid,]
+            startTimeCid <- Sys.time()
+            #for (n in indexes ) {
+            for (n in 1:nrow(partial) ) {
                 
-                dataRaw$targetx[n]<-target[1,1]
-                dataRaw$targety[n]<-target[1,2]
+                #dataRaw$targetx[n]<-target[1,1]
+                #dataRaw$targety[n]<-target[1,2]
+                
+                partial$targetx[n]<-target[1,1]
+                partial$targety[n]<-target[1,2]
                 
                 # transform the coordinate
-                point <- c(dataRaw[n,]$MouseX, dataRaw[n,]$MouseY)-axisStart 
+                #point <- c(dataRaw[n,]$MouseX, dataRaw[n,]$MouseY)-axisStart 
+                point <- c(partial[n,]$MouseX, partial[n,]$MouseY)-axisStart 
                 newPoint <- rotate(point, angle )
-                dataRaw$rx[n]<-newPoint[1,1]
-                dataRaw$ry[n]<-newPoint[1,2]
+                #dataRaw$rx[n]<-newPoint[1,1]
+                #dataRaw$ry[n]<-newPoint[1,2]
+                partial$rx[n]<-newPoint[1,1]
+                partial$ry[n]<-newPoint[1,2]
                 
-                #print(target)
-                #print(newPoint)
-                #print(" ")
+                
                 clickPointX <- newPoint[1,1]
                 clickPointY <- newPoint[1,2]
                 
                 #TRE
-                if (dist(rbind(newPoint, target)) < dataRaw[n,]$TargetWidth/2) {
+                if (dist(rbind(newPoint, target)) < partial[n,]$TargetWidth/2) {
                     if ( !entered ) {
                         entered <- TRUE
                         TRE <- TRE + 1
                     } 
-                    dataRaw$inside[n]<-TRUE
+                    partial$inside[n]<-TRUE
                 }else {
                     entered <- FALSE
-                    dataRaw$inside[n]<-FALSE
+                    partial$inside[n]<-FALSE
                     
                 }
                 
@@ -166,7 +177,6 @@ for (block in 1:max(dataRaw$Block) ) {
                 
                 #MDC          
                 curDif <- curY-prevMDCY
-                #print(paste("prevMDCDif:", prevMDCDif ,"prevMDCY: ", prevMDCY, " curDif:", curDif))
                 if ( prevMDCDif * curDif < 0 ) {
                     MDC <- MDC +1
                     #print("+1")
@@ -196,9 +206,7 @@ for (block in 1:max(dataRaw$Block) ) {
                 ys <- append(ys, curY)
                 
             }
-            
-            #dataRaw$targety[indexes] <- targetsY
-            #dataRaw$targetx[indexes] <- targetsX
+            print(paste("Cid processing time: ", Sys.time()-startTimeCid))
             
             #MO
             MO <- MO / length(indexes)
@@ -209,26 +217,11 @@ for (block in 1:max(dataRaw$Block) ) {
             #ME 
             ME <- sum(abs(ys))/length(indexes)
             
-
-            #print(paste("ErrorRate:", errorRate))
-            
-            #print(paste("TRE: ", TRE))
-            
-            #print(paste("TAC: ", TAC))
-            
-            #print(paste("MDC: ", MDC))
-            
-            #print(paste("ODC: ", ODC))
-            
-            #print(paste("MV: ", MV))
-            
-            #print(paste("ME: ", ME))
-            
-            #print(paste("MO: ", MO))
-            
+ 
             row <- c(partial[1,]$NumberDevice, partial[1,]$UserId, partial[1,]$Block, partial[1,]$Sequence, partial[1,]$CircleID, errorRate, TRE, TAC, MDC, ODC, MV, ME, MO, clickPointX, clickPointY, partial[1,]$ElapsedTime/1000, partial[1,]$TargetWidth, partial[1,]$DistanceCenter*2, calculatedDistance)
             dataMeasures <- rbind(dataMeasures, row)
             
+            newData <- rbind(newData, partial)
         }
     }
 }
@@ -257,14 +250,12 @@ endTime <- Sys.time()
 
 print(paste("Total time: ", endTime-startTime))
 
-#summary(dataMeasures)
-
-write.table(dataRaw, file = filenameTransformed, sep=" ", row.names=FALSE)
+write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
 
 
 
-toplot <- dataRaw[dataRaw$Block == 1 & dataRaw$Sequence == 1 & dataRaw$CircleID ==3, ]
+toplot <- newData[newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
 
 plot(toplot$rx, 
      toplot$ry, type='l')
