@@ -53,12 +53,13 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 ############################ data
-dataTransformedLeap <- read.csv(file="data/leapmotion-transformed.txt", head=TRUE, sep="")
-dataTransformedTouch <- read.csv(file="data/touchpad-transformed.txt", head=TRUE, sep="")
-dataTransformedMouse <- read.csv(file="data/mouse-transformed.txt", head=TRUE, sep="")
+#dataTransformedLeap <- read.csv(file="data/leapmotion-transformed.txt", head=TRUE, sep="")
+#dataTransformedTouch <- read.csv(file="data/touchpad-transformed.txt", head=TRUE, sep="")
+#dataTransformedMouse <- read.csv(file="data/mouse-transformed.txt", head=TRUE, sep="")
 
 
-dataTransformed <- rbind(dataTransformedLeap, dataTransformedTouch, dataTransformedMouse)
+#dataTransformed <- rbind(dataTransformedLeap, dataTransformedTouch, dataTransformedMouse)
+dataTransformed <- read.csv(file="data/all-transformed.txt", head=TRUE, sep="")
 
 # change column name to get a nicer chart
 colnames(dataTransformed)[colnames(dataTransformed)=="NumberDevice"] <- "Device"

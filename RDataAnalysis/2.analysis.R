@@ -7,12 +7,13 @@ require(doBy)
 
 
 ############################ data
-dataMeasuresLeap <- read.csv(file="data/leapmotion-measures.txt", head=TRUE, sep="")
-dataMeasuresTouch <- read.csv(file="data/touchpad-measures.txt", head=TRUE, sep="")
-dataMeasuresMouse <- read.csv(file="data/mouse-measures.txt", head=TRUE, sep="")
+#dataMeasuresLeap <- read.csv(file="data/leapmotion-measures.txt", head=TRUE, sep="")
+#dataMeasuresTouch <- read.csv(file="data/touchpad-measures.txt", head=TRUE, sep="")
+#dataMeasuresMouse <- read.csv(file="data/mouse-measures.txt", head=TRUE, sep="")
 
+#dataMeasures <- rbind(dataMeasuresLeap, dataMeasuresTouch, dataMeasuresMouse)
+dataMeasures <- read.csv(file="data/all-measures.txt", head=TRUE, sep="")
 
-dataMeasures <- rbind(dataMeasuresLeap, dataMeasuresTouch, dataMeasuresMouse)
 
 # change column name to get a nicer chart
 colnames(dataMeasures)[colnames(dataMeasures)=="DeviceNumber"] <- "Device"
