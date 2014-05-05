@@ -253,12 +253,7 @@ system.time(
         newData <- rbind(newData, newDataDevice)
     }
 )
-
-newData <- newDataDevice
 names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
-
-# Plot the calculated distances 
-plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
 
 #Calculate throughput
 meanX <- mean(dataMeasures$ClickPointX)
@@ -280,6 +275,12 @@ Throughput <- IDe/dataMeasures$MovementTime
 write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
 
+
+
+
+
+# Plot the calculated distances 
+plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
 
 
 toplot <- newData[newData$NumberDevice==2 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
