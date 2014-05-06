@@ -1,4 +1,9 @@
 
+# Trasnformed data points with abs(y) coordinate greater than NOISE_ERROR_THRESHOLD are sanitized (ie. the previous point is considered)
+
+NOISE_ERROR_THRESHOLD <- 400
+
+
 
 # Functions
 rotationMatrix <- function(angle) {
@@ -53,6 +58,9 @@ dataRaw <- read.csv(file=filename, head=TRUE, sep="")
 dataMeasures <- data.frame()
 
 newData <- data.frame()
+
+#For noise errors checking
+countNoiseErrors <- 0
 
 system.time(
     for (device in unique(dataRaw$NumberDevice) ) {
@@ -142,6 +150,9 @@ system.time(
                     partialry <- numeric()
                     partialinside <- logical()
                     
+                    # for noise errors checking
+                    lastCalculatedPointY <- 0
+                    
                     
                     #for (n in indexes ) {
                     for (n in 1:nrow(partial) ) {
@@ -155,9 +166,12 @@ system.time(
                         partialtargetx[n]<-target[1,1]
                         partialtargety[n]<-target[1,2]
                         
-                        # transform the coordinate
+                        
+                        
                         #point <- c(dataRaw[n,]$MouseX, dataRaw[n,]$MouseY)-axisStart 
-                        point <- c(partial[n,]$MouseX, partial[n,]$MouseY)-axisStart 
+                        point <- c(partial[n,]$MouseX, partial[n,]$MouseY)-axisStart
+                        
+                        # transform the coordinate
                         newPoint <- rotate(point, angle )
                         #dataRaw$rx[n]<-newPoint[1,1]
                         #dataRaw$ry[n]<-newPoint[1,2]
@@ -165,6 +179,15 @@ system.time(
                         #partial$ry[n]<-newPoint[1,2]
                         partialrx[n]<-newPoint[1,1]
                         partialry[n]<-newPoint[1,2]
+                        
+                        #Check for noise 
+                        if (abs(partialry[n]) > NOISE_ERROR_THRESHOLD) {
+                            print(paste("Correcting coordinate due to noise", partialry[n]))    
+                            partialry[n] <- lastCalculatedPointY
+                            countNoiseErrors <- countNoiseErrors +1
+                        }
+                        lastCalculatedPointY <- partialry[n]
+                         
                         
                         
                         clickPointX <- newPoint[1,1]
@@ -254,6 +277,10 @@ system.time(
     }
 )
 names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
+
+# 
+print(paste("Noise errors found: ", countNoiseErrors))
+
 
 #Calculate throughput
 meanX <- mean(dataMeasures$ClickPointX)
