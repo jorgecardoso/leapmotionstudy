@@ -1,3 +1,14 @@
+//The device number are as follow:
+// 0 = Leap Motion;
+// 1 = Mouse;
+// 2 = Touch Pad;
+Number of the device to be used: 0
+
+Assigned UserID to person performing the evaluation: 2
+
+Is user right-handed? (true/false): true
+
+
 Number of circles (integer): 16
 
 Circle radius (integer): 30 
@@ -10,17 +21,6 @@ Distance between circles and frame center (integer): 350
 //	Distance between circles and frame center =  418-419
 
 Random sequence generator (true/false): false
-
-Number of the device to be used: 1
-
-//The device number are as follow:
-// 0 = Leap Motion;
-// 1 = Mouse;
-// 2 = Touch Pad;
-
-Assigned UserID to person performing the evaluation: 24
-
-Is user right-handed? (true/false): true
 
 How many sequences does one block have? (integer): 5
 

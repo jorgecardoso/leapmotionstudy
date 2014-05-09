@@ -9,22 +9,29 @@ import com.leapmotion.leap.Gesture.Type;
 
 public class LeapMotion extends Listener
 {
+	//Enumeration containing all of the developed controlled modes.
 	public enum ControlMode{HAND_WITHOUT_GESTURE, HAND_WITHOUT_GESTURE_INVERTED, HAND_WITH_SCREENTAP_GESTURE, 
 							HANDS_WITH_KEYTAP_GESTURE, HANDS_WITH_GRABBING_GESTURE};
 
+	//Variables related to the Leap Motion control.
+	private Controller device;
 	private ControlMode choosenControlMode;
 	private boolean isRightHanded;
-
-	private Controller device;
-	private Frame lastFrame = new Frame();
 	private Hand dominantHand = new Hand();
 	private Hand auxiliaryHand = new Hand();
+	private Frame lastFrame = new Frame();
 
+	//Position of the cursor controlled by the Leap Motion
 	private int cursorPositionX = 0;
 	private int cursorPositionY = 0;
+	
+	//Variable related with the touch zone, a functionality offered by the Leap Motion.
 	private double touchZoneDistance = 0;
+	
+	//Variable that simulates a mouse click.
 	private boolean pressOcurred = false;
 
+	//Behavior of the function "onFrame()", a function belonging to the Leap Motion listener.
 	private boolean keepExecutting = true;
 	
 	//Robot responsible for moving the pointer cursor and to simulate a mouse click.
@@ -32,8 +39,6 @@ public class LeapMotion extends Listener
 	
 	//For testing purposes.
 	final boolean debug = false;
-	//int teste = 0;
-	//boolean boolTeste = false;
 		
 	/**
 	 * Constructor of Class LeapMotion.
@@ -83,7 +88,7 @@ public class LeapMotion extends Listener
 		device.addListener(this);
 
 		//Since the class will be using listeners for controlling the cursor and inputing commands,
-		//this thread just need to keep the resources alive. To do so an infinite loop is used.
+		//this thread just needs to keep the resources alive. To do so, an infinite loop is used.
 		while(true)
 		{}	
 	}
@@ -279,7 +284,7 @@ public class LeapMotion extends Listener
 	private void typeControlScreenTap(Controller controller)
 	{
 		ScreenList availableScreens = controller.locatedScreens();
-
+		
 		if(availableScreens.isEmpty())
 		{
 			if(debug){System.err.println("No screen has been detected.");}
@@ -692,7 +697,6 @@ public class LeapMotion extends Listener
 	 * 
 	 * NOTE: This does not turn off the device. All the information read will be 
 	 *       discarded and won't cause any changes.
-	 *  
 	 */
 	public void turnOff()
 	{
@@ -703,8 +707,8 @@ public class LeapMotion extends Listener
 	 * Function that restarts the Leap Motion functions.
 	 * 
 	 * NOTE: This function does not initialize the Leap Motion Class. This ONLY allows to revert
-	 * 		 the effects from the the "turnOff" function, allowing values to be read again, thus
-	 *       moving the mouse and performing "mouse button" clicks.
+	 * 		 the effects of the "turnOff" function, allowing values to be read again, thus permitting 
+	 * 		 the mouse to be moved and "mouse clicks" to be performed.
 	 */
 	public void turnOn()
 	{

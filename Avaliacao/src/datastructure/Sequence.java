@@ -16,8 +16,6 @@ public class Sequence
 	 */
 	public Sequence(int numberOfCircles, boolean random)
 	{
-		System.out.println("Generating sequence. Wait a moment...");
-		
 		if(numberOfCircles <= 2)
 		{
 			System.err.println("It is not possible to create a sequence with one or less number of circles...\nShutting down.");
@@ -35,8 +33,6 @@ public class Sequence
 			sequenceOfCircles.add(1);  sequenceOfCircles.add(9);
 			sequenceOfCircles.add(2);  sequenceOfCircles.add(10);
 			sequenceOfCircles.add(3);  sequenceOfCircles.add(11);
-			
-			System.out.println("Mackenzie's sequence sucessfully generated...");
 			
 			return;
 		}

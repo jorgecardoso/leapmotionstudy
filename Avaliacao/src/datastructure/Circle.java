@@ -103,4 +103,9 @@ public class Circle
 		else
 		{ return false; }
 	}
+	
+	public boolean doesPointBelongToCircle(Pixel pixel)
+	{
+		return doesPointBelongToCircle(pixel.getXCoordinate(), pixel.getYCoordinate());
+	}
 }

@@ -6,12 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Vector;
 
-public class Information 
+public class Information
 {
 	private int numberOfCircles;
 	private Pixel startingCircleCenter;
@@ -49,7 +46,13 @@ public class Information
 		//Default values
 		this.device = 0;			this.userId = 0;		
 		this.sequenceNumber = 0;	this.blockNumber = 0;   
+		
 		this.fileToStoreInfo = "";
+		
+		this.numberOfCircles = 0;
+		this.targetWidth = 0;
+		this.distanceBetweenCirclesAndFrameCenter = 0;	
+
 		
 		//Default values for the variables whose information is altered more frequently.
 		resetInformation();
@@ -57,7 +60,36 @@ public class Information
 		//Create a folder, named "Results", where the results from the experiment will be stored. 
 		createResultsFolder();
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	/**
+	 * Function that makes a copy of all the values of this class.
+	 * A solution to avoid arguments passed by reference.
+	 * 
+	 * @return A copy of the class.
+	 */
+	public Information copy()
+	{
+		Information copyOfOriginal = new Information();
+		
+		copyOfOriginal.device = this.device;
+		copyOfOriginal.userId = this.userId;
+		copyOfOriginal.circleId = this.circleId;
+		copyOfOriginal.elapsedTime = this.elapsedTime;
+		copyOfOriginal.targetWidth = this.targetWidth;
+		copyOfOriginal.blockNumber = this.blockNumber;
+		copyOfOriginal.sequenceNumber = this.sequenceNumber;
+		copyOfOriginal.numberOfClicks = this.numberOfClicks;
+		copyOfOriginal.fileToStoreInfo = this.fileToStoreInfo;
+		copyOfOriginal.numberOfCircles = this.numberOfCircles;
+		copyOfOriginal.path = (Vector<Pixel>) this.path.clone();
+		copyOfOriginal.endingCircleCenter = this.endingCircleCenter;
+		copyOfOriginal.startingCircleCenter = this.startingCircleCenter;
+		copyOfOriginal.distanceBetweenCirclesAndFrameCenter = this.distanceBetweenCirclesAndFrameCenter;
+		
+		return copyOfOriginal;
+	}
+		
 	/**
 	 * Function that resets all the class' changeable values to their default values.
 	 * 
@@ -65,12 +97,12 @@ public class Information
 	 */
 	public void resetInformation()
 	{
-		this.setNumberOfCircles(0);			this.setDistanceBetweenFrameAndCircleCenter(0);		this.setTargetWidth(0);
+			
 		this.setNumberOfClicks(0);			this.setStartingCircleCenter(new Pixel(0,0));		this.path = new Vector<Pixel>();
 		this.setElapsedTime(0);				this.setEndingCircleCenter(new Pixel(0,0));			this.setDistanceBetweenCircles(0.0);
 		this.circleId = 0;
 	}
-
+	
 	/**
 	 * Function that returns the number of circles drawn in the application.
 	 * 
@@ -259,6 +291,22 @@ public class Information
 	{ return this.path; }
 	
 	/**
+	 * Function that alters current path, vector of pixels, to the given one.
+	 * 
+	 * @param intendedPath - The new path.
+	 */
+	public void setPath(Vector<Pixel> intendedPath) 
+	{ this.path = intendedPath; }
+	
+	/**
+	 * Function that adds a single Pixel the path.
+	 * 
+	 * @param value - The pixel to be add.
+	 */
+	public void addToPath(Pixel value)
+	{	this.path.add(value);	}
+	
+	/**
 	 * Function that returns the time it took the user to perform this trial.
 	 * 
 	 * @return A Long value with time elapsed in milliseconds.
@@ -318,6 +366,7 @@ public class Information
 	 * several times.
 	 * 
 	 * Note: The first User ID is 0.
+	 * 
 	 * Note2: If used when the User ID is 0, nothing happens.
 	 */
 	public void lastUser() 
@@ -389,6 +438,14 @@ public class Information
 	public int getBlockNumber() 
 	{ return blockNumber; }
 
+	/**
+	 * Function that changes the block number to the given one.
+	 * 
+	 * In other words, the block number is increased by one.
+	 */
+	public void setBlockNumber(int block)
+	{ blockNumber = block; }
+	
 	/**
 	 * Function that changes the block number to the next available.
 	 * 
@@ -544,17 +601,17 @@ public class Information
 			System.err.println("File where information was to be stored does not exist.\nAs such no results will be saved.");
 			return;
 		}
-
+		
 		try 
 		{
 			Writer writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream(fileToWrite,true), "UTF8"));
-
+			
 			//Fill the columns with the respective information
 			for(int w = 0; w < path.size(); w++)
 			{
 				int mousePositionX = path.get(w).getXCoordinate();
 				int mousePositionY = path.get(w).getYCoordinate();
-
+				
 				writer.write(
 					device							 + " " + userId 								+ " " + 
 					(blockNumber + 1)				 + " " + (sequenceNumber + 1) 					+ " " +
@@ -565,7 +622,6 @@ public class Information
 					mousePositionX 					 + " " + mousePositionY							+ "\n"
 				);
 			}
-
 			writer.close();
 		}
 		catch(Exception e)

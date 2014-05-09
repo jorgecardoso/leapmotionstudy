@@ -24,58 +24,73 @@ import processing.core.*;
 public class EvaluationApp extends PApplet
 {
 	private static final long serialVersionUID = 1L;
-	
+
+	//Frame center coordinates.
 	private int centralPositionX;
 	private int centralPositionY;
+	
+	//For drawing the purple "+" sign that shows on the target circle
+	private int targetSizeX;
+	private int targetSizeY;
 
-	Vector<Circle> circles;
-	private int numberOfCircles;
-	private int circleRadius;
-	private int centerDistance;
-	
-	private int targetSizeX;		//For drawing the +
-	private int targetSizeY;		//the shows on the target circle
-	
 	protected boolean redrawElements;
-
+	
+	//Variables containing color values for the application.
 	private final int backgroundColor = 255; 			
 	private final int HoverColorCircleRed = 183;
 	private final int HoverColorCircleGreen = 228;
 	private final int HoverColorCircleBlue = 240;
-	
+
 	//Variables related to the presentation of text on the application.
 	private PFont font;
 	private int displayFontSize;
 	private String displayText;
 
+	//Information related to the circles drawn in the application
+	Vector<Circle> circles;
+	private int numberOfCircles;
+	private int circleRadius;
+	private int centerDistance;
+	
+	//Information related to the sequence to be generated.
 	private Sequence sequenceToPerform;
 	private boolean generateRandomSequence = false;
-	private int currentSequenceIndex = 0;
+	private int sequenceIndex = 0;
 	
-	private Information informationFromCurrentTrial = new Information();
-	private boolean isEvaluationComplete = false;
-	protected boolean acceptKeyInput = false;
-	private int numberOfSequencesPerBlock;
-	private int numberOfBlocksPerExperiment;
-	
-	private final Chronometer chronometer = new Chronometer();
-	
-	protected boolean makePause = true;	//To be used on the Thread that saves the mouse movement.
-	
+	//Variables concerning the Leap Motion thread and device.
 	private Thread lmThread;
 	protected LeapMotion leapMotionDevice;
 	private boolean activateLeapMotion;
 	private boolean rightHanded = true;
 	private ControlMode desiredControlMethod = ControlMode.HANDS_WITH_GRABBING_GESTURE;
-
+	
 	//Playing mode. The user can interact and experiment with application without sequence or block limitations. The results will not be stored.
 	private boolean playingMode = false;
 	
-	//private int teste = 0;
-	//private boolean debug = false;
-	//private boolean testeBoolean = false;
+	//Variables where information is temporarily stored during experiment.
+	private Vector<Sample> mouseSamples = new Vector<Sample>();
+	private Vector<Long> timeForEachSequence = new Vector<Long>();
+	private Vector<Integer> numberOfCliksPerTrial = new Vector<Integer>();
 	
-	public static void main(String args[]) {
+	//Information related to the block and sequence of the experiment.
+	private int currentBlockNumber = 0;
+	private int currentSequenceNumber = 0;
+	private int numberOfSequencesPerBlock;
+	private int numberOfBlocksPerExperiment;
+	
+	//Information related to the user and device ID being used on the experiment.
+	private int deviceID;
+	private int userID;
+	
+	//Information related to the mouse click thread.
+	protected boolean ignoreMouseInput = false;
+	private boolean mouseClicked = false;
+	private int numberOfClicksTrial = 0;
+	
+	private boolean debug = true;
+
+	public static void main(String args[]) 
+	{
 	    PApplet.main(new String[] { "--present", "core.EvaluationApp" });
 	}
 	
@@ -177,13 +192,13 @@ public class EvaluationApp extends PApplet
 		displayText();
 		
 		//If the evaluation is complete there is no need to draw the remaining elements.
-		if(isEvaluationComplete)
+		if(sequenceIndex > numberOfCircles)
 		{
 			return;
 		}
 		
 		//To avoid errors due synchronization issues between the listener and the drawing function.
-		int readCurrentSequenceIndex = currentSequenceIndex;
+		int readCurrentSequenceIndex = sequenceIndex;
 		
 		//If the sequence is complete, there is no need to draw the remaning elements.
 		if( readCurrentSequenceIndex == sequenceToPerform.size() )
@@ -215,10 +230,8 @@ public class EvaluationApp extends PApplet
 		
 		//Depending on the device being used or Leap Motion device's control mode, change the cursor
 		//to the correct cursor.
-		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   ||
-			desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
-			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE ||
-			informationFromCurrentTrial.getDeviceID() != 0 )
+		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   || desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
+			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE || deviceID != 0 )
 		{ 
 			//Default cursor image.
 			cursor();	
@@ -269,147 +282,6 @@ public class EvaluationApp extends PApplet
 		
 		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());	
-	}
-
-	/**
-	 * Handler to be called when the mouse button is pressed.
-	 */
-	protected void mouseButtonPressed() 
-	{	
-		//Error prevention. If the user performs two button presses too fast on the last circle of the sequence, this handler 
-		//may be called again, and error would occur when getting targetCircle.
-		if( currentSequenceIndex >= sequenceToPerform.size() )
-		{return;}
-			
-		Circle targetCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
-		
-		//If the current sequence index is different than the first element of the sequence...
-		if( currentSequenceIndex > 0 )
-		{
-			Circle selectedCircle = circles.get(sequenceToPerform.get(currentSequenceIndex));
-			
-			informationFromCurrentTrial.clickedOccurred();
-			
-			boolean isSelectionRight = selectedCircle.doesPointBelongToCircle(mouseX, mouseY);
-			
-			if( isSelectionRight  )
-			{
-				chronometer.stop();
-				
-				stopStoringMousePosition();
-				
-				Sound.playSucessSound();
-					
-				Circle lastCircle = circles.get(sequenceToPerform.get(currentSequenceIndex - 1));
-				
-				//On playing mode, no results will be saved.
-				if(!playingMode)
-				{
-					//Save collected data.
-					informationFromCurrentTrial.setNumberOfCircles(numberOfCircles);
-					informationFromCurrentTrial.setStartingCircleCenter(lastCircle.getCenterPixel());
-					informationFromCurrentTrial.setEndingCircleCenter(targetCircle.getCenterPixel());
-					informationFromCurrentTrial.setTargetWidth(targetCircle.getRadius() * 2); 		//A largura do alvo é o diametro da circunferência.
-					informationFromCurrentTrial.setElapsedTime(chronometer.getTimeInMilliseconds());
-					informationFromCurrentTrial.setDistanceBetweenFrameAndCircleCenter(centerDistance);
-					informationFromCurrentTrial.setCircleID(currentSequenceIndex);
-					informationFromCurrentTrial.setDistanceBetweenCircles(
-							Information.calculateDistanceBetweenPoints(
-									lastCircle.getCenterX(), lastCircle.getCenterY(), 
-									targetCircle.getCenterX(), targetCircle.getCenterY())
-					);
-					
-					//Store trial results...
-					informationFromCurrentTrial.storeInformationInFile();
-					
-					//...and start a new one.
-					informationFromCurrentTrial.resetInformation();
-				}
-				
-				currentSequenceIndex++;
-				
-				//Check to see if the experiment is over and, if not, make a little pause for the user.
-				if( currentSequenceIndex == sequenceToPerform.size() )
-				{	
-					isEvaluationComplete = true;
-					
-					//Check to see if the experiment is over. 
-					if(	informationFromCurrentTrial.getBlockNumber() == (numberOfBlocksPerExperiment - 1) && 
-						informationFromCurrentTrial.getSequenceNumber() == (numberOfSequencesPerBlock - 1) &&
-						!playingMode)
-					{
-						displayText = "The experiment is complete.\nThank you so much for participating!";
-						
-						System.out.println("Experiment successfully completed!");
-						
-						//A little time out to make sure the system has time to present the displayText
-						try {Thread.sleep(4000);}catch (InterruptedException e) {}
-						
-						System.exit(1);
-					}
-					
-					displayText = "Well done!\nLet's rest a bit.";
-					System.out.println("Sequence successfully completed!");
-					
-					//A little time out to make sure the system has time to present the displayText
-					try {Thread.sleep(2000);}catch (InterruptedException e) {}
-					
-					displayText = "When ready to continue, please press the \"space\" key.";
-					acceptKeyInput = true;
-					
-					return;
-				}
-			}	
-			else
-			{
-				Sound.playFailureSound();
-			}
-			
-			//A little pause to avoid several "button presses" if the user remains with the buttom pressed. 
-			try {Thread.sleep(200);}catch (InterruptedException e) {}
-			
-			if( isSelectionRight )
-			{
-				startStoringMousePosition();
-				
-				//Restart chronometer.
-				chronometer.reset();	chronometer.start();
-			}
-			
-		}
-		//If the current sequence index is the first element of the sequence...
-		else if( currentSequenceIndex == 0 )
-		{
-			//The experience should only be started when the user presses with success the first default target.
-			Circle selectedCircle = circles.get(sequenceToPerform.get(0));
-			
-			Boolean wasRightCirclePressed = selectedCircle.doesPointBelongToCircle(mouseX, mouseY);
-			
-			if( !wasRightCirclePressed )
-			{
-				if(playingMode)
-				{
-					Sound.playFailureSound();
-				}
-				
-				return;
-			}
-			
-			Sound.playSucessSound();
-			
-			currentSequenceIndex++;
-			
-			//A little pause to avoid several "button presses" if the user remains with the button pressed. 
-			try {Thread.sleep(200);}catch (InterruptedException e) {}
-			
-			//Don't print anything in the screen.
-			displayText = "";
-				
-			//Start saving the mouse position over time.
-			startStoringMousePosition();
-				
-			chronometer.start();
-		}
 	}
 
 	/**
@@ -566,7 +438,7 @@ public class EvaluationApp extends PApplet
 			}
 			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
 			{ 
-				informationFromCurrentTrial.changeUser( Integer.parseInt(result[1]) );
+				userID = Integer.parseInt(result[1]);
 			}
 			else if( result[0].equals("How many sequences does one block have? (integer)") )
 			{ 
@@ -606,7 +478,7 @@ public class EvaluationApp extends PApplet
 				else
 				{ activateLeapMotion = false; }
 				
-				informationFromCurrentTrial.changeDevice(value);
+				deviceID = value;
 			}
 			else if( result[0].equals("Is user right-handed? (true/false)") )
 			{ 
@@ -638,7 +510,7 @@ public class EvaluationApp extends PApplet
 		
 		//Initialize the required variables based on the values read  
 		targetSizeX = (int) (0.75 * 2 * circleRadius);		//Warning: Processing receives the diameter and not the radius. Multiply by 2. 
-		targetSizeY = (int) (0.125 * 2 * circleRadius);		//Note: 0.75 and 0.125 are resizing variables to assure that the "+" can fit inside a circle.
+		targetSizeY = (int) (0.125 * 2 * circleRadius);		//Note: 0.75 and 0.125 are resizing values to assure that the "+" can fit inside a circle.
 		
 		circles = new Vector<Circle>(numberOfCircles);
 		sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
@@ -682,14 +554,13 @@ public class EvaluationApp extends PApplet
 	}
 
 	/**
-	 * Function responsible for creating a Thread that, when allowed, will store the mouse position
-	 * (x and y coordinates) in the respective variable.
+	 * Function responsible for creating a Thread that will collect the Mouse position over time and perform the logical action
+	 * of the application.
 	 * 
 	 * Note: This function only creates a Thread, doesn't start it. That must be done manually by the
 	 * 		 by the programmer.
 	 * 
-	 * Note2: To start storing the values the function "startStoringMousePosition()" must be called otherwise
-	 * 		  no value will be stored.
+	 * Note: The sample rate (the number of times a position is registered) is 40 samples per seconds.
 	 * 
 	 * @return Thread that stores the mouse position.
 	 */
@@ -701,59 +572,175 @@ public class EvaluationApp extends PApplet
 			{
 				//Set priority to max as the values read in the Thread are of special importance.
 				setPriority(Thread.MAX_PRIORITY);
-
-				try 
+			
+				while(true)
 				{
-					while(true)
-					{
-						//Sleep 25 milliseconds. This allows the sample rate to be 40 samples per second.
-						sleep(25);
+					//Sleep 25 milliseconds. This allows the sample rate to be 40 samples per second.
+					try {sleep(25);}catch (InterruptedException e) { e.printStackTrace();}
+					
+					if(sequenceIndex == numberOfCircles)
+					{  
+						//If a click happens at this time, ignore it.
+						ignoreMouseInput();
 						
-						//While changing between targets or writing values to a file, there's no need to store information.
-						if(!makePause)
+						//Store experiment values.
+						Pixel lastSequencePixel = null;
+						Information dataToStore = null;
+						
+						for(int i = 1; i < numberOfCircles && !playingMode; i++)
 						{
-							informationFromCurrentTrial.storeCursorPosition(mouseX, mouseY);
+							//Calculate and determine the values to be stored.
+							int circleId = sequenceToPerform.get(i);		
+							int lastCircleId = sequenceToPerform.get(i-1);
+							
+							Circle startingCircle = circles.get(lastCircleId);
+							Circle targetCircle = circles.get(circleId);
+							
+							Pixel startingCircleCenter = startingCircle.getCenterPixel();
+							Pixel targetCircleCenter = targetCircle.getCenterPixel();
+							
+							double distanceBetweenPoints = Information.calculateDistanceBetweenPoints(startingCircleCenter, targetCircleCenter);
+							int numberOfClicks = numberOfCliksPerTrial.get(i);
+							long elapsedTime = timeForEachSequence.get(i) - timeForEachSequence.get(i-1);
+							
+							//Fill the information common to all this sequence trials. 
+							if(dataToStore == null)
+							{
+								dataToStore = new Information();
+								
+								int targetWidth = startingCircle.getRadius() * 2;
+								
+								dataToStore.setNumberOfCircles(numberOfCircles);
+								dataToStore.setTargetWidth(targetWidth);
+								dataToStore.changeDevice(deviceID);
+								dataToStore.changeUser(userID);
+							}
+							
+							//Fill the specific information to this trial. 
+							dataToStore.setStartingCircleCenter(startingCircleCenter);
+							dataToStore.setEndingCircleCenter(targetCircleCenter);
+							
+							dataToStore.setCircleID(i);	//Note: The internal CircleID differs from the real CircleID, which follows the Mackenzie circle.
+							
+							dataToStore.setDistanceBetweenCircles(distanceBetweenPoints);
+							dataToStore.setDistanceBetweenFrameAndCircleCenter(centerDistance);
+							dataToStore.setNumberOfClicks(numberOfClicks);
+							dataToStore.setElapsedTime(elapsedTime);
+							dataToStore.setSequenceNumber(currentSequenceNumber);
+							dataToStore.setBlockNumber(currentBlockNumber);
+							
+							
+							while(true)
+							{
+								//Make a copy of the first sample
+								Sample currentSample = new Sample();
+								currentSample = mouseSamples.get(0);
+								
+								//Add it to the data to be stored
+								dataToStore.addToPath(currentSample.getPixel());
+								
+								//Remove it from all the samples collected.
+								mouseSamples.remove(0);
+								
+								//If a click happens, it means that the next sequence has begun
+								if( currentSample.didClickHappen() )
+								{	
+									//Add the last sequence pixel to the beginning of this one.
+									if(lastSequencePixel != null)
+									{
+										dataToStore.getPath().add(0,lastSequencePixel);
+									}
+									
+									//Update the last sequence pixel.
+									lastSequencePixel = currentSample.getPixel();
+									
+									//This sequence samples are all collected. Go for the next sequence
+									break;	
+								}
+
+							}
+							
+							dataToStore.storeInformationInFile();
 						}
+						
+						//If the maximum number of trials have been performed, terminate the experiment.
+						if( numberOfBlocksPerExperiment == currentBlockNumber && numberOfSequencesPerBlock == currentSequenceNumber)
+						{
+							displayText = "The experiment is complete.\nThank you so much for participating!";
+							
+							System.out.println("Experiment successfully completed!");
+							
+							//A little time out to make sure the system has time to present the displayText
+							try {Thread.sleep(4000);}catch (InterruptedException e) {}
+							
+							System.exit(1);
+						}	
+						
+						//Update the current Sequence and block number if needed.
+						if(currentSequenceNumber == numberOfSequencesPerBlock)
+						{
+							currentBlockNumber++;
+							currentSequenceNumber = 0;
+						}
+						
+						//Generate a new sequence
+						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
+						
+						//Set the variables to their default values.
+						mouseClicked = false;
+						mouseSamples = new Vector<Sample>();
+						timeForEachSequence = new Vector<Long>();
+						numberOfCliksPerTrial = new Vector<Integer>();
+						numberOfClicksTrial = 0;
+						
+						displayText = "Let's rest a bit.\nWhen ready, press the + symbol!";
+						sequenceIndex = 0;
+						
+						acceptMouseInput();
+						return;
 					}
-				}
-				catch (InterruptedException e) 
-				{ e.printStackTrace(); }
+					
+					//Save a sample, which is the mouse position and if a mouse click has occurred.
+					if(sequenceIndex > 0 && !playingMode)
+					{
+						Sample readSample = new Sample(mouseX, mouseY);
+						
+						if(mouseClicked)
+						{	readSample.clickHappened();	}
+						
+						mouseSamples.add( readSample );
+					}
+					
+					//Only to be executed if a click happens.
+					if(mouseClicked)
+					{
+						mouseClicked = false;
+						
+						//In playing mode, no information is registered.
+						if(!playingMode)
+						{
+							//Store the time elapsed and number of clicks performed during this trial.
+							timeForEachSequence.add( System.currentTimeMillis() );
+							numberOfCliksPerTrial.add(numberOfClicksTrial);
+						}
+						
+						displayText = "";
+						numberOfClicksTrial = 0;
+						
+						sequenceIndex++;
+					}
+				}	
 			}
 		};
 	}
 	
-	/**
-	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
-	 * to start saving values.
-	 * 
-	 * Note: To stop registering values, use the function "stopStoringMousePosition()". 
-	 * 
-	 * Note2: Calling this function again without changing the behavior won't produce any effects. 
-	 */
-	private void startStoringMousePosition() 
-	{
-		makePause = false;
-	}
 	
 	/**
-	 * Function that will alter the behavior of the Thread responsible for storing the Mouse position over time, telling it
-	 * to stop saving values.
-	 * 
-	 * Note: To start registering values, use the function "startStoringMousePosition()". 
-	 * 
-	 * Note2: Calling this function again without changing the behavior won't produce any effects.
-	 * 
-	 * Note3: This is the default behavior of the Thread.
-	 */
-	private void stopStoringMousePosition() 
-	{
-		makePause = true;
-	}
-	
-	/**
-	 * Function that creates a listener that will store the mouse position over time.
+	 * Function that creates a listener that will check if a mouse click has occurred and play the respective feedback sound.
 	 * 
 	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
+	 * 
+	 * Note2: The behavior of this listener can be altered by using the functions "ignoreMouseInput()" and "acceptMouseInput()"
 	 * 
 	 * @return The said listener.
 	 */
@@ -762,7 +749,36 @@ public class EvaluationApp extends PApplet
 		return new MouseListener() 
 		{
 			@Override
-			public void mousePressed(MouseEvent e) { mouseButtonPressed(); }
+			public void mousePressed(MouseEvent e) 
+			{
+				if(!ignoreMouseInput)
+				{
+					//If the mouse click hasn't been processed, do nothing.
+					if(mouseClicked)
+					{return;}
+
+					numberOfClicksTrial++;
+
+					Pixel pressedMousePixel = new Pixel(mouseX, mouseY);
+
+					//If the current sequence index is bigger than the sequence to perform do nothing.
+					if( sequenceIndex >= sequenceToPerform.size() )
+					{return;}
+
+					Circle targetCircle = circles.get(sequenceToPerform.get(sequenceIndex));
+
+					if( targetCircle.doesPointBelongToCircle(pressedMousePixel) )
+					{
+						Sound.playSucessSound();
+						mouseClicked = true;
+					}
+					else
+					{
+						if(sequenceIndex > 0 || playingMode )
+						{	Sound.playFailureSound();	}
+					}
+				}
+			}
 			
 			//Not in use.
 			public void mouseClicked(MouseEvent e) {}
@@ -773,17 +789,42 @@ public class EvaluationApp extends PApplet
 	}
 	
 	/**
+	 * Function that alters the Mouse Listener behavior.
+	 * The listeners is to do nothing even if the mouse button is pressed.
+	 * 
+	 * Note: To alter this behavior use "acceptMouseInput()" function.. 
+	 */
+	private void ignoreMouseInput()
+	{
+		ignoreMouseInput = true;
+	}
+	
+	/**
+	 * Function that alters the Mouse Listener behavior.
+	 * The listeners is register the mouse click when one happens.
+	 * 
+	 * Note: To alter this behavior use "ignoreMouseInput()" function.
+	 * 
+	 * Note2: This is the default behavior of the listener. 
+	 */
+	private void acceptMouseInput()
+	{
+		ignoreMouseInput = false;
+	}
+	
+	/**
 	 * Function that creates a key listener in order to alter the application parameters.
 	 * The keys are as follows:
-	 * - > "Space" key. When prompted, this key acts as the "Yes" or positive input.
-	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's.
-	 * - > "G" key - Changes the gesture being used by the Leap Motion to interact with the application.
-	 * - > "H" key - Changes if the user is right-handed or left-handed.		
-	 *  > ["0","9"] - Keys between 0 and 9 change the device number to the one pressed.
+	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's. (DEBUG only)
+	 * - > "G" key - Changes the gesture being used by the Leap Motion to interact with the application. (DEBUG only)
+	 * - > "H" key - Changes if the user is right-handed or left-handed. (DEBUG only)
+	 * - > "P" key - Enables/disables playing mode.		
+	 * - > ["0"-"9"] - Keys between 0 and 2 change the device number to the one pressed. (DEBUG only)
+	 * - > "Esc" key - exits the application (due to Processing).
 	 * 
 	 * Note: Remember, this function only generates the listener. It must be added manually!
 	 * 
-	 * @return THe said listener.
+	 * @return The said listener.
 	 */
 	private KeyListener createKeyListener()
 	{
@@ -792,38 +833,9 @@ public class EvaluationApp extends PApplet
 			@Override
 			public void keyReleased(KeyEvent e) 
 			{
-				//"Space" key pressed. When prompted, this key acts as the "Yes" or positive input.
-				if(e.getKeyCode() == 32)
-				{
-					if(acceptKeyInput)
-					{
-						//Restart experiment.
-						acceptKeyInput = false;
-						isEvaluationComplete = false;
-						
-						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
-						currentSequenceIndex = 0;
-						
-						//If in playing mode
-						if(!playingMode)
-						{
-							informationFromCurrentTrial.increaseSequenceNumber();
-						}
-						
-						if(informationFromCurrentTrial.getSequenceNumber() == numberOfSequencesPerBlock)
-						{
-							informationFromCurrentTrial.resetSequenceNumber();
-							informationFromCurrentTrial.increaseBlockNumber();
-							
-							System.out.println("Block successfully completed!");
-						}
-						
-						displayText = "Let's do it again!\nTo start press the + symbol!";
-					}
-				}
-				/*//Change sequence generator from random to Mackenzie's paper and vice-versa when "R" key pressed.
+				//Change sequence generator from random to Mackenzie's paper and vice-versa.
 				//"R" key pressed.
-				else if(e.getKeyCode() == 32)
+				if(e.getKeyCode() == 32 && debug)
 				{
 					generateRandomSequence = !generateRandomSequence;
 					
@@ -835,13 +847,28 @@ public class EvaluationApp extends PApplet
 					{	message += "Mackenzie's style.";	}
 					
 					displayText = message;
-				}*/
-				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
-				//"H" key pressed
-				else if(e.getKeyCode() == 72)
+				}
+				
+				//Change the cursor movement and selection controls when using the Leap Motion.
+				//"G" key pressed.
+				else if(e.getKeyCode() == 71 && debug)
 				{
 					//If the Leap Motion isn't active, do nothing.
-					if(informationFromCurrentTrial.getDeviceID() != 0)
+					if(deviceID != 0)
+					{return;}
+					
+					desiredControlMethod = leapMotionDevice.changeControlMode();
+					
+					displayText = "Selection and movement were altered:\n" 
+								  + LeapMotion.controlModeToString(desiredControlMethod);
+				}
+				
+				//Changes the dominant hand of the user when using Leap Motion to control the cursor.
+				//"H" key pressed
+				else if(e.getKeyCode() == 72 && debug)
+				{
+					//If the Leap Motion isn't active, do nothing.
+					if(deviceID != 0)
 					{return;}
 					
 					rightHanded = !rightHanded;
@@ -857,6 +884,7 @@ public class EvaluationApp extends PApplet
 					
 					displayText = message;
 				}
+				
 				//Changes the application to playing mode. In other words, the user can practice, and no result will be saved.
 				//"P" key pressed
 				else if(e.getKeyCode() == 80)
@@ -872,8 +900,10 @@ public class EvaluationApp extends PApplet
 						displayText = "";
 					}	
 				}
-				//Changes the Device number when the "0", "1" or "2" keys are pressed.
-				else if(e.getKeyCode() >= 96 && e.getKeyCode() <= 98)
+				
+				//Changes the Device number.
+				//["0" - "9"] key pressed.
+				else if(e.getKeyCode() >= 96 && e.getKeyCode() <= 105 && debug)
 				{ 
 					/*
 					 * The device number are as follow:
@@ -884,10 +914,10 @@ public class EvaluationApp extends PApplet
 					int numberPressed = e.getKeyCode() - 96;
 					
 					//If the number pressed is the same as the current device, don't do anything.
-					if(informationFromCurrentTrial.getDeviceID() == numberPressed)
+					if(deviceID == numberPressed)
 					{return;}
 					
-					informationFromCurrentTrial.changeDevice(numberPressed);
+					deviceID = numberPressed;
 					
 					if(numberPressed == 0)
 					{
@@ -900,7 +930,7 @@ public class EvaluationApp extends PApplet
 					
 					String message = "The device was changed to:\n";					
 					
-					switch(informationFromCurrentTrial.getDeviceID())
+					switch(deviceID)
 					{
 						case 0:
 							message += "Leap Motion device";
@@ -913,38 +943,36 @@ public class EvaluationApp extends PApplet
 						case 2:
 							message += "Touch Pad";
 							break;
+							
+						default:
+							message += "Device number " + deviceID;
 					}
 					
 					displayText = message; 
 				}
 				
-				
-				//Change the cursor movement and selection controls when using the Leap Motion.
-				//"G" key pressed.
-				/*else if(e.getKeyCode() == 71)
+				//Changes the userID, incrementing it by one.
+				//"+" key pressed.
+				else if(e.getKeyCode() == 107 && debug)
 				{
-					//If the Leap Motion isn't active, do nothing.
-					if(informationFromCurrentTrial.getDeviceID() != 0)
-					{return;}
-					
-					desiredControlMethod = leapMotionDevice.changeControlMode();
-					
-					displayText = "Selection and movement were altered:\n" 
-								  + LeapMotion.controlModeToString(desiredControlMethod);
-				}*/
+					userID++;
+					displayText = "The User ID was changed to: " + userID;  
+				}
 				
-				/*//Change User ID when the following keys are pressed.
-					//"+" key pressed.
-					case 107:
-						informationFromCurrentTrial.nextUser();
-						displayText = "The User ID was changed to: " + informationFromCurrentTrial.getUserID();  
-						break;
+				//Changes the userID, decrementing it by one. 
+				//The ID cannot be less than 0.
+				//"-" key pressed.
+				else if(e.getKeyCode() == 109 && debug)
+				{
+					userID--;
 					
-					//"-" key pressed.
-					case 109:
-						informationFromCurrentTrial.lastUser();
-						displayText = "The User ID was changed to: " + informationFromCurrentTrial.getUserID();  
-						break;	*/
+					if(userID < 0)
+					{
+						userID = 0;
+					}
+					
+					displayText = "The User ID was changed to: " + userID;  
+				}
 			}
 			
 			//Not in use.
