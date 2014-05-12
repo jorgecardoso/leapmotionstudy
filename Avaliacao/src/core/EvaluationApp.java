@@ -20,7 +20,6 @@ import device.LeapMotion.ControlMode;
 import other.*;
 import processing.core.*;
 
-
 public class EvaluationApp extends PApplet
 {
 	private static final long serialVersionUID = 1L;
@@ -663,6 +662,11 @@ public class EvaluationApp extends PApplet
 							dataToStore.storeInformationInFile();
 						}
 						
+						if(!playingMode)
+						{
+							currentSequenceNumber++;
+						}
+						
 						//If the maximum number of trials have been performed, terminate the experiment.
 						if( numberOfBlocksPerExperiment == currentBlockNumber && numberOfSequencesPerBlock == currentSequenceNumber)
 						{
@@ -683,6 +687,10 @@ public class EvaluationApp extends PApplet
 							currentSequenceNumber = 0;
 						}
 						
+						System.out.println(currentSequenceNumber + " " + numberOfSequencesPerBlock);
+						System.out.println(currentBlockNumber + " " + numberOfBlocksPerExperiment);
+						
+						
 						//Generate a new sequence
 						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
 						
@@ -694,10 +702,10 @@ public class EvaluationApp extends PApplet
 						numberOfClicksTrial = 0;
 						
 						displayText = "Let's rest a bit.\nWhen ready, press the + symbol!";
+						
 						sequenceIndex = 0;
 						
 						acceptMouseInput();
-						return;
 					}
 					
 					//Save a sample, which is the mouse position and if a mouse click has occurred.
