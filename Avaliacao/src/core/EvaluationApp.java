@@ -72,7 +72,7 @@ public class EvaluationApp extends PApplet
 	private Vector<Integer> numberOfCliksPerTrial = new Vector<Integer>();
 	
 	//Information related to the block and sequence of the experiment.
-	private int currentBlockNumber = 0;
+	private int currentBlockNumber = 1;
 	private int currentSequenceNumber = 0;
 	private int numberOfSequencesPerBlock;
 	private int numberOfBlocksPerExperiment;
@@ -84,9 +84,10 @@ public class EvaluationApp extends PApplet
 	//Information related to the mouse click thread.
 	protected boolean ignoreMouseInput = false;
 	private boolean mouseClicked = false;
+	private boolean mouseClickedInsideTarget = false;
 	private int numberOfClicksTrial = 0;
 	
-	private boolean debug = true;
+	private boolean debug = false;
 
 	public static void main(String args[]) 
 	{
@@ -290,7 +291,7 @@ public class EvaluationApp extends PApplet
 	{
 		textFont(font,displayFontSize);            
 		fill(0);
-		textAlign(CENTER);
+		textAlign(CENTER,CENTER);
 		text(displayText,centralPositionX,centralPositionY);
 		noFill();
 	}
@@ -577,6 +578,10 @@ public class EvaluationApp extends PApplet
 					//Sleep 25 milliseconds. This allows the sample rate to be 40 samples per second.
 					try {sleep(25);}catch (InterruptedException e) { e.printStackTrace();}
 					
+					//Store the values read. This way they can be accessible anywhere in this listener without taking the risk of them changing.
+					int readPositionX = mouseX;
+					int readPositionY = mouseY;
+					
 					if(sequenceIndex == numberOfCircles)
 					{  
 						//If a click happens at this time, ignore it.
@@ -605,15 +610,17 @@ public class EvaluationApp extends PApplet
 							//Fill the information common to all this sequence trials. 
 							if(dataToStore == null)
 							{
-								dataToStore = new Information();
-								
 								int targetWidth = startingCircle.getRadius() * 2;
+								
+								dataToStore = new Information();
 								
 								dataToStore.setNumberOfCircles(numberOfCircles);
 								dataToStore.setTargetWidth(targetWidth);
 								dataToStore.changeDevice(deviceID);
 								dataToStore.changeUser(userID);
 							}
+							
+							dataToStore.resetInformation();
 							
 							//Fill the specific information to this trial. 
 							dataToStore.setStartingCircleCenter(startingCircleCenter);
@@ -628,7 +635,13 @@ public class EvaluationApp extends PApplet
 							dataToStore.setSequenceNumber(currentSequenceNumber);
 							dataToStore.setBlockNumber(currentBlockNumber);
 							
+							//Add the last sequence pixel to the beginning of this one.
+							if(lastSequencePixel != null)
+							{
+								dataToStore.getPath().add(lastSequencePixel);
+							}
 							
+							//Collect all samples belonging to this trial.
 							while(true)
 							{
 								//Make a copy of the first sample
@@ -644,12 +657,6 @@ public class EvaluationApp extends PApplet
 								//If a click happens, it means that the next sequence has begun
 								if( currentSample.didClickHappen() )
 								{	
-									//Add the last sequence pixel to the beginning of this one.
-									if(lastSequencePixel != null)
-									{
-										dataToStore.getPath().add(0,lastSequencePixel);
-									}
-									
 									//Update the last sequence pixel.
 									lastSequencePixel = currentSample.getPixel();
 									
@@ -690,7 +697,6 @@ public class EvaluationApp extends PApplet
 						System.out.println(currentSequenceNumber + " " + numberOfSequencesPerBlock);
 						System.out.println(currentBlockNumber + " " + numberOfBlocksPerExperiment);
 						
-						
 						//Generate a new sequence
 						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);
 						
@@ -701,42 +707,62 @@ public class EvaluationApp extends PApplet
 						numberOfCliksPerTrial = new Vector<Integer>();
 						numberOfClicksTrial = 0;
 						
-						displayText = "Let's rest a bit.\nWhen ready, press the + symbol!";
+						displayText = "You may rest a bit if you so wish.\nWhen ready, press the + symbol!";
 						
 						sequenceIndex = 0;
 						
 						acceptMouseInput();
 					}
 					
-					//Save a sample, which is the mouse position and if a mouse click has occurred.
+					Sample readSample = new Sample(readPositionX, readPositionY);
+					
+					if(mouseClicked)
+					{
+						//Acknowledge mouse click
+						mouseClicked = false;
+						
+						//Check if the click occurred inside the target circle
+						Circle targetCircle = circles.get(sequenceToPerform.get(sequenceIndex));
+					
+						if( targetCircle.doesPointBelongToCircle(readPositionX, readPositionY) )
+						{
+							Sound.playSucessSound();
+							
+							//Acknowledge correct click.
+							readSample.clickHappened();
+							
+							//In playing mode, no information is registered.
+							if(!playingMode)
+							{
+								//Store the time elapsed and number of clicks performed during this trial.
+								timeForEachSequence.add( System.currentTimeMillis() );
+								numberOfCliksPerTrial.add(numberOfClicksTrial);
+							}
+
+							displayText = "";
+							numberOfClicksTrial = 0;
+							mouseClickedInsideTarget = true;
+						}
+						else
+						{
+							if(sequenceIndex > 0 || playingMode )
+							{	Sound.playFailureSound();	}
+						}
+					}
+					
+					//Collect mouse sample.
 					if(sequenceIndex > 0 && !playingMode)
 					{
-						Sample readSample = new Sample(mouseX, mouseY);
-						
-						if(mouseClicked)
-						{	readSample.clickHappened();	}
-						
 						mouseSamples.add( readSample );
 					}
 					
-					//Only to be executed if a click happens.
-					if(mouseClicked)
+					//If the target was correctly pressed advance to the next trial
+					if(mouseClickedInsideTarget)
 					{
-						mouseClicked = false;
-						
-						//In playing mode, no information is registered.
-						if(!playingMode)
-						{
-							//Store the time elapsed and number of clicks performed during this trial.
-							timeForEachSequence.add( System.currentTimeMillis() );
-							numberOfCliksPerTrial.add(numberOfClicksTrial);
-						}
-						
-						displayText = "";
-						numberOfClicksTrial = 0;
-						
+						mouseClickedInsideTarget = false;
 						sequenceIndex++;
 					}
+					
 				}	
 			}
 		};
@@ -766,25 +792,8 @@ public class EvaluationApp extends PApplet
 					{return;}
 
 					numberOfClicksTrial++;
-
-					Pixel pressedMousePixel = new Pixel(mouseX, mouseY);
-
-					//If the current sequence index is bigger than the sequence to perform do nothing.
-					if( sequenceIndex >= sequenceToPerform.size() )
-					{return;}
-
-					Circle targetCircle = circles.get(sequenceToPerform.get(sequenceIndex));
-
-					if( targetCircle.doesPointBelongToCircle(pressedMousePixel) )
-					{
-						Sound.playSucessSound();
-						mouseClicked = true;
-					}
-					else
-					{
-						if(sequenceIndex > 0 || playingMode )
-						{	Sound.playFailureSound();	}
-					}
+					
+					mouseClicked = true;
 				}
 			}
 			

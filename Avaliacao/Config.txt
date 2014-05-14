@@ -2,9 +2,9 @@
 // 0 = Leap Motion;
 // 1 = Mouse;
 // 2 = Touch Pad;
-Number of the device to be used: 1
+Number of the device to be used: 0
 
-Assigned UserID to person performing the evaluation: 24
+Assigned UserID to person performing the evaluation: 10
 
 Is user right-handed? (true/false): true
 
@@ -22,6 +22,6 @@ Distance between circles and frame center (integer): 350
 
 Random sequence generator (true/false): false
 
-How many sequences does one block have? (integer): 2
+How many sequences does one block have? (integer): 5
 
-How many blocks does one experiment have? (integer): 10
+How many blocks does one experiment have? (integer): 5

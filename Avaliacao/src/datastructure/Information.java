@@ -614,7 +614,7 @@ public class Information
 				
 				writer.write(
 					device							 + " " + userId 								+ " " + 
-					(blockNumber + 1)				 + " " + (sequenceNumber + 1) 					+ " " +
+					blockNumber						 + " " + (sequenceNumber + 1) 					+ " " +
 					numberOfClicks 					 + " " + numberOfCircles 				 		+ " " + 
 					circleId 						 + " " + distanceBetweenCirclesAndFrameCenter 	+ " " +
 					startingCircleCenter.toString()  + " " + endingCircleCenter.toString()	 		+ " " + 

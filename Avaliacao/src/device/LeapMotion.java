@@ -19,6 +19,8 @@ public class LeapMotion extends Listener
 	private boolean isRightHanded;
 	private Hand dominantHand = new Hand();
 	private Hand auxiliaryHand = new Hand();
+	private Pointable pointerFinger = null;
+	private int fingerPosition = 0;
 	private Frame lastFrame = new Frame();
 
 	//Position of the cursor controlled by the Leap Motion
@@ -191,6 +193,8 @@ public class LeapMotion extends Listener
 			return;
 		}
 
+		
+		
 		if(detectedHands.count() == 1)
 		{
 			dominantHand = detectedHands.get(0);
@@ -262,7 +266,7 @@ public class LeapMotion extends Listener
 		{
 			//User controls the cursor using his/her dominant hand and simulates button 
 			//presses with the auxiliary hand by performing a grabbing gesture.
-			typeControlHandsWithGrabbingGesture(controller);
+			typeControlHandsWithGrabbingGesture(controller, capturedFrame);
 		}
 
 		//Saves the current frame to be used in future comparisons.
@@ -646,7 +650,7 @@ public class LeapMotion extends Listener
 	 * 
 	 * @param controller - Default device controller.
 	 */
-	private void typeControlHandsWithGrabbingGesture(Controller controller)
+	private void typeControlHandsWithGrabbingGesture(Controller controller, Frame frame)
 	{
 		ScreenList availableScreens = controller.locatedScreens();
 
@@ -656,14 +660,32 @@ public class LeapMotion extends Listener
 			return;
 		}
 
-		Pointable pointerFinger = dominantHand.pointables().frontmost();
-
+		if(dominantHand.pointables().count() == 0)
+		{
+			return;
+		}
+		
+		if(pointerFinger == null)
+		{
+			pointerFinger = discoverPointingFinger();
+		}
+		
+		pointerFinger = dominantHand.pointable(pointerFinger.id());
+		
+		if(!pointerFinger.isValid())
+		{
+			pointerFinger = null;
+			return;
+		}
+		
+		
+		
 		if(!pointerFinger.isValid())
 		{
 			if(debug){System.err.println("Invalid pointer finger!");}
 			return;
 		}
-
+		
 		Screen screen = availableScreens.get(0);
 
 		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
@@ -673,12 +695,13 @@ public class LeapMotion extends Listener
 
 		cursor.mouseMove(cursorPositionX, cursorPositionY);
 		
+		
 		if(!auxiliaryHand.isValid())
 		{
 			if(debug){System.err.println("Must place your auxiliary hand over the Leap Motion device.");}
 			return;
 		}
-
+		
 		if( (auxiliaryHand.fingers().count() <= 1) && !pressOcurred)
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
@@ -686,11 +709,44 @@ public class LeapMotion extends Listener
 			
 			pressOcurred = !pressOcurred;
 		}
+		
 		if( (auxiliaryHand.fingers().count() >= 4) && pressOcurred )
 		{
 			pressOcurred = !pressOcurred;
 		}
 	}
+
+	
+	private Pointable discoverPointingFinger() 
+	{
+		PointableList apontadores = dominantHand.pointables();
+
+		if(apontadores.count() == 1)
+		{
+			return apontadores.get(0);
+		}
+		else if(apontadores.count() > 1 && apontadores.count() <= 4)
+		{
+			return apontadores.leftmost();
+		}
+		else if(apontadores.count() == 5)
+		{
+			for(int i = 0; i < apontadores.count(); i++)
+			{
+				if( 
+					!apontadores.get(i).equals(apontadores.frontmost()) &&
+					!apontadores.get(i).equals(apontadores.leftmost()) &&
+					(apontadores.get(i).tipPosition().getX() < apontadores.frontmost().tipPosition().getX())
+				)
+				{
+					return apontadores.get(i);
+				}
+			}
+		}
+			
+		return null;
+	}
+	
 
 	/**
 	 * Function that terminates the Leap Motion functions.
@@ -801,7 +857,7 @@ public class LeapMotion extends Listener
 	//For testing purposes
 	public static void main(String[] args) 
 	{
-		LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_KEYTAP_GESTURE,true);
+		LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_GRABBING_GESTURE,true);
 		lm.initialize();
 	}
 }
