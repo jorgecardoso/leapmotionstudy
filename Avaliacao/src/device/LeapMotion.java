@@ -14,13 +14,12 @@ public class LeapMotion extends Listener
 							HANDS_WITH_KEYTAP_GESTURE, HANDS_WITH_GRABBING_GESTURE};
 
 	//Variables related to the Leap Motion control.
-	private Controller device;
+	private Controller controller;
 	private ControlMode choosenControlMode;
 	private boolean isRightHanded;
 	private Hand dominantHand = new Hand();
 	private Hand auxiliaryHand = new Hand();
-	private Pointable pointerFinger = null;
-	private int fingerPosition = 0;
+	private int pointerFingerID = -2;
 	private Frame lastFrame = new Frame();
 
 	//Position of the cursor controlled by the Leap Motion
@@ -74,7 +73,7 @@ public class LeapMotion extends Listener
 		}
 		
 		//Creates the Leap Motion controller variable. This contains several information related to the device, including the frames captured.
-		device = new Controller();
+		controller = new Controller();
 
 		if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 		{
@@ -87,7 +86,7 @@ public class LeapMotion extends Listener
 
 		System.out.println("Leap Motion has been initialized.");
 
-		device.addListener(this);
+		controller.addListener(this);
 
 		//Since the class will be using listeners for controlling the cursor and inputing commands,
 		//this thread just needs to keep the resources alive. To do so, an infinite loop is used.
@@ -193,8 +192,6 @@ public class LeapMotion extends Listener
 			return;
 		}
 
-		
-		
 		if(detectedHands.count() == 1)
 		{
 			dominantHand = detectedHands.get(0);
@@ -366,25 +363,25 @@ public class LeapMotion extends Listener
 	private void activateScreenTapGesture() 
 	{
 		//Alter the device configurations in order to detect the gesture with ease.
-		if(!device.config().setFloat("Gesture.ScreenTap.HistorySeconds", 0.5f) )
+		if(!controller.config().setFloat("Gesture.ScreenTap.HistorySeconds", 0.5f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.ScreenTap.HistorySeconds\" configuration.");
 			return;
 		}
 
-		if(! device.config().setFloat("Gesture.ScreenTap.MinDistance", 0.2f) )
+		if(! controller.config().setFloat("Gesture.ScreenTap.MinDistance", 0.2f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.ScreenTap.MinDistance\" configuration.");
 			return;
 		}
 
-		if(! device.config().setFloat("Gesture.ScreenTap.MinForwardVelocity", 0.1f) )
+		if(! controller.config().setFloat("Gesture.ScreenTap.MinForwardVelocity", 0.1f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.ScreenTap.MinForwardVelocity\" configuration.");
 			return;
 		}
 
-		device.enableGesture(Type.TYPE_SCREEN_TAP);
+		controller.enableGesture(Type.TYPE_SCREEN_TAP);
 	}
 
 	/**
@@ -392,7 +389,7 @@ public class LeapMotion extends Listener
 	 */
 	private void deactivateScreenTapGesture() 
 	{
-		device.enableGesture(Type.TYPE_SCREEN_TAP, false);
+		controller.enableGesture(Type.TYPE_SCREEN_TAP, false);
 	}
 	
 	/**
@@ -501,28 +498,28 @@ public class LeapMotion extends Listener
 	private void activateKeyTapGesture() 
 	{
 		//Alter the device configurations in order to detect the gesture with ease.
-		if(!device.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.5f) )
+		if(!controller.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.5f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.KeyTap.HistorySeconds\" configuration.");
 			return;
 		}
-		device.config().save();
+		controller.config().save();
 
-		if(!device.config().setFloat("Gesture.KeyTap.MinDownVelocity", 5.0f) )
+		if(!controller.config().setFloat("Gesture.KeyTap.MinDownVelocity", 5.0f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.KeyTap.MinDownVelocity\" configuration.");
 			return;
 		}
-		device.config().save();
+		controller.config().save();
 
-		if(!device.config().setFloat("Gesture.KeyTap.MinDistance", 20.0f) )
+		if(!controller.config().setFloat("Gesture.KeyTap.MinDistance", 20.0f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.KeyTap.MinDownVelocity\" configuration.");
 			return;
 		}
-		device.config().save();
+		controller.config().save();
 
-		device.enableGesture(Type.TYPE_KEY_TAP);
+		controller.enableGesture(Type.TYPE_KEY_TAP);
 	}
 	
 	/**
@@ -530,7 +527,7 @@ public class LeapMotion extends Listener
 	 */
 	private void deactivateKeyTapGesture() 
 	{ 
-		device.enableGesture(Type.TYPE_KEY_TAP, false); 
+		controller.enableGesture(Type.TYPE_KEY_TAP, false); 
 	}
 
 	/**
@@ -660,25 +657,24 @@ public class LeapMotion extends Listener
 			return;
 		}
 
+		//If no pointables (fingers or other objects) are detected, do nothing.
 		if(dominantHand.pointables().count() == 0)
 		{
 			return;
 		}
 		
-		if(pointerFinger == null)
+		if(pointerFingerID == -2)
 		{
-			pointerFinger = discoverPointingFinger();
+			pointerFingerID = discoverPointingFinger();
 		}
 		
-		pointerFinger = dominantHand.pointable(pointerFinger.id());
+		Pointable pointerFinger = dominantHand.pointable(pointerFingerID);
 		
 		if(!pointerFinger.isValid())
 		{
-			pointerFinger = null;
+			pointerFingerID = -2;
 			return;
 		}
-		
-		
 		
 		if(!pointerFinger.isValid())
 		{
@@ -692,9 +688,18 @@ public class LeapMotion extends Listener
 
 		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
 		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
 		
+		/*
+		float distanceToLeapMotionDetectionLimits = controller.devices().get(0).distanceToBoundary(pointerFinger.tipPosition());
+		
+		if( distanceToLeapMotionDetectionLimits < 80.0f )
+		{
+			if(debug){System.out.println("Threshold reached");}
+			return;
+		}
+		 */
+		
+		cursor.mouseMove(cursorPositionX, cursorPositionY);
 		
 		if(!auxiliaryHand.isValid())
 		{
@@ -717,34 +722,52 @@ public class LeapMotion extends Listener
 	}
 
 	
-	private Pointable discoverPointingFinger() 
+	private int discoverPointingFinger() 
 	{
 		PointableList apontadores = dominantHand.pointables();
 
 		if(apontadores.count() == 1)
 		{
-			return apontadores.get(0);
+			return apontadores.get(0).id();
 		}
 		else if(apontadores.count() > 1 && apontadores.count() <= 4)
 		{
-			return apontadores.leftmost();
+			if(isRightHanded)
+			{
+				return apontadores.leftmost().id();
+			}
+			else
+			{
+				return apontadores.rightmost().id();
+			}
 		}
 		else if(apontadores.count() == 5)
 		{
-			for(int i = 0; i < apontadores.count(); i++)
+			if(isRightHanded)
 			{
-				if( 
-					!apontadores.get(i).equals(apontadores.frontmost()) &&
-					!apontadores.get(i).equals(apontadores.leftmost()) &&
-					(apontadores.get(i).tipPosition().getX() < apontadores.frontmost().tipPosition().getX())
-				)
+				for(int i = 0; i < apontadores.count(); i++)
 				{
-					return apontadores.get(i);
+					Pointable thisPointable = apontadores.get(i);
+					if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.leftmost()) && (thisPointable.tipPosition().getX() < apontadores.frontmost().tipPosition().getX()) )
+					{
+						return thisPointable.id();
+					}
+				}
+			}
+			else
+			{
+				for(int i = 0; i < apontadores.count(); i++)
+				{
+					Pointable thisPointable = apontadores.get(i);
+					if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.rightmost()) && (thisPointable.tipPosition().getX() > apontadores.frontmost().tipPosition().getX()) )
+					{
+						return thisPointable.id();
+					}
 				}
 			}
 		}
 			
-		return null;
+		return -2;
 	}
 	
 
