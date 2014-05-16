@@ -16,7 +16,7 @@ public class Information
 	private int targetWidth; 							//In other words, the circles' diameter, in pixels. 
 	private int circleId;
 	
-	private int distanceBetweenCirclesAndFrameCenter;	//In pixels.
+	private float distanceBetweenCirclesAndFrameCenter;	//In pixels.
 	private double distanceBetweenCircles;				//In pixels.
 
 	private int numberOfClicks;							//In pixels.
@@ -218,7 +218,7 @@ public class Information
 	 * 
 	 * @return Integer value with the distance between the circle and application.
 	 */
-	public int getDistanceBetweenFrameAndCircleCenter() 
+	public float getDistanceBetweenFrameAndCircleCenter() 
 	{ return distanceBetweenCirclesAndFrameCenter; }
 
 	/**
@@ -228,7 +228,7 @@ public class Information
 	 * 
 	 * @param distance - An integer with the distance between both centers.
 	 */
-	public void setDistanceBetweenFrameAndCircleCenter(int distance) 
+	public void setDistanceBetweenFrameAndCircleCenter(float distance) 
 	{ this.distanceBetweenCirclesAndFrameCenter = distance; }
 	
 	/**

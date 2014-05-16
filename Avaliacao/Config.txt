@@ -11,9 +11,9 @@ Is user right-handed? (true/false): true
 
 Number of circles (integer): 16
 
-Circle radius (integer): 30 
+Circle radius (float): 24.5 
 
-Distance between circles and frame center (integer): 350
+Distance between circles and frame center (integer): 340.5
 
 //Nota:
 //	Para as medidas de Mackenzie os valores a colocar seriam:
@@ -24,4 +24,4 @@ Random sequence generator (true/false): false
 
 How many sequences does one block have? (integer): 5
 
-How many blocks does one experiment have? (integer): 5
+How many blocks does one experiment have? (integer): 10

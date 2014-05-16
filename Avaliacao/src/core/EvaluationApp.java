@@ -48,8 +48,8 @@ public class EvaluationApp extends PApplet
 	//Information related to the circles drawn in the application
 	Vector<Circle> circles;
 	private int numberOfCircles;
-	private int circleRadius;
-	private int centerDistance;
+	private float circleRadius;
+	private float centerDistance;
 	
 	//Information related to the sequence to be generated.
 	private Sequence sequenceToPerform;
@@ -421,7 +421,6 @@ public class EvaluationApp extends PApplet
 			
 			//Remove certain symbols that may exist.
 			result[1] = result[1].replace(" ", "");
-			result[1] = result[1].replace(".", "");
 			
 			//Store the read values in the respective variable.
 			if( result[0].equals("Number of circles (integer)") )
@@ -430,11 +429,11 @@ public class EvaluationApp extends PApplet
 			}
 			else if( result[0].equals("Distance between circles and frame center (integer)") )
 			{ 
-				centerDistance = Integer.parseInt(result[1]); 
+				centerDistance = Float.parseFloat(result[1]); 
 			}
-			else if( result[0].equals("Circle radius (integer)") )
+			else if( result[0].equals("Circle radius (float)") )
 			{ 
-				circleRadius = Integer.parseInt(result[1]); 
+				circleRadius = Float.parseFloat(result[1]); 
 			}
 			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
 			{ 
@@ -490,19 +489,19 @@ public class EvaluationApp extends PApplet
 				//True is the default value of "rightHanded".
 			}
 		}
-		
+
 		//Check if the acquired values are respect the established limits.
 		if( !(numberOfCircles >= 2 && numberOfCircles <= 32) )
 		{
 			System.err.println("\"Number of circles\" can only vary between 2 and 32.");
 			System.exit(3);
 		}
-		else if( !(circleRadius >= 1 && circleRadius <= 200) )
+		else if( !(circleRadius >= 1.0f && circleRadius <= 200.0f) )
 		{
 			System.err.println("\"Circle radius\" can only vary between 1 and 200.");
 			System.exit(4);
 		}
-		else if( !(centerDistance >= 0 && centerDistance <= 800) )
+		else if( !(centerDistance >= 0.0f && centerDistance <= 800.0f) )
 		{
 			System.err.println("\"Distance between circles and frame center\" can only vary between 0 and 800.");
 			System.exit(5);
@@ -693,9 +692,6 @@ public class EvaluationApp extends PApplet
 							currentBlockNumber++;
 							currentSequenceNumber = 0;
 						}
-						
-						System.out.println(currentSequenceNumber + " " + numberOfSequencesPerBlock);
-						System.out.println(currentBlockNumber + " " + numberOfBlocksPerExperiment);
 						
 						//Generate a new sequence
 						sequenceToPerform = new Sequence(numberOfCircles, generateRandomSequence);

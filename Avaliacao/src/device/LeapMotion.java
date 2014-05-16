@@ -697,7 +697,7 @@ public class LeapMotion extends Listener
 			if(debug){System.out.println("Threshold reached");}
 			return;
 		}
-		 */
+		*/ 
 		
 		cursor.mouseMove(cursorPositionX, cursorPositionY);
 		
