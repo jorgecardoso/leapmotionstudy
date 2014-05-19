@@ -31,6 +31,10 @@ public class EvaluationApp extends PApplet
 	//For drawing the purple "+" sign that shows on the target circle
 	private int targetSizeX;
 	private int targetSizeY;
+	
+	//Screen Resolution
+	private int windowHeight;
+	private int windowWidth;
 
 	protected boolean redrawElements;
 	
@@ -99,12 +103,16 @@ public class EvaluationApp extends PApplet
 	 * This function is only executed once.
 	 * 
 	 * This function is responsible for setting the initial parameters of Processing, reading the configuration file 
-	 * and starting the adequate listneres.
+	 * and starting the adequate listeners.
 	 */
 	public void setup()
 	{
 		//Loading the required values to the execution of the application from the configuration text file ("Config.txt").
 		loadConfigurationFile();
+		
+		//Discover the screen resolution.
+		windowHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
+		windowWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
 		
 		//Start Leap Motion device in its own thread
 		if(activateLeapMotion)
@@ -119,10 +127,6 @@ public class EvaluationApp extends PApplet
 		
 		//Set starting text.
 		displayText = "Welcome to the Evaluation application!\nTo start press the + on the top!";
-		
-		//Discover the screen resolution.
-		int windowHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
-		int windowWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
 		
 		//Window will occupy all the available screen area. Some OSes restrict this area.
 		size(windowWidth,windowHeight);
@@ -309,7 +313,7 @@ public class EvaluationApp extends PApplet
 		{ return ; }
 		
 		//The space occupied is always less that the screens resolution (the window may be unable to overlap the tool bars).
-		//For that reason, it may be need to uodate the application frame size.		
+		//For that reason, it may be need to update the application frame size.		
 		centralPositionX = (int) (this.width / 2.0);
 		centralPositionY = (int) (this.height / 2.0);
 		
@@ -520,12 +524,14 @@ public class EvaluationApp extends PApplet
 	 * for it to run exclusively.
 	 * 
 	 * If the Leap Motion is already started but has been stopped, this function will restart it.
+	 * @param windowHeight 
+	 * @param windowWidth 
 	 */
 	private void activateLeapMotion() 
 	{
 		if(leapMotionDevice == null)
 		{
-			leapMotionDevice = new LeapMotion(desiredControlMethod, rightHanded);
+			leapMotionDevice = new LeapMotion(desiredControlMethod, rightHanded, windowWidth, windowHeight);
 			lmThread = new Thread("Leap Motion Listener") {
 				public void run(){
 					//Boolean represents if user is right handed or not.

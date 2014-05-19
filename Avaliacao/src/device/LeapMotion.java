@@ -2,6 +2,7 @@ package device;
 
 import java.awt.AWTException;
 import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.event.InputEvent;
 
 import com.leapmotion.leap.*;
@@ -21,6 +22,8 @@ public class LeapMotion extends Listener
 	private Hand auxiliaryHand = new Hand();
 	private int pointerFingerID = -2;
 	private Frame lastFrame = new Frame();
+	private int screenResolutionX = 0;
+	private int screenResolutionY = 0;
 
 	//Position of the cursor controlled by the Leap Motion
 	private int cursorPositionX = 0;
@@ -40,6 +43,7 @@ public class LeapMotion extends Listener
 	
 	//For testing purposes.
 	final boolean debug = false;
+	int teste = 0;
 		
 	/**
 	 * Constructor of Class LeapMotion.
@@ -49,10 +53,17 @@ public class LeapMotion extends Listener
 	 * @param modeOfControl - Type of control the user intends to have.
 	 * @param isRightHanded - Boolean indicating if the user is right handed.
 	 */
-	public LeapMotion(ControlMode modeOfControl, boolean isRightHanded)
+	
+	
+	
+	
+	
+	public LeapMotion(ControlMode modeOfControl, boolean isRightHanded, int screenResX, int screenResY)
 	{
 		this.isRightHanded = isRightHanded;
 		this.choosenControlMode = modeOfControl;
+		this.screenResolutionX = screenResX;
+		this.screenResolutionY = screenResY;
 	}
 
 	/**
@@ -663,32 +674,53 @@ public class LeapMotion extends Listener
 			return;
 		}
 		
-		if(pointerFingerID == -2)
+		if(pointerFingerID == -2 || ( dominantHand.pointable(pointerFingerID).equals(dominantHand.pointables().leftmost()) 
+									  && dominantHand.pointables().count() >= 1))
 		{
 			pointerFingerID = discoverPointingFinger();
 		}
 		
+		System.out.println(auxiliaryHand.pointables().count());
 		Pointable pointerFinger = dominantHand.pointable(pointerFingerID);
 		
 		if(!pointerFinger.isValid())
 		{
 			pointerFingerID = -2;
+			System.out.println("Dedo foi perdido!" + teste++);
 			return;
 		}
 		
-		if(!pointerFinger.isValid())
-		{
-			if(debug){System.err.println("Invalid pointer finger!");}
-			return;
-		}
+	
+
 		
+		/*
+		Screen screen = availableScreens.get(0);
+		
+		Vector intersection = screen.intersect(pointerFinger.stabilizedTipPosition(),pointerFinger.direction(), true);
+		
+		cursorPositionX = (int) (intersection.getX() * screenResolutionX);
+		cursorPositionY = (int) (screenResolutionY - (intersection.getY() * screenResolutionY));
+		*/
+		
+		
+		Vector stabilizedPosition = pointerFinger.stabilizedTipPosition();//stabilizedTipPosition();
+
+		InteractionBox iBox = frame.interactionBox();
+		Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
+		float x = normalizedPosition.getX() * screenResolutionX;
+		float y = screenResolutionY - normalizedPosition.getY() * screenResolutionY;
+		
+		cursorPositionX = (int) x;
+		cursorPositionY = (int) y;
+		
+		/*
 		Screen screen = availableScreens.get(0);
 
 		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
 
 		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
 		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-		
+		*/
 		/*
 		float distanceToLeapMotionDetectionLimits = controller.devices().get(0).distanceToBoundary(pointerFinger.tipPosition());
 		
@@ -707,18 +739,18 @@ public class LeapMotion extends Listener
 			return;
 		}
 		
-		if( (auxiliaryHand.fingers().count() <= 1) && !pressOcurred)
+		if( (auxiliaryHand.fingers().count() <= 0) && pressOcurred)
+		{
+			pressOcurred = false;
+		}
+		
+		if( (auxiliaryHand.fingers().count() >= 2) && !pressOcurred )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			
-			pressOcurred = !pressOcurred;
-		}
-		
-		if( (auxiliaryHand.fingers().count() >= 4) && pressOcurred )
-		{
-			pressOcurred = !pressOcurred;
-		}
+			pressOcurred = true;
+		}	
 	}
 
 	
@@ -726,48 +758,69 @@ public class LeapMotion extends Listener
 	{
 		PointableList apontadores = dominantHand.pointables();
 
-		if(apontadores.count() == 1)
+		switch(apontadores.count())
 		{
-			return apontadores.get(0).id();
-		}
-		else if(apontadores.count() > 1 && apontadores.count() <= 4)
-		{
-			if(isRightHanded)
-			{
-				return apontadores.leftmost().id();
-			}
-			else
-			{
-				return apontadores.rightmost().id();
-			}
-		}
-		else if(apontadores.count() == 5)
-		{
-			if(isRightHanded)
-			{
-				for(int i = 0; i < apontadores.count(); i++)
+			case 1:
+				return apontadores.get(0).id();
+				
+			case 2:
+				if(isRightHanded)
+				{
+					return apontadores.frontmost().id();		
+				}
+				else
+				{
+					return apontadores.frontmost().id();
+				}
+				
+			case 3:
+				for(int i = 0; i < 3; i++)	
 				{
 					Pointable thisPointable = apontadores.get(i);
-					if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.leftmost()) && (thisPointable.tipPosition().getX() < apontadores.frontmost().tipPosition().getX()) )
+						
+					if( !thisPointable.equals(apontadores.leftmost()) && !thisPointable.equals(apontadores.rightmost()) )
 					{
 						return thisPointable.id();
 					}
 				}
-			}
-			else
-			{
-				for(int i = 0; i < apontadores.count(); i++)
+				
+			case 4:
+				if(isRightHanded)
 				{
-					Pointable thisPointable = apontadores.get(i);
-					if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.rightmost()) && (thisPointable.tipPosition().getX() > apontadores.frontmost().tipPosition().getX()) )
+					return apontadores.leftmost().id();		
+				}
+				else
+				{
+					return apontadores.rightmost().id();
+				}
+				
+			case 5:
+				if(isRightHanded)
+				{
+					for(int i = 0; i < apontadores.count(); i++)
 					{
-						return thisPointable.id();
+						Pointable thisPointable = apontadores.get(i);
+						if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.leftmost()) && (thisPointable.tipPosition().getX() < apontadores.frontmost().tipPosition().getX()) )
+						{
+							return thisPointable.id();
+						}
 					}
 				}
-			}
+				else
+				{
+					for(int i = 0; i < apontadores.count(); i++)
+					{
+						Pointable thisPointable = apontadores.get(i);
+						if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.rightmost()) && (thisPointable.tipPosition().getX() > apontadores.frontmost().tipPosition().getX()) )
+						{
+							return thisPointable.id();
+						}
+					}
+				}
+				
+			default:
+				return -2;
 		}
-			
-		return -2;
 	}
 	
 
@@ -880,7 +933,10 @@ public class LeapMotion extends Listener
 	//For testing purposes
 	public static void main(String[] args) 
 	{
-		LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_GRABBING_GESTURE,true);
+		int windowHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
+		int windowWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+		
+		LeapMotion lm = new LeapMotion(ControlMode.HANDS_WITH_GRABBING_GESTURE,true, windowWidth, windowHeight);
 		lm.initialize();
 	}
 }

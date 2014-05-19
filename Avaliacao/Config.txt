@@ -4,7 +4,7 @@
 // 2 = Touch Pad;
 Number of the device to be used: 0
 
-Assigned UserID to person performing the evaluation: 10
+Assigned UserID to person performing the evaluation: 2
 
 Is user right-handed? (true/false): true
 
@@ -24,4 +24,4 @@ Random sequence generator (true/false): false
 
 How many sequences does one block have? (integer): 5
 
-How many blocks does one experiment have? (integer): 10
+How many blocks does one experiment have? (integer): 8
