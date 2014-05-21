@@ -59,7 +59,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 #dataTransformed <- rbind(dataTransformedLeap, dataTransformedTouch, dataTransformedMouse)
-dataTransformed <- read.csv(file="data/all-transformed.txt", head=TRUE, sep="")
+dataTransformed <- read.csv(file="data/10-transformed.txt", head=TRUE, sep="")
 
 # change column name to get a nicer chart
 colnames(dataTransformed)[colnames(dataTransformed)=="NumberDevice"] <- "Device"
@@ -67,6 +67,7 @@ colnames(dataTransformed)[colnames(dataTransformed)=="NumberDevice"] <- "Device"
 # convert the column to factor and name the levels
 dataTransformed$Device <- as.factor(dataTransformed$Device)
 levels(dataTransformed$Device) <- c("LeapMotion",  "Mouse", "Touchpad")
+#levels(dataTransformed$Device) <- c("Mouse")
 
 
 #calculate the maximum and minimum y and x coords for setting the plots' scales
@@ -78,9 +79,9 @@ print ( paste("X scale: ", minX, maxX, " Y scale: ", minY, maxY))
 
 # plot the paths for each user and device. a single plot aggregates one entire sequence
 for (device in levels(dataTransformed$Device) ) {
-    for (user in 24) {
+    for (user in unique(dataTransformed$User)) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
-                                         dataTransformed$UserId==24,], 
+                                         dataTransformed$UserId==user,], 
                      aes(x=rx, y=ry, group=Device, colour=Device )) +
             geom_line() +
             coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +
@@ -99,9 +100,9 @@ for (device in levels(dataTransformed$Device) ) {
 
 # plot the paths for each user and device. a single plot aggregates one circleid
 for (device in levels(dataTransformed$Device) ) {
-    for (user in 24) {
+    for (user in unique(dataTransformed$User)) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
-                                        dataTransformed$UserId==24,], 
+                                        dataTransformed$UserId==user,], 
                     aes(x=rx, y=ry, group=Device, colour=Device )) +
             geom_line() +
             coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +
@@ -122,11 +123,11 @@ for (device in levels(dataTransformed$Device) ) {
 # plot INDIVIDUAL paths for each user and device. 
 # PRODUCES LOTS OF FILES
 for (device in levels(dataTransformed$Device) ) {
-    for (user in 24) {
-        for (block in 1:10) { 
+    for (user in unique(dataTransformed$User)) {
+        for (block in unique(dataTransformed$Block)) { 
             p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                             dataTransformed$Block==block &
-                                            dataTransformed$UserId==24,], 
+                                            dataTransformed$UserId==user,], 
                         aes(x=rx, y=ry, group=Device, colour=Device )) +
                 geom_line() +
                 coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +

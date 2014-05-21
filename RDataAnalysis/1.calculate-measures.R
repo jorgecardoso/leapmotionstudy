@@ -4,6 +4,8 @@
 NOISE_ERROR_THRESHOLD <- 400
 
 
+SAMPLE_INTERVAL <- 25 #40 samples per second: 25 millisecond interval
+
 
 # Functions
 rotationMatrix <- function(angle) {
@@ -47,7 +49,7 @@ toDegrees <- function(radians) {
 
 
 ############################ data
-device <- "all"
+device <- "10"
 filename <- paste("data/",device,".txt", sep="")
 filenameTransformed <- paste("data/", device,"-transformed.txt", sep="")
 filenameMeasures <- paste("data/", device,"-measures.txt", sep="")
@@ -149,9 +151,17 @@ system.time(
                     partialrx <- numeric()
                     partialry <- numeric()
                     partialinside <- logical()
+                    speeds <- numeric()
+                    accels <- numeric()
                     
                     # for noise errors checking
                     lastCalculatedPointY <- 0
+                    
+                    
+                    # for speed and accel calculation
+                    lastPointX <- 0
+                    lastPointY <- 0
+                    lastSpeed <- 0
                     
                     
                     #for (n in indexes ) {
@@ -188,10 +198,18 @@ system.time(
                         }
                         lastCalculatedPointY <- partialry[n]
                          
-                        
-                        
+        
                         clickPointX <- newPoint[1,1]
                         clickPointY <- newPoint[1,2]
+        
+                        
+                        # Speed/Accel
+                        dist <- dist(rbind(c(clickPointX,clickPointY), c(lastPointX, lastPointY)))
+                        speed <- dist/(SAMPLE_INTERVAL/1000)
+                        speeds[n] <- speed
+                        lastPointX <- clickPointX
+                        lastPointY <- clickPointY
+                        
                         
                         #TRE
                         if (dist(rbind(newPoint, target)) < partial[n,]$TargetWidth/2) {
@@ -266,6 +284,8 @@ system.time(
                     partial$ry <- partialry
                     partial$inside <- partialinside
                     
+                    partial$speeds <- speeds
+                    
                     #newData <- rbind(newData, partial)
                     newDataSequence <- rbind(newDataSequence, partial)
                 }
@@ -292,11 +312,11 @@ diffY <- dataMeasures$ClickPointY-meanY
 diffSQX <- diffX*diffX
 diffSQY <- diffY*diffY
 
-SD <- sqrt(sum(diffSQX+diffSQY)/length(diffX))
+SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
 We <- 4.133*SD
-IDe <- log(dataMeasures[1,]$Distance/We + 1)
+IDe <- log(dataMeasures[1,]$Distance/We + 1, 2)
 Throughput <- IDe/dataMeasures$MovementTime
-
+dataMeasures$Throughput <-Throughput
 
 
 write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
@@ -310,10 +330,9 @@ write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
 plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
 
 
-toplot <- newData[newData$NumberDevice==2 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
+toplot <- newData[newData$NumberDevice==0 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
 
-plot(toplot$rx, 
-     toplot$ry, type='l')
+plot(toplot$speed, type='l')
 
 
 

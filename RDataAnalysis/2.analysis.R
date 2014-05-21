@@ -12,7 +12,7 @@ require(doBy)
 #dataMeasuresMouse <- read.csv(file="data/mouse-measures.txt", head=TRUE, sep="")
 
 #dataMeasures <- rbind(dataMeasuresLeap, dataMeasuresTouch, dataMeasuresMouse)
-dataMeasures <- read.csv(file="data/all-measures.txt", head=TRUE, sep="")
+dataMeasures <- read.csv(file="data/10-measures.txt", head=TRUE, sep="")
 
 
 # change column name to get a nicer chart
@@ -42,6 +42,12 @@ p + geom_point(size=5, aes(shape=Device)) + coord_cartesian(xlim = c(0, 0.4), yl
     xlab("Target Re-Entry") 
 ggsave(file = "charts/MO-TRE.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
+
+# plot the throughput
+p <- ggplot(dataMeasures, aes(x=Device,y=Throughput, group=Device, colour=Device ))
+p + stat_summary(fun.y="mean", geom="line") + stat_summary(fun.y="mean", geom="point", aes(shape=Device)) 
+
+ggsave(file = "charts/Throughput.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
 # analysis of variance
