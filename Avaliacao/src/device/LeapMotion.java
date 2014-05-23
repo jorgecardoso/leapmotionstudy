@@ -12,7 +12,7 @@ public class LeapMotion extends Listener
 {
 	//Enumeration containing all of the developed controlled modes.
 	public enum ControlMode{HAND_WITHOUT_GESTURE, HAND_WITHOUT_GESTURE_INVERTED, HAND_WITH_SCREENTAP_GESTURE, 
-							HANDS_WITH_KEYTAP_GESTURE, HANDS_WITH_GRABBING_GESTURE};
+							HANDS_WITH_KEYTAP_GESTURE, HAND_WITH_GRABBING_GESTURE ,HANDS_WITH_GRABBING_GESTURE };
 
 	//Variables related to the Leap Motion control.
 	private Controller controller;
@@ -20,8 +20,8 @@ public class LeapMotion extends Listener
 	private boolean isRightHanded;
 	private Hand dominantHand = new Hand();
 	private Hand auxiliaryHand = new Hand();
-	private int pointerFingerID = -2;
 	private Frame lastFrame = new Frame();
+	Pointable pointerFinger = new Pointable();
 	private int screenResolutionX = 0;
 	private int screenResolutionY = 0;
 
@@ -243,28 +243,128 @@ public class LeapMotion extends Listener
 				auxiliaryHand = rightHand;
 			}
 		}
+		
+		//Depending on the control mode being used, take a different take on moving the screen cursor.
+		if( (choosenControlMode == ControlMode.HAND_WITH_SCREENTAP_GESTURE) 	||
+			(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)			||
+			(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)	  )
+		{
+			//In this option, a interaction box is used, allowing for a more precise pointing. The pointing is done 
+			//using the index finger tip position. 
+			if(!pointerFinger.isValid() || dominantHand.pointables().frontmost().equals(pointerFinger))
+			{
+				pointerFinger = discoverPointingFinger();
+			}
+			else
+			{
+				pointerFinger = dominantHand.pointable(pointerFinger.id());
+			}
+			
+			if(!pointerFinger.isValid())
+			{
+				if(debug){System.err.println("Invalid pointer finger!");}
+				return;
+			}
+			
+			Vector stabilizedPosition = pointerFinger.stabilizedTipPosition();
+			
+			InteractionBox iBox = capturedFrame.interactionBox();
+			Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
+			
+			float x = normalizedPosition.getX() * screenResolutionX;
+			float y = screenResolutionY - normalizedPosition.getY() * screenResolutionY;
+			
+			cursorPositionX = (int) x;
+			cursorPositionY = (int) y;
+			
+			cursor.mouseMove(cursorPositionX, cursorPositionY);
+		}
+		else if( (choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)  ||
+				 (choosenControlMode == ControlMode.HANDS_WITH_GRABBING_GESTURE)  )
+		{
+			//In this option an intersection is used, having less precision in pointing, but allowing two hands to be used at the same time. 
+			ScreenList availableScreens = controller.locatedScreens();
 
+			if(availableScreens.isEmpty())
+			{
+				if(debug){System.err.println("No screen has been detected.");}
+				return;
+			}
+			
+			Screen screen = availableScreens.get(0);
+			
+			if(!pointerFinger.isValid())
+			{
+				pointerFinger = discoverPointingFinger();
+			}
+			else
+			{
+				pointerFinger =  dominantHand.pointable(pointerFinger.id());
+			}
+
+			if(!pointerFinger.isValid())
+			{
+				if(debug){System.err.println("Invalid pointer finger!");}
+				return;
+			}
+			
+			Vector interscection = screen.intersect(pointerFinger.stabilizedTipPosition(), pointerFinger.direction(), true, 1.0f);
+
+			//Vector interscection = screen.intersect(pointerFinger, true, 1.0f);
+
+			
+			cursorPositionX = (int) ( screen.widthPixels() * interscection.getX() );
+			cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - interscection.getY() ) );
+
+			cursor.mouseMove(cursorPositionX, cursorPositionY);
+		}
+		else if( choosenControlMode == ControlMode.HAND_WITH_GRABBING_GESTURE )
+		{
+			if(! (dominantHand.fingers().count() >= 3) )
+			{
+				//In this option, similar to the first, an interactive box is used allowing for a more precise pointing. However, 
+				//the pointing is done with the hand palm instead.  
+				Vector stabilizedPosition = dominantHand.stabilizedPalmPosition();
+				
+				InteractionBox iBox = capturedFrame.interactionBox();
+				Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
+				float x = normalizedPosition.getX() * screenResolutionX;
+				float y = screenResolutionY - normalizedPosition.getY() * screenResolutionY;
+				
+				cursorPositionX = (int) x;
+				cursorPositionY = (int) y;
+				
+				cursor.mouseMove(cursorPositionX, cursorPositionY);	
+			}			
+		}
+		
 		//Take the respective action depending on the control mode.
 		if(choosenControlMode == ControlMode.HAND_WITH_SCREENTAP_GESTURE)
 		{ 
 			//User controls the cursor and simulates button presses with the same hand.
 			//The button press is simulated by the SCREEN TAP gesture.
-			typeControlScreenTap(controller); 
+			typeControlScreenTap(controller, capturedFrame); 
 		}
 		else if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 		{ 
 			//User controls the cursor using his/her dominant hand and simulates button 
 			//presses with the auxiliary hand by performing KEYTAP gesture.
-			typeControlKeyTap(controller); 
+			typeControlKeyTap(controller, capturedFrame); 
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)
 		{ 
+			//Information required for this control mode.
+			touchZoneDistance = pointerFinger.touchDistance();
+			
 			//User controls the cursor and simulates button presses with the same hand.
 			//The button press is simulated by the touch zone distance. When "touching" a click will occur.
 			typeControlTouchDistance(controller); 
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)
 		{
+			//Information required for this control mode.
+			touchZoneDistance = pointerFinger.touchDistance();
+			
 			//User controls the cursor and simulates button presses with the same hand.
 			//The button press is simulated by the touch zone distance. This time, a click will occur when not "touching" the 
 			//touch zone.
@@ -274,7 +374,13 @@ public class LeapMotion extends Listener
 		{
 			//User controls the cursor using his/her dominant hand and simulates button 
 			//presses with the auxiliary hand by performing a grabbing gesture.
-			typeControlHandsWithGrabbingGesture(controller, capturedFrame);
+			typeControlHandsWithGrabbingGesture(controller);
+		}
+		else if(choosenControlMode == ControlMode.HAND_WITH_GRABBING_GESTURE)
+		{
+			//User controls the cursor using his/her dominant hand and simulates button 
+			//presses with the auxiliary hand by performing a grabbing gesture.
+			typeControlHandWithGrabbingGesture(controller);
 		}
 
 		//Saves the current frame to be used in future comparisons.
@@ -293,34 +399,9 @@ public class LeapMotion extends Listener
 	 * 
 	 * @param controller - Default device controller.
 	 */
-	private void typeControlScreenTap(Controller controller)
+	private void typeControlScreenTap(Controller controller, Frame frame)
 	{
-		ScreenList availableScreens = controller.locatedScreens();
-		
-		if(availableScreens.isEmpty())
-		{
-			if(debug){System.err.println("No screen has been detected.");}
-			return;
-		}
-
-		Pointable pointerFinger = dominantHand.pointables().frontmost();
-
-		if(!pointerFinger.isValid())
-		{
-			if(debug){System.err.println("Invalid pointer finger!");}
-			return;
-		}
-
-		Screen screen = availableScreens.get(0);
-
-		Vector interscection = screen.intersect(pointerFinger, true, 1.0f);
-
-		cursorPositionX = (int) ( screen.widthPixels() * interscection.getX() );
-		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - interscection.getY() ) );
-
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
-		
-		GestureList gestures = controller.frame().gestures();
+		GestureList gestures = frame.gestures();
 		Gesture performedGesture = new Gesture();
 
 		//If there are no gestures, no need to go any further.
@@ -417,34 +498,9 @@ public class LeapMotion extends Listener
 	 * 
 	 * @param controller - Default device controller.
 	 */
-	private void typeControlKeyTap(Controller controller)
+	private void typeControlKeyTap(Controller controller, Frame frame)
 	{
-		ScreenList availableScreens = controller.locatedScreens();
-
-		if(availableScreens.isEmpty())
-		{
-			if(debug){System.err.println("No screen was detected.");}
-			return;
-		}
-
-		Pointable pointerFinger = dominantHand.pointables().frontmost();
-
-		if(!pointerFinger.isValid())
-		{
-			if(debug){System.err.println("Invalid pointer finger!");}
-			return;
-		}
-
-		Screen screen = availableScreens.get(0);
-
-		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
-
-		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
-		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
-	
-		GestureList gestures = controller.frame().gestures();
+		GestureList gestures = frame.gestures();
 
 		//If there are no gestures, no need to go any further.
 		if(gestures.isEmpty())
@@ -554,32 +610,6 @@ public class LeapMotion extends Listener
 	 */
 	private void typeControlTouchDistance(Controller controlador)
 	{
-		ScreenList availableScreens = controlador.locatedScreens();
-
-		if(availableScreens.isEmpty())
-		{
-			if(debug){System.err.println("No screen detected.");}
-			return;
-		}
-
-		Pointable pointerFinger = dominantHand.pointables().frontmost();
-
-		if(!pointerFinger.isValid())
-		{
-			if(debug){System.err.println("Invalid pointer finger!");}
-			return;
-		}
-
-		Screen screen = availableScreens.get(0);
-
-		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
-
-		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
-		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-		touchZoneDistance = pointerFinger.touchDistance();
-
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
-		
 		if(!pressOcurred && (touchZoneDistance <= 0.0) )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
@@ -608,32 +638,6 @@ public class LeapMotion extends Listener
 	 */
 	private void typeControlTouchDistanceInverted(Controller controller) 
 	{
-		ScreenList availableScreens = controller.locatedScreens();
-
-		if(availableScreens.isEmpty())
-		{
-			if(debug){System.err.println("No screen detected.");}
-			return;
-		}
-
-		Pointable pointerFinger = dominantHand.pointables().frontmost();
-
-		if(!pointerFinger.isValid())
-		{
-			if(debug){System.err.println("Invalid pointer finger!");}
-			return;
-		}
-
-		Screen screen = availableScreens.get(0);
-
-		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
-
-		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
-		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-		touchZoneDistance = pointerFinger.touchDistance();
-
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
-		
 		if(!pressOcurred && (touchZoneDistance >= 0.0) )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
@@ -658,120 +662,62 @@ public class LeapMotion extends Listener
 	 * 
 	 * @param controller - Default device controller.
 	 */
-	private void typeControlHandsWithGrabbingGesture(Controller controller, Frame frame)
-	{
-		ScreenList availableScreens = controller.locatedScreens();
-
-		if(availableScreens.isEmpty())
-		{
-			if(debug){System.err.println("No screen was detected.");}
-			return;
-		}
-
-		//If no pointables (fingers or other objects) are detected, do nothing.
-		if(dominantHand.pointables().count() == 0)
-		{
-			return;
-		}
-		
-		if(pointerFingerID == -2 || ( dominantHand.pointable(pointerFingerID).equals(dominantHand.pointables().leftmost()) 
-									  && dominantHand.pointables().count() >= 1))
-		{
-			pointerFingerID = discoverPointingFinger();
-		}
-		
-		System.out.println(auxiliaryHand.pointables().count());
-		Pointable pointerFinger = dominantHand.pointable(pointerFingerID);
-		
-		if(!pointerFinger.isValid())
-		{
-			pointerFingerID = -2;
-			System.out.println("Dedo foi perdido!" + teste++);
-			return;
-		}
-		
-	
-
-		
-		/*
-		Screen screen = availableScreens.get(0);
-		
-		Vector intersection = screen.intersect(pointerFinger.stabilizedTipPosition(),pointerFinger.direction(), true);
-		
-		cursorPositionX = (int) (intersection.getX() * screenResolutionX);
-		cursorPositionY = (int) (screenResolutionY - (intersection.getY() * screenResolutionY));
-		*/
-		
-		
-		Vector stabilizedPosition = pointerFinger.stabilizedTipPosition();//stabilizedTipPosition();
-
-		InteractionBox iBox = frame.interactionBox();
-		Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
-		float x = normalizedPosition.getX() * screenResolutionX;
-		float y = screenResolutionY - normalizedPosition.getY() * screenResolutionY;
-		
-		cursorPositionX = (int) x;
-		cursorPositionY = (int) y;
-		
-		/*
-		Screen screen = availableScreens.get(0);
-
-		Vector intersection = screen.intersect(pointerFinger, true, 1.0f);
-
-		cursorPositionX = (int) ( screen.widthPixels() * intersection.getX() );
-		cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - intersection.getY() ) );
-		*/
-		/*
-		float distanceToLeapMotionDetectionLimits = controller.devices().get(0).distanceToBoundary(pointerFinger.tipPosition());
-		
-		if( distanceToLeapMotionDetectionLimits < 80.0f )
-		{
-			if(debug){System.out.println("Threshold reached");}
-			return;
-		}
-		*/ 
-		
-		cursor.mouseMove(cursorPositionX, cursorPositionY);
-		
+	private void typeControlHandsWithGrabbingGesture(Controller controller)
+	{	
 		if(!auxiliaryHand.isValid())
 		{
 			if(debug){System.err.println("Must place your auxiliary hand over the Leap Motion device.");}
 			return;
 		}
 		
-		if( (auxiliaryHand.fingers().count() <= 0) && pressOcurred)
+		if( (auxiliaryHand.fingers().count() <= 1) && pressOcurred)
 		{
 			pressOcurred = false;
 		}
 		
-		if( (auxiliaryHand.fingers().count() >= 2) && !pressOcurred )
+		if( (auxiliaryHand.fingers().count() >= 3) && !pressOcurred )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			
 			pressOcurred = true;
-		}	
+		}
+	}
+	
+	private void typeControlHandWithGrabbingGesture(Controller controller)
+	{	
+		if(!dominantHand.isValid())
+		{
+			if(debug){System.err.println("Must place your auxiliary hand over the Leap Motion device.");}
+			return;
+		}
+		
+		if( (dominantHand.fingers().count() <= 1) && pressOcurred)
+		{
+			pressOcurred = false;
+		}
+		
+		if( (dominantHand.fingers().count() >= 4) && !pressOcurred )
+		{
+			cursor.mousePress(InputEvent.BUTTON1_MASK);
+			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
+			
+			pressOcurred = true;
+		}
 	}
 
 	
-	private int discoverPointingFinger() 
+	private Pointable discoverPointingFinger() 
 	{
 		PointableList apontadores = dominantHand.pointables();
 
 		switch(apontadores.count())
 		{
 			case 1:
-				return apontadores.get(0).id();
+				return apontadores.get(0);
 				
 			case 2:
-				if(isRightHanded)
-				{
-					return apontadores.frontmost().id();		
-				}
-				else
-				{
-					return apontadores.frontmost().id();
-				}
+				return apontadores.frontmost();		
 				
 			case 3:
 				for(int i = 0; i < 3; i++)	
@@ -780,18 +726,18 @@ public class LeapMotion extends Listener
 						
 					if( !thisPointable.equals(apontadores.leftmost()) && !thisPointable.equals(apontadores.rightmost()) )
 					{
-						return thisPointable.id();
+						return thisPointable;
 					}
 				}
 				
 			case 4:
 				if(isRightHanded)
 				{
-					return apontadores.leftmost().id();		
+					return apontadores.leftmost();		
 				}
 				else
 				{
-					return apontadores.rightmost().id();
+					return apontadores.rightmost();
 				}
 				
 			case 5:
@@ -802,7 +748,7 @@ public class LeapMotion extends Listener
 						Pointable thisPointable = apontadores.get(i);
 						if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.leftmost()) && (thisPointable.tipPosition().getX() < apontadores.frontmost().tipPosition().getX()) )
 						{
-							return thisPointable.id();
+							return thisPointable;
 						}
 					}
 				}
@@ -813,13 +759,13 @@ public class LeapMotion extends Listener
 						Pointable thisPointable = apontadores.get(i);
 						if(	!thisPointable.equals(apontadores.frontmost()) && !thisPointable.equals(apontadores.rightmost()) && (thisPointable.tipPosition().getX() > apontadores.frontmost().tipPosition().getX()) )
 						{
-							return thisPointable.id();
+							return thisPointable;
 						}
 					}
 				}
 				
 			default:
-				return -2;
+				return new Pointable();
 		}
 	}
 	
@@ -891,6 +837,10 @@ public class LeapMotion extends Listener
 				break;
 	
 			case HANDS_WITH_GRABBING_GESTURE:
+				choosenControlMode = ControlMode.HAND_WITH_GRABBING_GESTURE;
+				break;
+				
+			case HAND_WITH_GRABBING_GESTURE:
 				choosenControlMode = ControlMode.HANDS_WITH_KEYTAP_GESTURE;
 				activateKeyTapGesture();
 				break;
@@ -924,6 +874,9 @@ public class LeapMotion extends Listener
 	
 			case HANDS_WITH_GRABBING_GESTURE:
 				return "2 hand, Grabbing gesture.";
+				
+			case HAND_WITH_GRABBING_GESTURE:
+				return "1 hand, Grabbing gesture.";
 		}
 
 		//This should not happen.

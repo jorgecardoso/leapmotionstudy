@@ -4,7 +4,7 @@
 // 2 = Touch Pad;
 Number of the device to be used: 0
 
-Assigned UserID to person performing the evaluation: 2
+Assigned UserID to person performing the evaluation: 0
 
 Is user right-handed? (true/false): true
 

@@ -91,7 +91,7 @@ public class EvaluationApp extends PApplet
 	private boolean mouseClickedInsideTarget = false;
 	private int numberOfClicksTrial = 0;
 	
-	private boolean debug = false;
+	private boolean debug = true;
 
 	public static void main(String args[]) 
 	{
@@ -232,10 +232,15 @@ public class EvaluationApp extends PApplet
 		if(redrawElements)
 		{ return ; }
 		
+		//Draw "+" (target) symbol on the screen. 
+		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
+		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
+		
 		//Depending on the device being used or Leap Motion device's control mode, change the cursor
 		//to the correct cursor.
 		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   || desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
-			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE || deviceID != 0 )
+			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE || desiredControlMethod == ControlMode.HAND_WITH_GRABBING_GESTURE ||
+			deviceID != 0 )
 		{ 
 			//Default cursor image.
 			cursor();	
@@ -264,10 +269,12 @@ public class EvaluationApp extends PApplet
 					stroke(0,0,0);
 				}
 				
+				noFill();
+				
 				//The drawn circle radius will change according to the touch zone (the farther, the bigger).
 				drawCircle(mouseX, mouseY, ((int) (10 + leapMotionDevice.getTouchZone() * 20)) );
 				
-				noStroke();					//Processing function.
+				stroke(0);					//Processing function.
 				strokeWeight(1.0f);			//Processing function.
 			}
 			catch(Exception e)
@@ -282,10 +289,7 @@ public class EvaluationApp extends PApplet
 				strokeWeight(1.0f);
 				noStroke();
 			}
-		}
-		
-		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
-		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());	
+		}	
 	}
 
 	/**
