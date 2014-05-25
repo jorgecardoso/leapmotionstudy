@@ -49,11 +49,22 @@ toDegrees <- function(radians) {
 
 
 ############################ data
-device <- "10"
-filename <- paste("data/",device,".txt", sep="")
-filenameTransformed <- paste("data/", device,"-transformed.txt", sep="")
-filenameMeasures <- paste("data/", device,"-measures.txt", sep="")
-dataRaw <- read.csv(file=filename, head=TRUE, sep="")
+
+files <- list.files(path="data", pattern="[0-9]+.*")
+files
+dataRaw <- data.frame()
+for (file in files) {
+    print (file)
+    dat = read.csv(paste("data/", file, sep=""), sep="", head = TRUE)
+    print(nrow(dat))
+    dataRaw <- rbind(dataRaw, dat)
+}
+colnames(dataRaw)
+
+#filename <- paste("data/",device,".txt", sep="")
+filenameTransformed <- paste("data/", "transformed.txt", sep="")
+filenameMeasures <- paste("data/", "measures.txt", sep="")
+#dataRaw <- read.csv(file=filename, head=TRUE, sep="")
 
 
 
@@ -65,6 +76,10 @@ newData <- data.frame()
 countNoiseErrors <- 0
 
 system.time(
+for (user in unique(dataRaw$UserId) ) {
+    print(paste("USer: ", user))
+    newDataUser <- data.frame()
+    
     for (device in unique(dataRaw$NumberDevice) ) {
         print(paste("Device: ", device))
         newDataDevice <- data.frame()
@@ -293,15 +308,17 @@ system.time(
             }
             newDataDevice <- rbind(newDataDevice, newDataBlock)
         }
-        newData <- rbind(newData, newDataDevice)
+        newDataUser <- rbind(newDataUser, newDataDevice)
     }
+    newData <- rbind(newData, newDataUser)
+}
 )
 names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
 
 # 
 print(paste("Noise errors found: ", countNoiseErrors))
 
-
+#TODO: Calc throughtput based on device 
 #Calculate throughput
 meanX <- mean(dataMeasures$ClickPointX)
 meanY <- mean(dataMeasures$ClickPointY)
