@@ -318,22 +318,45 @@ names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleI
 # 
 print(paste("Noise errors found: ", countNoiseErrors))
 
+
+
 #TODO: Calc throughtput based on device 
-#Calculate throughput
-meanX <- mean(dataMeasures$ClickPointX)
-meanY <- mean(dataMeasures$ClickPointY)
-
-diffX <- dataMeasures$ClickPointX-meanX
-diffY <- dataMeasures$ClickPointY-meanY
-
-diffSQX <- diffX*diffX
-diffSQY <- diffY*diffY
-
-SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
-We <- 4.133*SD
-IDe <- log(dataMeasures[1,]$Distance/We + 1, 2)
-Throughput <- IDe/dataMeasures$MovementTime
-dataMeasures$Throughput <-Throughput
+# Calculate throughput
+dataMeasures$Throughput <- -1
+for ( device in unique(dataMeasures$Device)) {
+    
+    
+    meanX <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointX)
+    meanY <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointY)
+    
+    diffX <- dataMeasures[dataMeasures$Device == device,]$ClickPointX-meanX
+    diffY <- dataMeasures[dataMeasures$Device == device,]$ClickPointY-meanY
+    
+    diffSQX <- diffX*diffX
+    diffSQY <- diffY*diffY
+    
+    SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
+    We <- 4.133*SD
+    IDe <- log(dataMeasures[dataMeasures$Device == device,]$Distance/We + 1, 2)
+    Throughput <- IDe/dataMeasures[dataMeasures$Device == device,]$MovementTime
+    dataMeasures[dataMeasures$Device == device,]$Throughput <-Throughput
+    
+}
+# 
+# meanX <- mean(dataMeasures$ClickPointX)
+# meanY <- mean(dataMeasures$ClickPointY)
+# 
+# diffX <- dataMeasures$ClickPointX-meanX
+# diffY <- dataMeasures$ClickPointY-meanY
+# 
+# diffSQX <- diffX*diffX
+# diffSQY <- diffY*diffY
+# 
+# SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
+# We <- 4.133*SD
+# IDe <- log(dataMeasures[1,]$Distance/We + 1, 2)
+# Throughput <- IDe/dataMeasures$MovementTime
+# dataMeasures$Throughput <-Throughput
 
 
 write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
