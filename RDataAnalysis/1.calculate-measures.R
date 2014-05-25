@@ -77,21 +77,22 @@ countNoiseErrors <- 0
 
 system.time(
 for (user in unique(dataRaw$UserId) ) {
-    print(paste("USer: ", user))
+#for (user in 4 ) {
+        
     newDataUser <- data.frame()
     
     for (device in unique(dataRaw$NumberDevice) ) {
-        print(paste("Device: ", device))
+        
         newDataDevice <- data.frame()
         
         for (block in 1:max(dataRaw$Block) ) {
             #for (block in 1:1 ) {
-            print(paste("Block: ", block))
+            
             newDataBlock <- data.frame()
             
             for (sequence in 1:max(dataRaw$Sequence) ) {
                 #for (sequence in 1:1 ) {
-                print(paste("Sequence: ", sequence))
+                print(paste("User:", user, " Device:", device, " Block:", block, " Sequence: ", sequence))
                 newDataSequence <- data.frame()
                 
                 for (cid in 1:max(dataRaw$CircleID) ) {
@@ -99,7 +100,7 @@ for (user in unique(dataRaw$UserId) ) {
                     
                     
                     #indexes for the current target selection
-                    indexes <- which(dataRaw$NumberDevice == device & dataRaw$Block == block & dataRaw$Sequence == sequence & dataRaw$CircleID == cid)
+                    indexes <- which(dataRaw$UserId == user & dataRaw$NumberDevice == device & dataRaw$Block == block & dataRaw$Sequence == sequence & dataRaw$CircleID == cid)
                     partial <- dataRaw[indexes, ]
                     
                     #print(paste("CircleID: ", cid, " samples: ", length(indexes)))
@@ -290,7 +291,7 @@ for (user in unique(dataRaw$UserId) ) {
                     ME <- sum(abs(ys))/length(indexes)
                     
                     
-                    row <- c(partial[1,]$NumberDevice, partial[1,]$UserId, partial[1,]$Block, partial[1,]$Sequence, partial[1,]$CircleID, errorRate, TRE, TAC, MDC, ODC, MV, ME, MO, clickPointX, clickPointY, partial[1,]$ElapsedTime/1000, partial[1,]$TargetWidth, partial[1,]$DistanceCenter*2, calculatedDistance)
+                    row <- c(partial[1,]$NumberDevice, partial[1,]$UserId, partial[1,]$Block, partial[1,]$Sequence, partial[1,]$CircleID, errorRate, TRE, TAC, MDC, ODC, MV, ME, MO, clickPointX, clickPointY, partialtargetx[1], partialtargety[1], partial[1,]$ElapsedTime/1000, partial[1,]$TargetWidth, partial[1,]$DistanceCenter*2, calculatedDistance)
                     dataMeasures <- rbind(dataMeasures, row)
                     
                     partial$targetx <- partialtargetx
@@ -313,31 +314,32 @@ for (user in unique(dataRaw$UserId) ) {
     newData <- rbind(newData, newDataUser)
 }
 )
-names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
+names(dataMeasures) <- c("DeviceNumber", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY","TargetX","TargetY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
 
 # 
 print(paste("Noise errors found: ", countNoiseErrors))
 
 
 
-#TODO: Calc throughtput based on device 
+
 # Calculate throughput
 dataMeasures$Throughput <- -1
 for ( device in unique(dataMeasures$Device)) {
+#for ( device in 1) {
+    #device <- "Mouse"
     
+    meanX <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointX - dataMeasures[dataMeasures$Device == device,]$TargetX)
+    meanY <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointY - dataMeasures[dataMeasures$Device == device,]$TargetY )
     
-    meanX <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointX)
-    meanY <- mean(dataMeasures[dataMeasures$Device == device,]$ClickPointY)
-    
-    diffX <- dataMeasures[dataMeasures$Device == device,]$ClickPointX-meanX
-    diffY <- dataMeasures[dataMeasures$Device == device,]$ClickPointY-meanY
+    diffX <- (dataMeasures[dataMeasures$Device == device,]$ClickPointX - dataMeasures[dataMeasures$Device == device,]$TargetX)-meanX
+    diffY <- (dataMeasures[dataMeasures$Device == device,]$ClickPointY - dataMeasures[dataMeasures$Device == device,]$TargetY)-meanY
     
     diffSQX <- diffX*diffX
     diffSQY <- diffY*diffY
     
     SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
     We <- 4.133*SD
-    IDe <- log(dataMeasures[dataMeasures$Device == device,]$Distance/We + 1, 2)
+    IDe <- log(dataMeasures[dataMeasures$Device == device,]$CalculatedDistance/We + 1, 2)
     Throughput <- IDe/dataMeasures[dataMeasures$Device == device,]$MovementTime
     dataMeasures[dataMeasures$Device == device,]$Throughput <-Throughput
     
@@ -363,18 +365,18 @@ write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
 
 
-
-
-
-# Plot the calculated distances 
-plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
-
-
-toplot <- newData[newData$NumberDevice==0 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
-
-plot(toplot$speed, type='l')
-
-
+# 
+# 
+# 
+# # Plot the calculated distances 
+# plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
+# 
+# 
+# toplot <- newData[newData$NumberDevice==0 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
+# 
+# plot(toplot$speed, type='l')
+# 
+# 
 
 
 
