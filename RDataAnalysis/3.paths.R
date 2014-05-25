@@ -59,14 +59,14 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 #dataTransformed <- rbind(dataTransformedLeap, dataTransformedTouch, dataTransformedMouse)
-dataTransformed <- read.csv(file="data/10-transformed.txt", head=TRUE, sep="")
+dataTransformed <- read.csv(file="data/transformed.txt", head=TRUE, sep="")
 
 # change column name to get a nicer chart
 colnames(dataTransformed)[colnames(dataTransformed)=="NumberDevice"] <- "Device"
 
 # convert the column to factor and name the levels
 dataTransformed$Device <- as.factor(dataTransformed$Device)
-levels(dataTransformed$Device) <- c("LeapMotion",  "Mouse", "Touchpad")
+levels(dataTransformed$Device) <- list( LeapMotion=c(0),  Mouse=c(1), Touchpad=c(2), LeapMotionTouchless=c(4))
 #levels(dataTransformed$Device) <- c("Mouse")
 
 
@@ -77,8 +77,13 @@ minY <- min(dataTransformed$ry)
 maxY <- max(dataTransformed$ry)
 print ( paste("X scale: ", minX, maxX, " Y scale: ", minY, maxY))
 
+
+
+
+
+
 # plot the paths for each user and device. a single plot aggregates one entire sequence
-for (device in levels(dataTransformed$Device) ) {
+for (device in unique(dataTransformed$Device) ) {
     for (user in unique(dataTransformed$User)) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                          dataTransformed$UserId==user,], 
@@ -99,7 +104,7 @@ for (device in levels(dataTransformed$Device) ) {
 
 
 # plot the paths for each user and device. a single plot aggregates one circleid
-for (device in levels(dataTransformed$Device) ) {
+for (device in unique(dataTransformed$Device) ) {
     for (user in unique(dataTransformed$User)) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                         dataTransformed$UserId==user,], 
@@ -122,7 +127,7 @@ for (device in levels(dataTransformed$Device) ) {
 
 # plot INDIVIDUAL paths for each user and device. 
 # PRODUCES LOTS OF FILES
-for (device in levels(dataTransformed$Device) ) {
+for (device in unique(dataTransformed$Device) ) {
     for (user in unique(dataTransformed$User)) {
         for (block in unique(dataTransformed$Block)) { 
             p <- ggplot(dataTransformed[dataTransformed$Device==device &
