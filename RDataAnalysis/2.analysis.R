@@ -12,7 +12,7 @@ require(doBy)
 #dataMeasuresMouse <- read.csv(file="data/mouse-measures.txt", head=TRUE, sep="")
 
 #dataMeasures <- rbind(dataMeasuresLeap, dataMeasuresTouch, dataMeasuresMouse)
-dataMeasures <- read.csv(file="data/10-measures.txt", head=TRUE, sep="")
+dataMeasures <- read.csv(file="data/measures.txt", head=TRUE, sep="")
 
 
 # change column name to get a nicer chart
@@ -20,7 +20,7 @@ colnames(dataMeasures)[colnames(dataMeasures)=="DeviceNumber"] <- "Device"
 
 # convert the column to factor and name the levels
 dataMeasures$Device <- as.factor(dataMeasures$Device)
-levels(dataMeasures$Device) <- c("LeapMotion",  "Mouse", "Touchpad")
+levels(dataMeasures$Device) <- list( LeapMotion=c(0),  Mouse=c(1), Touchpad=c(2), LeapMotionTouchless=c(4))
 
 # print summary stats
 s <- summaryBy(ErrorRate+TRE+TAC+MDC+ODC+MV+ME+MO+MovementTime~Device, 
@@ -29,10 +29,116 @@ s <- summaryBy(ErrorRate+TRE+TAC+MDC+ODC+MV+ME+MO+MovementTime~Device,
 t(s)
 
 
-# plot the movement time over block for each device
-p <- ggplot(dataMeasures, aes(x=Block, y=MovementTime, group=Device, colour=Device ))
-p + stat_summary(fun.y="mean", geom="line") + stat_summary(fun.y="mean", geom="point", aes(shape=Device)) 
-ggsave(file = "charts/movementtime-block.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+# plot the boxplots of the movement time for each device
+p <- ggplot(dataMeasures, aes(Device, y=MovementTime,  colour=Device )) + 
+    geom_boxplot() + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/movementtime-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the ErrorRate for each device
+p <- ggplot(dataMeasures, aes(Device, y=ErrorRate,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/errorrate-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the TRE for each device
+p <- ggplot(dataMeasures, aes(Device, y=TRE,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/tre-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the TAC for each device
+p <- ggplot(dataMeasures, aes(Device, y=TAC,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/tac-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the MDC for each device
+p <- ggplot(dataMeasures, aes(Device, y=MDC,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/mdc-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+# plot the boxplots of the ODC for each device
+p <- ggplot(dataMeasures, aes(Device, y=ODC,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/odc-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+
+
+# plot the boxplots of the MV for each device
+p <- ggplot(dataMeasures, aes(Device, y=MV,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/mv-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the ME for each device
+p <- ggplot(dataMeasures, aes(Device, y=ME,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/me-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the boxplots of the MO for each device
+p <- ggplot(dataMeasures, aes(Device, y=MO,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/mo-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+# plot the boxplots of the Throughput for each device
+p <- ggplot(dataMeasures, aes(Device, y=Throughput,  colour=Device )) + 
+    geom_boxplot() + #outlier.shape = NA) + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    #scale_y_continuous(limits = c(0, 0.2)) +
+    theme() #noop
+p
+ggsave(file = "charts/throughput-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
 
 
 # plot the movement offset over the TRE for each device
@@ -43,11 +149,38 @@ p + geom_point(size=5, aes(shape=Device)) + coord_cartesian(xlim = c(0, 0.4), yl
 ggsave(file = "charts/MO-TRE.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
-# plot the throughput
-p <- ggplot(dataMeasures, aes(x=Device,y=Throughput, group=Device, colour=Device ))
-p + stat_summary(fun.y="mean", geom="line") + stat_summary(fun.y="mean", geom="point", aes(shape=Device)) 
 
+# line plot movement time over block for each device
+p <- ggplot(dataMeasures, aes(x=Block, y=MovementTime, group=Device, colour=Device )) + 
+    stat_summary(fun.y="mean", geom="line") + 
+    stat_summary(fun.y="mean", geom="point", aes(shape=Device)) + 
+    theme(legend.direction = "horizontal", legend.position = "top") +
+    theme() #noop
+p
+ggsave(file = "charts/movementtime-block-lineplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+
+# plot the throughput
+p <- ggplot(dataMeasures, aes(x=Device,y=Throughput, group=Device, colour=Device )) + 
+    stat_summary(fun.y="mean", geom="bar") + 
+    stat_summary(fun.y="mean", geom="point", aes(shape=Device)) +
+    theme() 
+p
 ggsave(file = "charts/Throughput.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the throughput over block
+p <- ggplot(dataMeasures, aes(x=Block, y=Throughput, group=Device, colour=Device )) + 
+    stat_summary(fun.y="mean", geom="line") + 
+    stat_summary(fun.y="mean", geom="point", aes(shape=Device)) +
+    theme(legend.direction = "horizontal", legend.position = "top") +
+    theme() 
+p
+ggsave(file = "charts/Throughput-block-lineplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+
 
 
 # analysis of variance
