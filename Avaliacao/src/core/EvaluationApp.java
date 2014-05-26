@@ -858,7 +858,7 @@ public class EvaluationApp extends PApplet
 			{
 				//Change sequence generator from random to Mackenzie's paper and vice-versa.
 				//"R" key pressed.
-				if(e.getKeyCode() == 32 && debug)
+				if(e.getKeyCode() == 82 && debug)
 				{
 					generateRandomSequence = !generateRandomSequence;
 					
@@ -965,6 +965,10 @@ public class EvaluationApp extends PApplet
 							
 						case 2:
 							message += "Touch Pad";
+							break;
+							
+						case 3:
+							message += "Leap Motion + Touchless";
 							break;
 							
 						default:

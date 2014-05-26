@@ -54,10 +54,6 @@ public class LeapMotion extends Listener
 	 * @param isRightHanded - Boolean indicating if the user is right handed.
 	 */
 	
-	
-	
-	
-	
 	public LeapMotion(ControlMode modeOfControl, boolean isRightHanded, int screenResX, int screenResY)
 	{
 		this.isRightHanded = isRightHanded;

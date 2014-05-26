@@ -2,18 +2,17 @@
 // 0 = Leap Motion;
 // 1 = Mouse;
 // 2 = Touch Pad;
-Number of the device to be used: 0
+Number of the device to be used: 2
 
-Assigned UserID to person performing the evaluation: 0
+Assigned UserID to person performing the evaluation: 6
 
 Is user right-handed? (true/false): true
 
-
 Number of circles (integer): 16
 
-Circle radius (float): 24.5 
+Circle radius (float): 30.23 
 
-Distance between circles and frame center (integer): 340.5
+Distance between circles and frame center (integer): 418.60
 
 //Nota:
 //	Para as medidas de Mackenzie os valores a colocar seriam:
