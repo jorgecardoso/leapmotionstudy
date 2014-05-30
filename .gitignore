@@ -1,0 +1,5 @@
+RDataAnalysis/charts/*.pdf
+RDataAnalysis/charts/paths/*.pdf
+RDataAnalysis/tables/*.csv
+transformed.txt
+measures.txt
