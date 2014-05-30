@@ -26,8 +26,20 @@ levels(dataMeasures$Device) <- list( LeapMotion=c(0),  Mouse=c(1), Touchpad=c(2)
 s <- summaryBy(ErrorRate+TRE+TAC+MDC+ODC+MV+ME+MO+MovementTime~Device, 
                 data=dataMeasures,
                FUN=c(mean,sd))
-t(s)
+s[,order(names(s))]
+write.table(s[,order(names(s))], file = "tables/measures-mean-sd.csv", sep=",", row.names=FALSE)
+#t(s)
 
+
+
+# plot the histograms of the movement time for each device
+p <- ggplot(dataMeasures, aes(Device, y=MovementTime,  colour=Device )) + 
+    geom_hist() + 
+    coord_flip() + 
+    theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/movementtime-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
 # plot the boxplots of the movement time for each device
