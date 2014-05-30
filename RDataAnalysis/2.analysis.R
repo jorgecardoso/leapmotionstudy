@@ -33,9 +33,10 @@ write.table(s[,order(names(s))], file = "tables/measures-mean-sd.csv", sep=",", 
 
 
 # plot the histograms of the movement time for each device
-p <- ggplot(dataMeasures, aes(Device, y=MovementTime,  colour=Device )) + 
-    geom_hist() + 
-    coord_flip() + 
+p <- ggplot(dataMeasures, aes(MovementTime, colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap( ~ Device, ncol=1)
     theme(legend.position="none") +
     theme()
 p
@@ -52,6 +53,17 @@ p
 ggsave(file = "charts/movementtime-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
+# plot the histograms of the ErrorRate  for each device
+p <- ggplot(dataMeasures, aes(ErrorRate,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/errorrate-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
 # plot the boxplots of the ErrorRate for each device
 p <- ggplot(dataMeasures, aes(Device, y=ErrorRate,  colour=Device )) + 
     geom_boxplot() + #outlier.shape = NA) + 
@@ -61,6 +73,18 @@ p <- ggplot(dataMeasures, aes(Device, y=ErrorRate,  colour=Device )) +
     theme() #noop
 p
 ggsave(file = "charts/errorrate-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+
+# plot the histograms of the TRE  for each device
+p <- ggplot(dataMeasures, aes(TRE,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/tre-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
 # plot the boxplots of the TRE for each device
@@ -74,6 +98,18 @@ p
 ggsave(file = "charts/tre-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
+
+# plot the histograms of the TAC  for each device
+p <- ggplot(dataMeasures, aes(TAC,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/tac-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
 # plot the boxplots of the TAC for each device
 p <- ggplot(dataMeasures, aes(Device, y=TAC,  colour=Device )) + 
     geom_boxplot() + #outlier.shape = NA) + 
@@ -85,6 +121,17 @@ p
 ggsave(file = "charts/tac-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
+# plot the histograms of the MDC  for each device
+p <- ggplot(dataMeasures, aes(MDC,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/mdc-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
 # plot the boxplots of the MDC for each device
 p <- ggplot(dataMeasures, aes(Device, y=MDC,  colour=Device )) + 
     geom_boxplot() + #outlier.shape = NA) + 
@@ -94,6 +141,18 @@ p <- ggplot(dataMeasures, aes(Device, y=MDC,  colour=Device )) +
     theme() #noop
 p
 ggsave(file = "charts/mdc-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the histograms of the ODC  for each device
+p <- ggplot(dataMeasures, aes(ODC,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/odc-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
 
 # plot the boxplots of the ODC for each device
 p <- ggplot(dataMeasures, aes(Device, y=ODC,  colour=Device )) + 
@@ -107,6 +166,16 @@ ggsave(file = "charts/odc-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
 
+# plot the histograms of the MV  for each device
+p <- ggplot(dataMeasures, aes(MV,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/mv-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
 
 # plot the boxplots of the MV for each device
 p <- ggplot(dataMeasures, aes(Device, y=MV,  colour=Device )) + 
@@ -119,6 +188,17 @@ p
 ggsave(file = "charts/mv-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
+
+# plot the histograms of the ME  for each device
+p <- ggplot(dataMeasures, aes(ME,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/me-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
 # plot the boxplots of the ME for each device
 p <- ggplot(dataMeasures, aes(Device, y=ME,  colour=Device )) + 
     geom_boxplot() + #outlier.shape = NA) + 
@@ -130,6 +210,16 @@ p
 ggsave(file = "charts/me-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
+# plot the histograms of the MO  for each device
+p <- ggplot(dataMeasures, aes(MO,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/mo-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
 # plot the boxplots of the MO for each device
 p <- ggplot(dataMeasures, aes(Device, y=MO,  colour=Device )) + 
     geom_boxplot() + #outlier.shape = NA) + 
@@ -139,6 +229,17 @@ p <- ggplot(dataMeasures, aes(Device, y=MO,  colour=Device )) +
     theme() #noop
 p
 ggsave(file = "charts/mo-boxplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
+
+
+# plot the histograms of the Throughput  for each device
+p <- ggplot(dataMeasures, aes(Throughput,  colour=Device )) + 
+    geom_histogram() + 
+    #coord_flip() + 
+    facet_wrap(  ~ Device, ncol=1)
+theme(legend.position="none") +
+    theme()
+p
+ggsave(file = "charts/Throughput-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 # plot the boxplots of the Throughput for each device
 p <- ggplot(dataMeasures, aes(Device, y=Throughput,  colour=Device )) + 
@@ -154,10 +255,13 @@ ggsave(file = "charts/throughput-boxplot.pdf", width=20/2.54, height=16/2.54, dp
 
 
 # plot the movement offset over the TRE for each device
-p <- ggplot(s, aes(x=TRE.mean, y=abs(MO.mean), group=Device, colour=Device ))
-p + geom_point(size=5, aes(shape=Device)) + coord_cartesian(xlim = c(0, 0.4), ylim=c(0, 8)) + 
+p <- ggplot(s, aes(x=TRE.mean, y=abs(MO.mean), group=Device, colour=Device )) +
+    geom_point(size=5, aes(shape=Device)) + 
+    #coord_cartesian(xlim = c(0, 0.4), ylim=c(0, 8)) + 
     ylab("Movement offset (pixels)") +
-    xlab("Target Re-Entry") 
+    xlab("Target Re-Entry") +
+    theme()
+p
 ggsave(file = "charts/MO-TRE.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 
@@ -190,7 +294,6 @@ p <- ggplot(dataMeasures, aes(x=Block, y=Throughput, group=Device, colour=Device
     theme() 
 p
 ggsave(file = "charts/Throughput-block-lineplot.pdf", width=20/2.54, height=16/2.54, dpi=100)
-
 
 
 
