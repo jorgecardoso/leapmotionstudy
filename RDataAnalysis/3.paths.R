@@ -1,9 +1,7 @@
-#require(RCurl) # web
+# This script generates the graphics with the various selection paths
+
 require(ggplot2)
 require(doBy)
-#library("stringr") # for first word
-#library(reshape)
-#theme_set(theme_bw())
 
 
 
