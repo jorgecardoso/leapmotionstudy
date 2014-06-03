@@ -3,3 +3,6 @@ RDataAnalysis/charts/paths/*.pdf
 RDataAnalysis/tables/*.csv
 transformed.txt
 measures.txt
+RDataAnalysis/charts/boxplot/*.pdf
+RDataAnalysis/charts/hist/*.pdf
+RDataAnalysis/charts/lineplot/*.pdf
