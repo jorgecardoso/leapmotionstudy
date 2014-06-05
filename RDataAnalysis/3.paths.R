@@ -6,13 +6,20 @@ require(doBy)
 
 
 ############################ data
-#dataTransformedLeap <- read.csv(file="data/leapmotion-transformed.txt", head=TRUE, sep="")
-#dataTransformedTouch <- read.csv(file="data/touchpad-transformed.txt", head=TRUE, sep="")
-#dataTransformedMouse <- read.csv(file="data/mouse-transformed.txt", head=TRUE, sep="")
 
 
-#dataTransformed <- rbind(dataTransformedLeap, dataTransformedTouch, dataTransformedMouse)
-dataTransformed <- read.csv(file="data/transformed.txt", head=TRUE, sep="")
+files <- list.files(path="data", pattern="transformed-.*")
+files
+dataTransformed <- data.frame()
+for (file in files) {
+    print (file)
+    dat = read.csv(paste("data/", file, sep=""), sep="", head = TRUE)
+    print(nrow(dat))
+    dataTransformed <- rbind(dataTransformed, dat)
+}
+colnames(dataTransformed)
+
+#dataTransformed <- read.csv(file="data/transformed.txt", head=TRUE, sep="")
 
 # change column name to get a nicer chart
 colnames(dataTransformed)[colnames(dataTransformed)=="NumberDevice"] <- "Device"
