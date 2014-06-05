@@ -7,3 +7,4 @@ RDataAnalysis/charts/boxplot/*.pdf
 RDataAnalysis/charts/hist/*.pdf
 RDataAnalysis/charts/lineplot/*.pdf
 RDataAnalysis/data
+RDataAnalysis/*.Rhistory
