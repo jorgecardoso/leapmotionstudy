@@ -120,6 +120,7 @@ for (user in unique(dataRaw$UserId) ) {
                     partialinside <- logical()
                     speeds <- numeric()
                     accels <- numeric()
+                    percentpath <-numeric()
                     
                     # for noise errors checking
                     lastCalculatedPointY <- 0
@@ -133,7 +134,7 @@ for (user in unique(dataRaw$UserId) ) {
                     # go through all coordinates, transform them and calculate the various measures.
                     #for (n in indexes ) {
                     for (n in 1:nrow(partial) ) {
-
+                        percentpath[n] = n/nrow(partial)
                         partialtargetx[n]<-target[1,1]
                         partialtargety[n]<-target[1,2]
                         
@@ -242,6 +243,7 @@ for (user in unique(dataRaw$UserId) ) {
                     partial$ry <- partialry
                     partial$inside <- partialinside
                     
+                    partial$percentpath <- percentpath
                     partial$speeds <- speeds
                     partial$accels <- accels
                     
