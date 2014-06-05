@@ -65,7 +65,7 @@ for (device in unique(dataTransformed$Device) ) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                          dataTransformed$UserId==user,], 
                      aes(x=rx, y=ry, group=Device, colour=Device )) +
-            geom_line() +
+            geom_path() +
             coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +
             facet_grid(Block ~ Sequence) +
             ylab("Block") +
@@ -86,7 +86,7 @@ for (device in unique(dataTransformed$Device) ) {
         p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                         dataTransformed$UserId==user,], 
                     aes(x=rx, y=ry, group=Device, colour=Device )) +
-            geom_line() +
+            geom_path() +
             coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +
             facet_grid(CircleID ~ .) +
             ylab("Circle ID") +
@@ -106,12 +106,13 @@ for (device in unique(dataTransformed$Device) ) {
 # PRODUCES LOTS OF FILES
 for (device in unique(dataTransformed$Device) ) {
     for (user in unique(dataTransformed$User)) {
-        for (block in unique(dataTransformed$Block)) { 
+        for (block in unique(dataTransformed[dataTransformed$Device==device &
+                                                 dataTransformed$UserId==user,]$Block)) { 
             p <- ggplot(dataTransformed[dataTransformed$Device==device &
                                             dataTransformed$Block==block &
                                             dataTransformed$UserId==user,], 
                         aes(x=rx, y=ry, group=Device, colour=Device )) +
-                geom_line() +
+                geom_path() +
                 coord_cartesian(xlim = c(minX, maxX), ylim=c(minY, maxY)) +
                 facet_grid(CircleID ~ Sequence) +
                 ylab("Circle Id") +
