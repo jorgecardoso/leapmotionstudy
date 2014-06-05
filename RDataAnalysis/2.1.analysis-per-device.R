@@ -217,7 +217,7 @@ p
 ggsave(file = "charts/hist/Throughput-hist.pdf", width=20/2.54, height=16/2.54, dpi=100)
 
 # plot the boxplots of the Throughput for each device
-p <- ggplot(dataMeasures, aes(Device, y=Throughput,  colour=Device )) + 
+p <- ggplot(dataMeasures, aes(Device, y=Throughput,  colour=Device)) + 
     geom_boxplot() + #outlier.shape = NA) + 
     coord_flip() + 
     theme(legend.position="none") +
@@ -253,7 +253,7 @@ ggsave(file = "charts/lineplot/movementtime-block-lineplot.pdf", width=20/2.54, 
 
 
 # plot the throughput
-p <- ggplot(dataMeasures, aes(x=Device,y=Throughput, group=Device, colour=Device )) + 
+p <- ggplot(dataMeasures, aes(x=Device,y=Throughput, group=Device, colour=Device, fill=Device )) + 
     stat_summary(fun.y="mean", geom="bar") + 
     stat_summary(fun.y="mean", geom="point", aes(shape=Device)) +
     theme() 
