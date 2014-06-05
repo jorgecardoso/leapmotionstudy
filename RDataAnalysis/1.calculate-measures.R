@@ -23,7 +23,7 @@ for (file in files) {
 colnames(dataRaw)
 
 
-filenameTransformed <- paste("data/", "transformed.txt", sep="")
+filenameTransformed <- paste("data/", "transformed", sep="")
 filenameMeasures <- paste("data/", "measures.txt", sep="")
 
 
@@ -256,6 +256,7 @@ for (user in unique(dataRaw$UserId) ) {
         }
         newDataUser <- rbind(newDataUser, newDataDevice)
     }
+    write.table(newDataUser, file = paste(filenameTransformed,"-",user,".txt", sep=""), sep=" ", row.names=FALSE)
     newData <- rbind(newData, newDataUser)
 }
 )
@@ -305,7 +306,6 @@ for ( device in unique(dataMeasures$Device)) {
 # dataMeasures$Throughput <-Throughput
 
 
-write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
 
 
