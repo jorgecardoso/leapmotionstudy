@@ -1,9 +1,11 @@
 source("2d.R")
 
-# Trasnformed data points with abs(y) coordinate greater than NOISE_ERROR_THRESHOLD are 
-# sanitized (ie. the previous point is considered)
+# Transformed data points with abs(y) coordinate greater than NOISE_ERROR_THRESHOLD are 
+# sanitized (ie. the previous point is considered) 
+# Very large values (larger than the maximum screen coordinates) effectively disable this threshold
 NOISE_ERROR_THRESHOLD <- 111400
 
+# For speed calculation
 SAMPLE_INTERVAL <- 25 #40 samples per second: 25 millisecond interval
 
 
@@ -20,10 +22,9 @@ for (file in files) {
 }
 colnames(dataRaw)
 
-#filename <- paste("data/",device,".txt", sep="")
+
 filenameTransformed <- paste("data/", "transformed.txt", sep="")
 filenameMeasures <- paste("data/", "measures.txt", sep="")
-#dataRaw <- read.csv(file=filename, head=TRUE, sep="")
 
 
 
@@ -40,17 +41,17 @@ for (user in unique(dataRaw$UserId) ) {
         
     newDataUser <- data.frame()
     
-    for (device in unique(dataRaw$NumberDevice) ) {
+    for (device in unique(dataRaw[dataRaw$UserId==user,]$NumberDevice) ) {
     #for (device in unique(dataRaw$NumberDevice)[1] ) {
         
         newDataDevice <- data.frame()
         
-        for (block in 1:max(dataRaw$Block) ) {
+        for (block in 1:max(dataRaw[dataRaw$UserId==user & dataRaw$NumberDevice==device,]$Block) ) {
             #for (block in 1:1 ) {
             
             newDataBlock <- data.frame()
             
-            for (sequence in 1:max(dataRaw$Sequence) ) {
+            for (sequence in 1:max(dataRaw[dataRaw$UserId==user & dataRaw$NumberDevice==device & dataRaw$Block==block,]$Sequence) ) {
                 #for (sequence in 1:1 ) {
                 print(paste("User:", user, " Device:", device, " Block:", block, " Sequence: ", sequence))
                 newDataSequence <- data.frame()
