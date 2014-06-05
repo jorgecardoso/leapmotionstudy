@@ -129,6 +129,24 @@ for (device in unique(dataTransformed$Device) ) {
 
 
 
+dataTransformed$cuts<-cut(dataTransformed$percentpath, 100)
+
+speed<-aggregate(dataTransformed$speed, dataTransformed[,c("cuts", "Device")], mean)
+ggplot(speed, aes(x=cuts, y=x, group=Device, colour=Device)) +
+    #geom_smooth() +
+    geom_path()
+
+
+
+accel<-aggregate(dataTransformed$accel, dataTransformed[,c("cuts", "Device")], mean)
+ggplot(accel, aes(x=cuts, y=x, group=Device, colour=Device)) +
+    #geom_smooth() +
+    geom_path()
+
+#geom_boxplot(stat="identity")
+#stat_summary(fun.y="mean", geom="point") 
+#edit(dataTransformed)    
+
 
 
 
