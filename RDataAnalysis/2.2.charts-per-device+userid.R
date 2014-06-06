@@ -286,38 +286,3 @@ ggsave(file = "charts/lineplot/Throughput-block-device+userid-lineplot.pdf", wid
 
 
 
-
-
-
-
-
-
-
-# analysis of variance
-bartlett.test(MovementTime~Device,data=dataMeasures)
-a <- aov(MovementTime~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(ErrorRate~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(TRE~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(TAC~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(MDC~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(ODC~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(MV~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(ME~Device+UserId,data=dataMeasures)
-summary(a)
-
-a <- aov(MO~Device+UserId,data=dataMeasures)
-summary(a)
