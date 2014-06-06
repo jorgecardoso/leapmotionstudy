@@ -8,3 +8,4 @@ RDataAnalysis/charts/hist/*.pdf
 RDataAnalysis/charts/lineplot/*.pdf
 RDataAnalysis/data
 RDataAnalysis/*.Rhistory
+RDataAnalysis/charts/questionnaire/*.pdf
