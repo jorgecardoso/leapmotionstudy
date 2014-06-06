@@ -1,4 +1,5 @@
 
+
 # print summary stats per Device
 s <- summaryBy(ErrorRate+TRE+TAC+MDC+ODC+MV+ME+MO+MovementTime~Device, 
                data=dataMeasures,
