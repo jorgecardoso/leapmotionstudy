@@ -1,4 +1,4 @@
-
+#install.packages(c("ggplot2", "doBy"))
 require(ggplot2)
 require(doBy)
 #library("stringr") # for first word
@@ -16,7 +16,7 @@ dataMeasures <- read.csv(file="data/measures.txt", head=TRUE, sep="")
 
 
 # change column name to get a nicer chart
-colnames(dataMeasures)[colnames(dataMeasures)=="DeviceNumber"] <- "Device"
+#colnames(dataMeasures)[colnames(dataMeasures)=="DeviceNumber"] <- "Device"
 
 # convert the column to factor and name the levels
 dataMeasures$Device <- as.factor(dataMeasures$Device)
