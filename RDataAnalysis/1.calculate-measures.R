@@ -1,9 +1,17 @@
+# This file takes as input the individual datasets for each user (<number>.txt files) 
+# and generates two output files: 
+# - transformed.txt, contains the same data as the individual files, plus the transformed path coordinates so that
+#   each selection path lies horizontally.
+# - measures.txt, contains the various Mackenzie's accuracy measures for each path
+
 source("2d.R")
 options(warn=1)
+
 # Transformed data points with abs(y) coordinate greater than NOISE_ERROR_THRESHOLD are 
 # sanitized (ie. the previous point is considered) 
 # Very large values (larger than the maximum screen coordinates) effectively disable this threshold
 NOISE_ERROR_THRESHOLD <- 111400
+
 
 # For speed calculation
 SAMPLE_INTERVAL <- 25 #40 samples per second: 25 millisecond interval
@@ -11,7 +19,7 @@ SAMPLE_INTERVAL <- 25 #40 samples per second: 25 millisecond interval
 
 ############################ data
 
-files <- list.files(path="data", pattern="^1[0-9]+.*")
+files <- list.files(path="data", pattern="[0-9]+.*")
 files
 dataRaw <- data.frame()
 for (file in files) {
@@ -29,7 +37,6 @@ filenameMeasures <- paste("data/", "measures.txt", sep="")
 
 
 dataMeasures <- data.frame()
-
 newData <- data.frame()
 
 #For noise errors checking
@@ -288,36 +295,6 @@ for ( device in unique(dataMeasures$Device)) {
   dataMeasures[dataMeasures$Device == device,]$Throughput <-Throughput
   
 }
-# 
-# meanX <- mean(dataMeasures$ClickPointX)
-# meanY <- mean(dataMeasures$ClickPointY)
-# 
-# diffX <- dataMeasures$ClickPointX-meanX
-# diffY <- dataMeasures$ClickPointY-meanY
-# 
-# diffSQX <- diffX*diffX
-# diffSQY <- diffY*diffY
-# 
-# SD <- sqrt(sum(diffSQX+diffSQY)/(length(diffX)-1))
-# We <- 4.133*SD
-# IDe <- log(dataMeasures[1,]$Distance/We + 1, 2)
-# Throughput <- IDe/dataMeasures$MovementTime
-# dataMeasures$Throughput <-Throughput
-
 
 write.table(newData, file = filenameTransformed, sep=" ", row.names=FALSE)
 write.table(dataMeasures, file = filenameMeasures, sep=" ", row.names=FALSE)
-
-
-# 
-# 
-# 
-# # Plot the calculated distances 
-# plot(dataMeasures[dataMeasures$DeviceNumber==0,]$CalculatedDistance)
-# 
-# 
-# toplot <- newData[newData$NumberDevice==0 & newData$Block == 1 & newData$Sequence == 1 & newData$CircleID ==3, ]
-# 
-# plot(toplot$speed, type='l')
-# 
-# 
