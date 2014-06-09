@@ -1,6 +1,7 @@
 #install.packages(c("ggplot2", "doBy"))
 require(ggplot2)
 require(doBy)
+require(psych)
 library(reshape2)
 
 
@@ -110,13 +111,21 @@ ggplot(m, aes(Device, value, colour=Device)) +
 ggsave(file = "charts/questionnaire/iso-boxplot.pdf", width=21/2.54, height=29/2.54, dpi=100)
 
 
+describe <- describeBy(m$value, list(m$Device,m$variable), mat=TRUE)
+colnames(describe)[colnames(describe)=="group1"] <- "Device"
+colnames(describe)[colnames(describe)=="group2"] <- "variable"
+#Reorder levels for chart
+levels(describe$Device) <- list( Mouse=c("Mouse"), Touchpad=c("Touchpad"), LeapMotion=c("LeapMotion"))
+    
 
-dfc <- summarySE(m, measurevar="value", groupvars=c("Device","variable"))
 
-ggplot(dfc, aes(Device, value, colour=Device, fill=Device)) + 
-  stat_summary(fun.y="mean", geom="bar") + 
+#dfc <- summarySE(m, measurevar="value", groupvars=c("Device","variable"))
+
+ggplot(describe, aes(Device, mean, colour=Device, fill=Device)) + 
+  #stat_summary(fun.y="mean", geom="bar") + 
+ geom_bar(stat="identity") +
   #coord_flip() +
-  geom_errorbar(aes(ymin=value-se, ymax=value+se), colour="Black",
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="Black",
                width=.2,                    # Width of the error bars
                position=position_dodge(.9)) +
   facet_wrap(  ~ variable,ncol=3)
