@@ -125,7 +125,7 @@ ggplot(describe, aes(Device, mean, colour=Device, fill=Device)) +
   #stat_summary(fun.y="mean", geom="bar") + 
  geom_bar(stat="identity") +
   #coord_flip() +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="Black",
+  geom_errorbar(aes(ymin=mean-1.96*se, ymax=mean+1.96*se), colour="Black",
                width=.2,                    # Width of the error bars
                position=position_dodge(.9)) +
   facet_wrap(  ~ variable,ncol=3)
