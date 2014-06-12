@@ -23,7 +23,7 @@ sink()
 for (var in c("MovementTime", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "Throughput") ) {
   
   # plot the histograms of the movement time for each device
-  p <- ggplot(dataMeasures, aes_string(var, colour="Device" )) + 
+  p <- ggplot(dataMeasures, aes_string(x=var, colour="Device" )) + 
     geom_histogram() + 
     #coord_flip() + 
     facet_wrap(Device ~ UserId, nrow=3) +
@@ -34,7 +34,7 @@ for (var in c("MovementTime", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME
   
   
   # plot the boxplots of the movement time for each device
-  p <- ggplot(dataMeasures, aes_string("Device", y=var,  colour="Device" )) + 
+  p <- ggplot(dataMeasures, aes_string(x="Device", y=var,  colour="Device" )) + 
     geom_boxplot() + 
     #coord_flip() + 
     facet_wrap( ~ UserId, nrow=1) +
