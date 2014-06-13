@@ -52,27 +52,32 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 data <- read.csv(file="data/Resultados.csv", head=TRUE, skip=1, sep=",")
 names(data)
 
-s <- summary(data[,c(4:9)])
+s <- describe(data[,c(4:9)])
+s <- cbind(Device=rownames(s), s)
 s
 write.table(s, file = "tables/questionnaire-demographics-summary.csv", sep=",", row.names=FALSE)
 
 
-s <- summary(data[,c(11:22)])
+s <- describe(data[,c(11:22)])
+s <- cbind(Device=rownames(s), s)
 s
 write.table(s, file = "tables/questionnaire-leapmotion-summary.csv", sep=",", row.names=FALSE)
 
 
-s <- summary(data[,c(24:35)])
+s <- describe(data[,c(24:35)])
+s <- cbind(Device=rownames(s), s)
 s
 write.table(s, file = "tables/questionnaire-touchpad-summary.csv", sep=",", row.names=FALSE)
 
 
-s <- summary(data[,c(37:48)])
+s <- describe(data[,c(37:48)])
+s <- cbind(Device=rownames(s), s)
 s
 write.table(s, file = "tables/questionnaire-mouse-summary.csv", sep=",", row.names=FALSE)
 
 
-s <- summary(data[,c(50, 51)])
+s <- describe(data[,c(50, 51)])
+s <- cbind(Device=rownames(s), s)
 s
 write.table(s, file = "tables/questionnaire-devicepreference-summary.csv", sep=",", row.names=FALSE)
 
