@@ -10,7 +10,7 @@ import com.leapmotion.leap.Gesture.Type;
 
 public class LeapMotion extends Listener
 {
-	//Enumeration containing all of the developed controlled modes.
+	//Enumeration containing all of the developed and created control modes.
 	public enum ControlMode{HAND_WITHOUT_GESTURE, HAND_WITHOUT_GESTURE_INVERTED, HAND_WITH_SCREENTAP_GESTURE, 
 							HANDS_WITH_KEYTAP_GESTURE, HAND_WITH_GRABBING_GESTURE ,HANDS_WITH_GRABBING_GESTURE };
 
@@ -33,27 +33,27 @@ public class LeapMotion extends Listener
 	private double touchZoneDistance = 0;
 	
 	//Variable that simulates a mouse click.
-	private boolean pressOcurred = false;
+	private boolean clickHappened = false;
 
 	//Behavior of the function "onFrame()", a function belonging to the Leap Motion listener.
 	private boolean keepExecutting = true;
 	
-	//Robot responsible for moving the pointer cursor and to simulate a mouse click.
+	//Robot responsible for moving the pointer/cursor and to simulate a mouse click.
 	Robot cursor;
 	
 	//For testing purposes.
 	final boolean debug = false;
-	int teste = 0;
 		
 	/**
 	 * Constructor of Class LeapMotion.
-	 * This class tries to emulate the mouse, allowing the Leap Motion device to take control of the pointer cursor 
-	 * and perform "mouse clicks".
+	 * <br>This class tries to emulate the mouse, allowing the Leap Motion device to take control of the pointer/cursor 
+	 * and perform clicks.
 	 * 
-	 * @param modeOfControl - Type of control the user intends to have.
-	 * @param isRightHanded - Boolean indicating if the user is right handed.
+	 * @param modeOfControl - Type of control the user intends to have. See "ControlMode" enumeration for the available possibilities.
+	 * @param isRightHanded - Boolean indicating if the user is right-handed (true) or not (false).
+	 * @param screenResX - The screen resolution (width)
+	 * @param screenResY - THe screen resolution (height) 
 	 */
-	
 	public LeapMotion(ControlMode modeOfControl, boolean isRightHanded, int screenResX, int screenResY)
 	{
 		this.isRightHanded = isRightHanded;
@@ -82,6 +82,7 @@ public class LeapMotion extends Listener
 		//Creates the Leap Motion controller variable. This contains several information related to the device, including the frames captured.
 		controller = new Controller();
 
+		//If a Keytap or Screentap gesture are to be used, extra configurations are need.
 		if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 		{
 			activateKeyTapGesture();
@@ -102,7 +103,7 @@ public class LeapMotion extends Listener
 	}
 
 	/**
-	 * Function that returns the cursor current position on the X axis.
+	 * Function that returns the cursor current screen position on the X (width) axis.
 	 * 
 	 * @return Cursor current X coordinate.
 	 */
@@ -110,7 +111,7 @@ public class LeapMotion extends Listener
 	{ return this.cursorPositionX; }
 	
 	/**
-	 * Function that returns the cursor current position on the Y axis.
+	 * Function that returns the cursor current screen position on the Y (height) axis.
 	 *
 	 * @return Cursor current Y coordinate.
 	 */
@@ -118,41 +119,42 @@ public class LeapMotion extends Listener
 	{ return this.cursorPositionY; }
 
 	/**
-	 * Function that tells if "mouse button" is being pressed.
+	 * Function that tells if click is happening.
 	 * 
-	 * NOTE: Being the Leap Motion device, this "mouse button" is simulated.
+	 * <p><b>Note:</b> Some gestures perform a click instantaneously. In those, this function will always return false.
 	 * 
-	 * NOTE2: Some gestures are instantaneous. In those, this function will always return false.
-	 * 
-	 * @return Boolean indicating if a " mouse button" is being pressed.
+	 * @return Boolean indicating if a click is occurring.
 	 */
-	public boolean isPressedOcurred()
+	public boolean isClickHappening()
 	{
-		return this.pressOcurred;
+		return this.clickHappened;
 	}
 
 	/**
 	 * Returns the distance to an invisible, perpendicular plane to the Leap Motion.
-	 * The Touch Zone is a functionality is provided by the Leap Motion device. 
+	 * The Touch Zone is a functionality provided by the Leap Motion device. 
 	 * 
-	 * NOTE: The distance always varies between [-1.0,1.0]. 
+	 * <p><b>Note:</b> The touh zone values always varies between [-1.0,1.0]. 
 	 * 
-	 * NOTE2: Some control modes don't use this functionality. In those, 0 will always be returned.
+	 * <p><b>Note2:</b> Some control modes don't use this functionality. In those, 0 will always be returned.
 	 * 
-	 * NOTE3: If the "HAND_WITHOUT_GESTURE_INVERTED" control mode is being used, the returned value will 
-	 * 		  be the opposite value (i.e., - current value). 
+	 * <p><b>Note3:</b> If the "HAND_WITHOUT_GESTURE_INVERTED" control mode is being used, the returned value will 
+	 * 		  be the opposite value (i.e., -current value). 
 	 *  
-	 * @return Value with the distance. 
+	 * @return Distance to the touch zone (double). 
 	 */
 	public double getTouchZone()
 	{
 		if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)
 		{
-			if(this.touchZoneDistance < 0){	return 0; }
+			if(this.touchZoneDistance < 0)
+			{return 0;}
+			
 			return this.touchZoneDistance;
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)
 		{
+			//Return the inverse value.
 			double value = (- this.touchZoneDistance);
 			
 			if(value < 0) 
@@ -162,6 +164,7 @@ public class LeapMotion extends Listener
 		}
 		else
 		{
+			//If using other control modes, the touch zone is always 0.
 			return 0;
 		}	
 	}
@@ -169,9 +172,9 @@ public class LeapMotion extends Listener
 	/**
 	 * Leap Motion listener extended.
 	 * 
-	 * When the device captures a frame this function occurs. The frame received is 
+	 * <p>When the device captures a frame this function occurs. The frame received is 
 	 * analyzed in search of hands and gestures. 
-	 * Depending on the data recovered the respective action will be taken.
+	 * <br>Depending on the data recovered, the respective action will be taken.
 	 */
 	public void onFrame(Controller controller)
 	{	
@@ -188,6 +191,7 @@ public class LeapMotion extends Listener
 			return;
 		}
 
+		//If no new frame was captured, there is no need to analyze it. 
 		if(capturedFrame.equals(lastFrame))
 		{ return; }
 
@@ -199,6 +203,7 @@ public class LeapMotion extends Listener
 			return;
 		}
 
+		//If only one hand was detected then that hand will be the dominant hand. 
 		if(detectedHands.count() == 1)
 		{
 			dominantHand = detectedHands.get(0);
@@ -240,16 +245,17 @@ public class LeapMotion extends Listener
 			}
 		}
 		
-		//Depending on the control mode being used, take a different take on moving the screen cursor.
+		//Depending on the control mode being used, perform a different process for moving the screen pointer.
 		if( (choosenControlMode == ControlMode.HAND_WITH_SCREENTAP_GESTURE) 	||
 			(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)			||
-			(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)	  )
+			(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)	||
+			(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)  	)
 		{
 			//In this option, a interaction box is used, allowing for a more precise pointing. The pointing is done 
 			//using the index finger tip position. 
 			if(!pointerFinger.isValid() || dominantHand.pointables().frontmost().equals(pointerFinger))
 			{
-				pointerFinger = discoverPointingFinger();
+				pointerFinger = discoverIndexFinger();
 			}
 			else
 			{
@@ -275,51 +281,47 @@ public class LeapMotion extends Listener
 			
 			cursor.mouseMove(cursorPositionX, cursorPositionY);
 		}
-		else if( (choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)  ||
-				 (choosenControlMode == ControlMode.HANDS_WITH_GRABBING_GESTURE)  )
+		else if( choosenControlMode == ControlMode.HANDS_WITH_GRABBING_GESTURE )
 		{
-			//In this option an intersection is used, having less precision in pointing, but allowing two hands to be used at the same time. 
-			ScreenList availableScreens = controller.locatedScreens();
-
-			if(availableScreens.isEmpty())
+			//In this option, a interaction box is used, allowing for a more precise pointing. The pointing is done 
+			//using the index finger tip position. 
+			if(!pointerFinger.isValid() || dominantHand.pointables().frontmost().equals(pointerFinger))
 			{
-				if(debug){System.err.println("No screen has been detected.");}
-				return;
-			}
-			
-			Screen screen = availableScreens.get(0);
-			
-			if(!pointerFinger.isValid())
-			{
-				pointerFinger = discoverPointingFinger();
+				pointerFinger = discoverIndexFinger();
 			}
 			else
 			{
-				pointerFinger =  dominantHand.pointable(pointerFinger.id());
+				pointerFinger = dominantHand.pointable(pointerFinger.id());
 			}
-
+			
 			if(!pointerFinger.isValid())
 			{
 				if(debug){System.err.println("Invalid pointer finger!");}
 				return;
 			}
 			
-			Vector interscection = screen.intersect(pointerFinger.stabilizedTipPosition(), pointerFinger.direction(), true, 1.0f);
-
-			//Vector interscection = screen.intersect(pointerFinger, true, 1.0f);
-
-			
-			cursorPositionX = (int) ( screen.widthPixels() * interscection.getX() );
-			cursorPositionY = (int) ( screen.heightPixels() * ( 1.0f - interscection.getY() ) );
-
-			cursor.mouseMove(cursorPositionX, cursorPositionY);
+			if( !(auxiliaryHand.isValid() && auxiliaryHand.pointables().count() > 2) )
+			{
+				Vector stabilizedPosition = pointerFinger.stabilizedTipPosition();
+				
+				InteractionBox iBox = capturedFrame.interactionBox();
+				Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
+				
+				float x = normalizedPosition.getX() * screenResolutionX;
+				float y = screenResolutionY - normalizedPosition.getY() * screenResolutionY;
+				
+				cursorPositionX = (int) x;
+				cursorPositionY = (int) y;
+				
+				cursor.mouseMove(cursorPositionX, cursorPositionY);
+			}
 		}
 		else if( choosenControlMode == ControlMode.HAND_WITH_GRABBING_GESTURE )
 		{
 			if(! (dominantHand.fingers().count() >= 3) )
 			{
-				//In this option, similar to the first, an interactive box is used allowing for a more precise pointing. However, 
-				//the pointing is done with the hand palm instead.  
+				//In this option, similar to the first, an interactive box is used allowing for a more precise pointing. 
+				//However, the pointing is done with the hand palm instead.  
 				Vector stabilizedPosition = dominantHand.stabilizedPalmPosition();
 				
 				InteractionBox iBox = capturedFrame.interactionBox();
@@ -338,13 +340,13 @@ public class LeapMotion extends Listener
 		if(choosenControlMode == ControlMode.HAND_WITH_SCREENTAP_GESTURE)
 		{ 
 			//User controls the cursor and simulates button presses with the same hand.
-			//The button press is simulated by the SCREEN TAP gesture.
+			//The click is simulated by the SCREEN TAP gesture.
 			typeControlScreenTap(controller, capturedFrame); 
 		}
 		else if(choosenControlMode == ControlMode.HANDS_WITH_KEYTAP_GESTURE)
 		{ 
-			//User controls the cursor using his/her dominant hand and simulates button 
-			//presses with the auxiliary hand by performing KEYTAP gesture.
+			//User controls the cursor using his/her dominant hand and simulates a click 
+			//by performing KEYTAP gesture with the auxiliary hand.
 			typeControlKeyTap(controller, capturedFrame); 
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE)
@@ -352,8 +354,8 @@ public class LeapMotion extends Listener
 			//Information required for this control mode.
 			touchZoneDistance = pointerFinger.touchDistance();
 			
-			//User controls the cursor and simulates button presses with the same hand.
-			//The button press is simulated by the touch zone distance. When "touching" a click will occur.
+			//User controls the cursor and simulates a click with the same hand.
+			//The click is simulated thanks to the touch zone distance. When "touching" a click will occur.
 			typeControlTouchDistance(controller); 
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITHOUT_GESTURE_INVERTED)
@@ -361,21 +363,20 @@ public class LeapMotion extends Listener
 			//Information required for this control mode.
 			touchZoneDistance = pointerFinger.touchDistance();
 			
-			//User controls the cursor and simulates button presses with the same hand.
-			//The button press is simulated by the touch zone distance. This time, a click will occur when not "touching" the 
-			//touch zone.
+			//User controls the cursor and simulates a click with the same hand.
+			//The click is simulated thanks to the touch zone distance. 
+			//This time, a click will occur when not "touching".
 			typeControlTouchDistanceInverted(controller);
 		}
 		else if(choosenControlMode == ControlMode.HANDS_WITH_GRABBING_GESTURE)
 		{
-			//User controls the cursor using his/her dominant hand and simulates button 
-			//presses with the auxiliary hand by performing a grabbing gesture.
+			//User controls the cursor using his/her dominant hand and simulates  
+			//a click with the auxiliary hand by performing a grabbing gesture.
 			typeControlHandsWithGrabbingGesture(controller);
 		}
 		else if(choosenControlMode == ControlMode.HAND_WITH_GRABBING_GESTURE)
 		{
-			//User controls the cursor using his/her dominant hand and simulates button 
-			//presses with the auxiliary hand by performing a grabbing gesture.
+			//User controls the cursor and simulates a click, with the dominant hand, by performing a grabbing gesture.
 			typeControlHandWithGrabbingGesture(controller);
 		}
 
@@ -384,14 +385,12 @@ public class LeapMotion extends Listener
 	}
 
 	/**
-	 * In this type of control a finger, from the dominant hand, closest to the screen (the farthest 
-	 * from the hand center) is used to move the cursor and simulate the mouse button click.
-	 * To perform the "mouse click" the SCREEN TAP Gesture is used. To do this, simply move the finger
-	 * in the screen direction as if to touch it / press it.
+	 * In this type of control a finger from the dominant hand, the closest to the screen (the farthest 
+	 * from the hand center), is used to move the cursor and simulate the click.
+	 * <br>To perform a click, the SCREEN TAP Gesture is used. 
 	 * 
-	 * For more information on the gesture: https://developer.leapmotion.com/documentation/java/api/Leap.ScreenTapGesture.html
-	 * 
-	 * In this type of control only one hand is required.
+	 * <p>For more information on the gesture: <a href="https://developer.leapmotion.com/documentation/java/api/Leap.ScreenTapGesture.html">https://developer.leapmotion.com/documentation/java/api/Leap.ScreenTapGesture.html</a> 
+	 * <p>In this type of control only one hand is required.
 	 * 
 	 * @param controller - Default device controller.
 	 */
@@ -404,21 +403,8 @@ public class LeapMotion extends Listener
 		if(gestures.isEmpty())
 		{ return; }
 
-		if(gestures.count() == 1)
-		{
-			performedGesture = gestures.get(0);
-		}
-		else
-		{
-			for(int i = 0; i < gestures.count(); i++)
-			{
-				if( gestures.get(i).hands().get(0).equals(auxiliaryHand))
-				{
-					performedGesture = gestures.get(i);
-				}
-			}
-		}
-
+		performedGesture = gestures.get(0);
+		
 		if(!performedGesture.isValid())
 		{
 			if(debug){System.err.println("The performed gesture is invalid.");}
@@ -430,14 +416,8 @@ public class LeapMotion extends Listener
 			if(debug)
 			{
 				System.err.println( "More than one hand has performed the SCREEN TAP gesture.\n" +
-						"Only one hand should be used and this should be the dominant hand." );
+						"Only one hand should do it (the dominant hand)." );
 			}
-			return;
-		}
-
-		if(!performedGesture.hands().get(0).equals(dominantHand))
-		{
-			if(debug){System.err.println("Only the dominant hand should perform gestures.");}
 			return;
 		}
 
@@ -450,7 +430,7 @@ public class LeapMotion extends Listener
 	 */
 	private void activateScreenTapGesture() 
 	{
-		//Alter the device configurations in order to detect the gesture with ease.
+		//Alter the device configurations in order to detect the gesture more easily.
 		if(!controller.config().setFloat("Gesture.ScreenTap.HistorySeconds", 0.5f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.ScreenTap.HistorySeconds\" configuration.");
@@ -481,16 +461,14 @@ public class LeapMotion extends Listener
 	}
 	
 	/**
-	 * In this type of control a finger, from the dominant hand, closest to the screen (the farthest 
-	 * from the hand center) is used to move the cursor.
-	 * To simulate the a mouse button click, a finger from the auxiliary hand, closest to the screen (again,
-	 * farthest from the hand center) must perform the gesture KEY TAP.
-	 * To perform the Key Tap Gesture simply move the finger in the Leap Motion direction 
-	 * as if going to press a key.
+	 * In this type of control a finger from the dominant hand, the closest to the screen (the farthest 
+	 * from the hand center), is used to move the cursor.
+	 * <br>To simulate a click, a finger from the auxiliary hand, the closest to the screen (again,
+	 * farthest from the hand center), must perform the gesture KEY TAP.
 	 * 
-	 * For more information on the gesture: https://developer.leapmotion.com/documentation/java/api/Leap.KeyTapGesture.html
+	 * <p>For more information on the gesture: <a href="https://developer.leapmotion.com/documentation/java/api/Leap.KeyTapGesture.html">https://developer.leapmotion.com/documentation/java/api/Leap.KeyTapGesture.html</a>
 	 * 
-	 * In this type of control two hands are required.
+	 * <p>In this type of control two hands are required.
 	 * 
 	 * @param controller - Default device controller.
 	 */
@@ -510,6 +488,7 @@ public class LeapMotion extends Listener
 		}
 		else
 		{
+			//Only gestures from the auxiliary hand should be regarded, as this is the hand that will perform the gesture.
 			for(int i = 0; i < gestures.count(); i++)
 			{
 				if( gestures.get(i).hands().get(0).equals(auxiliaryHand))
@@ -560,7 +539,7 @@ public class LeapMotion extends Listener
 	 */
 	private void activateKeyTapGesture() 
 	{
-		//Alter the device configurations in order to detect the gesture with ease.
+		//Alter the device configurations in order to detect the gesture more easily.
 		if(!controller.config().setFloat("Gesture.KeyTap.HistorySeconds", 0.5f) )
 		{
 			System.err.println("It was not possible to alter \"Gesture.KeyTap.HistorySeconds\" configuration.");
@@ -594,67 +573,66 @@ public class LeapMotion extends Listener
 	}
 
 	/**
-	 * In this type of control a finger, from the dominant hand, closest to the screen (the farthest 
-	 * from the hand center) is used to move the cursor and simulate the mouse button click.
-	 * To perform the "mouse click" the TOUCH DISTANCE is used.
+	 * In this type of control a finger from the dominant hand, the closest to the screen (the farthest 
+	 * from the hand center), is used to move the cursor and simulate a click.
+	 * <br>To perform a click, the TOUCH DISTANCE is used.
 	 * 
-	 * For more information on the concept: https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance
+	 * <p>For more information on the concept: <a href="https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance">https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance</a>
 	 * 
-	 * In this type of control only one hand is required.
+	 * <p>In this type of control only one hand is required.
 	 * 
 	 * @param controller - Default device controller.
 	 */
 	private void typeControlTouchDistance(Controller controlador)
 	{
-		if(!pressOcurred && (touchZoneDistance <= 0.0) )
+		if(!clickHappened && (touchZoneDistance <= 0.0) )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			
-			pressOcurred = true;
+			clickHappened = true;
 		}
-		else if(pressOcurred && (touchZoneDistance >= 0.27) )
+		else if(clickHappened && (touchZoneDistance >= 0.27) )
 		{
-			pressOcurred = false;
+			clickHappened = false;
 		}
 	}
 
 	/**
-	 * In this type of control a finger, from the dominant hand, closest to the screen (the farthest 
-	 * from the hand center) is used to move the cursor and simulate the mouse button click.
-	 * To perform the "mouse click" the TOUCH DISTANCE is used. 
-	 * In this function, when the finger from the auxiliary hand is not in "touching" state, 
-	 * a click will occur.
+	 * In this type of control a finger from the dominant hand, the closest to the screen (the farthest 
+	 * from the hand center), is used to move the cursor and simulate a click.
+	 * <br>To perform the click the TOUCH DISTANCE is used. 
+	 * <br>In this function, a click will occur when the touch zone is not in the "touching" zone.
 	 * 
-	 * For more information on the concept: https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance
+	 * <p>For more information on the concept: <a href="https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance">https://developer.leapmotion.com/documentation/java/devguide/Leap_Touch_Emulation.html?highlight=touch%20distance</a>
 	 * 
-	 * In this type of control only one hand is required.
+	 * <p>In this type of control only one hand is required.
 	 * 
 	 * @param controller - Default device controller.
 	 */
 	private void typeControlTouchDistanceInverted(Controller controller) 
 	{
-		if(!pressOcurred && (touchZoneDistance >= 0.0) )
+		if(!clickHappened && (touchZoneDistance >= 0.0) )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 
-			pressOcurred = true;
+			clickHappened = true;
 		}
-		else if(pressOcurred && (touchZoneDistance < -0.10) )
+		else if(clickHappened && (touchZoneDistance < -0.10) )
 		{
-			pressOcurred = false;
+			clickHappened = false;
 		}
 	}
 
 	/**
-	 * In this type of control a finger, from the dominant hand, closest to the screen (the farthest 
-	 * from the hand center) is used to move the cursor.
+	 * In this type of control a finger from the dominant hand, the closest to the screen 
+	 * (the farthest from the hand center) is used to move the cursor.
 	 * 
-	 * To simulate a "mouse button" click, the whole auxiliary hand must be close.
-	 * To terminate it, the whole auxiliary hand must be opened.
+	 * <p>To simulate a click, the whole auxiliary hand must be opened.
+	 * <br>To terminate it, the whole auxiliary hand must be closed.
 	 * 
-	 * In this type of control two hands are required.
+	 * <p>In this type of control two hands are required.
 	 * 
 	 * @param controller - Default device controller.
 	 */
@@ -666,44 +644,58 @@ public class LeapMotion extends Listener
 			return;
 		}
 		
-		if( (auxiliaryHand.fingers().count() <= 1) && pressOcurred)
+		if( (auxiliaryHand.fingers().count() <= 1) && clickHappened)
 		{
-			pressOcurred = false;
+			clickHappened = false;
 		}
 		
-		if( (auxiliaryHand.fingers().count() >= 3) && !pressOcurred )
+		if( (auxiliaryHand.fingers().count() >= 3) && !clickHappened )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			
-			pressOcurred = true;
+			clickHappened = true;
 		}
 	}
 	
+	/**
+	 * In this type of control the dominant hand is used to move the cursor.
+	 * 
+	 * <p>To simulate a click, the whole dominant hand must be opened.
+	 * <br>To terminate it, the whole auxiliary hand must be closed.
+	 * 
+	 * <p>In this type of control only one hand is required.
+	 * 
+	 * @param controller - Default device controller.
+	 */
 	private void typeControlHandWithGrabbingGesture(Controller controller)
 	{	
 		if(!dominantHand.isValid())
 		{
-			if(debug){System.err.println("Must place your auxiliary hand over the Leap Motion device.");}
+			if(debug){System.err.println("Must place your dominant hand over the Leap Motion device.");}
 			return;
 		}
 		
-		if( (dominantHand.fingers().count() <= 1) && pressOcurred)
+		if( (dominantHand.fingers().count() <= 1) && clickHappened)
 		{
-			pressOcurred = false;
+			clickHappened = false;
 		}
 		
-		if( (dominantHand.fingers().count() >= 4) && !pressOcurred )
+		if( (dominantHand.fingers().count() >= 4) && !clickHappened )
 		{
 			cursor.mousePress(InputEvent.BUTTON1_MASK);
 			cursor.mouseRelease(InputEvent.BUTTON1_MASK);
 			
-			pressOcurred = true;
+			clickHappened = true;
 		}
 	}
 
-	
-	private Pointable discoverPointingFinger() 
+	/**
+	 * Function responsible of discovering which finger is the index finger.
+	 * 
+	 * @return The (supposedly) index finger (as a pointable). 
+	 */
+	private Pointable discoverIndexFinger() 
 	{
 		PointableList apontadores = dominantHand.pointables();
 
@@ -713,13 +705,17 @@ public class LeapMotion extends Listener
 				return apontadores.get(0);
 				
 			case 2:
+				//Assuming that only the Thumb and Index finger are being shown.
 				return apontadores.frontmost();		
 				
 			case 3:
+				//Assuming that the Thumb, Index and any (but only one) finger to the right of the Index finger.
+				//This is necessary since, sometimes, the Leap Motion detects one of the hidden fingers unintencionally.
 				for(int i = 0; i < 3; i++)	
 				{
 					Pointable thisPointable = apontadores.get(i);
 						
+					//If this finger is not the leftmost and rightmost then it's the Index finger.
 					if( !thisPointable.equals(apontadores.leftmost()) && !thisPointable.equals(apontadores.rightmost()) )
 					{
 						return thisPointable;
@@ -727,6 +723,7 @@ public class LeapMotion extends Listener
 				}
 				
 			case 4:
+				//Assume that the thumb is not being shown.
 				if(isRightHanded)
 				{
 					return apontadores.leftmost();		
@@ -737,6 +734,7 @@ public class LeapMotion extends Listener
 				}
 				
 			case 5:
+				//Assume that all fingers are being shown and the middle finger is the frontmost.
 				if(isRightHanded)
 				{
 					for(int i = 0; i < apontadores.count(); i++)
@@ -761,16 +759,18 @@ public class LeapMotion extends Listener
 				}
 				
 			default:
+				//If no fingers are detected return an empty pointable.
 				return new Pointable();
 		}
 	}
 	
 
 	/**
-	 * Function that terminates the Leap Motion functions.
+	 * Function that "terminates" the Leap Motion functions.
 	 * 
-	 * NOTE: This does not turn off the device. All the information read will be 
-	 *       discarded and won't cause any changes.
+	 * <p><b>Note:</b> This does not turn off the device, since it was not possible to stop the device through code.
+	 * 		 This function simply changes the "onFrame" function behavior by having all the information read discarded.
+	 * 		 With that, no actions (click or pointer movement) are executed.
 	 */
 	public void turnOff()
 	{
@@ -778,11 +778,11 @@ public class LeapMotion extends Listener
 	}
 
 	/**
-	 * Function that restarts the Leap Motion functions.
+	 * Function that "restarts" the Leap Motion functions.
 	 * 
-	 * NOTE: This function does not initialize the Leap Motion Class. This ONLY allows to revert
-	 * 		 the effects of the "turnOff" function, allowing values to be read again, thus permitting 
-	 * 		 the mouse to be moved and "mouse clicks" to be performed.
+	 * <p><b>Note:</b> This function does not initialize the Leap Motion Class. This ONLY reverts	the effects of the 
+	 * 		 "turnOff" function, allowing values to be read again, thus permitting the pointer to be moved
+	 * 		 and clicks to be performed again.
 	 */
 	public void turnOn()
 	{
@@ -790,24 +790,27 @@ public class LeapMotion extends Listener
 	}
 
 	/**
-	 * Function that exchanges the User dominant hand with the auxiliary hand. 
-	 * In other words, if the user was right-handed, he/she now is left-handed (and vice-versa).
+	 * Function that exchanges the user dominant hand with the auxiliary hand. 
+	 * <br>In other words, if the user was right-handed, he/she now is left-handed (and vice-versa).
 	 */
 	public void changeDominantHand()
 	{ this.isRightHanded = !this.isRightHanded; }
 
 	/**
 	 * Function responsible for changing the control mode.
-	 * The order of change is as follows:
-	 * 	-> 1 Hand, Screen Tap gesture;
-	 *  -> 1 Hand, based on touch zone distance, no gesture;
-	 *  -> 1 Hand, based on opposite value of the touch zone distance, no gesture;
-	 *  -> 2 Hands, grabbing gesture;
-	 *  -> 2 Hands, Key Tap gesture;
+	 * <br>The order of change is as follows:
+	 * 	<br>-> 1 Hand, Screen Tap gesture;
+	 *  <br>-> 1 Hand, based on touch zone distance, no gesture;
+	 *  <br>-> 1 Hand, based on opposite value of the touch zone distance, no gesture;
+	 *  <br>-> 2 Hands, grabbing gesture;
+	 *  <br>-> 2 Hands, Key Tap gesture;
+	 *  <br>-> ...
 	 * 	
-	 * 	NOTE: 2 hands, Key Tap gesture is the default.
+	 * 	<p><b>Note:</b> 2 Hands, grabbing gesture is the default.
+	 * 	
+	 * 	<p><b>Note2:</b> This function may be used several times in order to achieve the intended Control Mode. 
 	 * 
-	 * 	@return THe current chosen control mode.
+	 * 	@return The next control mode.
 	 */
 	public ControlMode changeControlMode()
 	{

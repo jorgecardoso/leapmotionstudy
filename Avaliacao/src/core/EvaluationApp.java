@@ -1,3 +1,4 @@
+
 package core;
 
 import java.awt.Toolkit;
@@ -27,6 +28,8 @@ public class EvaluationApp extends PApplet
 	//Frame center coordinates.
 	private int centralPositionX;
 	private int centralPositionY;
+	private int offsetX;
+	private int offsetY; 
 	
 	//For drawing the purple "+" sign that shows on the target circle
 	private int targetSizeX;
@@ -48,6 +51,7 @@ public class EvaluationApp extends PApplet
 	private PFont font;
 	private int displayFontSize;
 	private String displayText;
+	private String displayTextSequencesLeft; 
 
 	//Information related to the circles drawn in the application
 	Vector<Circle> circles;
@@ -100,9 +104,9 @@ public class EvaluationApp extends PApplet
 	
 	/**
 	 * Extended function from Processing.
-	 * This function is only executed once.
+	 * <br>This function is only executed once.
 	 * 
-	 * This function is responsible for setting the initial parameters of Processing, reading the configuration file 
+	 * <p>This function is responsible for setting the initial parameters of Processing, reading the configuration file 
 	 * and starting the adequate listeners.
 	 */
 	public void setup()
@@ -127,6 +131,7 @@ public class EvaluationApp extends PApplet
 		
 		//Set starting text.
 		displayText = "Welcome to the Evaluation application!\nTo start press the + on the top!";
+		displayTextSequencesLeft = determineActualSequence();
 		
 		//Window will occupy all the available screen area. Some OSes restrict this area.
 		size(windowWidth,windowHeight);
@@ -145,9 +150,9 @@ public class EvaluationApp extends PApplet
 		{
 			double currentAngle = Math.toRadians(angle * i);
 						
-			double coordinateX = centralPositionX + centerDistance * Math.cos(currentAngle);
+			double coordinateX = centralPositionX + offsetX + centerDistance * Math.cos(currentAngle);
 						
-			double coordinateY = centralPositionY + centerDistance * Math.sin(currentAngle);
+			double coordinateY = centralPositionY + offsetY + centerDistance * Math.sin(currentAngle);
 					
 			circles.add( 
 				new Circle( ((int) coordinateX), ((int) coordinateY), ((int) circleRadius))
@@ -175,9 +180,9 @@ public class EvaluationApp extends PApplet
 
 	/**
 	 * Extended function from Processing.
-	 * This function is executed ad aeternum by Processing. In other words, when it ends, it is executed again.
+	 * <br>This function is executed ad aeternum by Processing. In other words, when it ends, it is executed again.
 	 * 
-	 * THis function is responsible for drawing and refreshing the Graphical User Interface.
+	 * <p>This function is responsible for drawing and refreshing the Graphical User Interface.
 	 */
 	public void draw() 
 	{  
@@ -189,17 +194,21 @@ public class EvaluationApp extends PApplet
 		if(redrawElements)
 		{ return ; }
 		
-		//Paint background with the selected color. Processing function. Processing function.
+		//Paint background with the selected color. Processing function.
 		background(backgroundColor);
 		
-		//Draw the respective message on the application.
+		//Draw any messages from the application on the screen.
 		displayText();
+		
 		
 		//If the evaluation is complete there is no need to draw the remaining elements.
 		if(sequenceIndex > numberOfCircles)
 		{
 			return;
 		}
+		
+		//Draw the current trial being performed VS total trials on the bottom right of the screen.
+		displayNumberOfTrials();
 		
 		//To avoid errors due synchronization issues between the listener and the drawing function.
 		int readCurrentSequenceIndex = sequenceIndex;
@@ -236,11 +245,12 @@ public class EvaluationApp extends PApplet
 		Circle targetCircle = circles.get(sequenceToPerform.get(readCurrentSequenceIndex));
 		drawTargetSign(targetCircle.getCenterX(), targetCircle.getCenterY());
 		
-		//Depending on the device being used or Leap Motion device's control mode, change the cursor
+		//Depending on the device being used or the Leap Motion device control mode change the pointer image.
 		//to the correct cursor.
 		if(	desiredControlMethod == ControlMode.HANDS_WITH_KEYTAP_GESTURE   || desiredControlMethod == ControlMode.HAND_WITH_SCREENTAP_GESTURE ||
 			desiredControlMethod == ControlMode.HANDS_WITH_GRABBING_GESTURE || desiredControlMethod == ControlMode.HAND_WITH_GRABBING_GESTURE ||
 			deviceID != 0 )
+			
 		{ 
 			//Default cursor image.
 			cursor();	
@@ -255,9 +265,9 @@ public class EvaluationApp extends PApplet
 			{
 				strokeWeight(4.0f);
 				
-				if(!leapMotionDevice.isPressedOcurred())
+				if(!leapMotionDevice.isClickHappening())
 				{
-					//Depending on the distance to the touch zone, draw the cursor circle with a different colour.
+					//Depending on the distance to the touch zone, draw the cursor circle with a different color.
 					float redValue = (float) ( (leapMotionDevice.getTouchZone() * 205.0f));
 					float greenValue = (float) ( ( 1 - leapMotionDevice.getTouchZone() ) * 205.0f);
 					
@@ -293,19 +303,46 @@ public class EvaluationApp extends PApplet
 	}
 
 	/**
-	 * Function that prints, on the application frame, the string stored in "displayText" variable.
+	 * Function that prints, on the center of the application frame, any feedback messages to the user.
 	 */
 	private void displayText() 
 	{
 		textFont(font,displayFontSize);            
 		fill(0);
 		textAlign(CENTER,CENTER);
-		text(displayText,centralPositionX,centralPositionY);
+		text(displayText,centralPositionX + offsetX,centralPositionY + offsetY);
 		noFill();
+	}
+	
+	/**
+	 * Function that prints, on the bottom right of the application frame, the number of the current trial
+	 * and the number of trials that must be performed. 
+	 */
+	private void displayNumberOfTrials() 
+	{
+		textFont(font,displayFontSize);            
+		fill(0);
+		textAlign(LEFT);
+		text(displayTextSequencesLeft,windowWidth - displayFontSize * 3 ,windowHeight -10);
+		noFill();
+	}
+	
+	/**
+	 * Function responsible for calculating which sequence is currently being performed.
+	 * <br>This function is used in conjunction with the display function. As such the
+	 * result is a string. 
+	 * 
+	 * @return A string with the format "Current_sequence/Total_sequence"
+	 */
+	private String determineActualSequence() 
+	{
+		return ( (currentBlockNumber - 1 ) * numberOfSequencesPerBlock + currentSequenceNumber + 1) + "/" + numberOfSequencesPerBlock * numberOfBlocksPerExperiment;
 	}
 
 	/**
 	 * Function responsible for recalculating certain values when a resize happens.
+	 * 
+	 * <P>(Since the application starts in fullscreen, this function is not used)
 	 */
 	private void redrawElements() 
 	{
@@ -336,10 +373,10 @@ public class EvaluationApp extends PApplet
 		{
 			double currentAngle = Math.toRadians(angle * i);
 						
-			double coordinateX = centralPositionX + 
+			double coordinateX = centralPositionX + offsetX +
 					centerDistance * Math.cos(currentAngle);
 						
-			double coordinateY = centralPositionY + 
+			double coordinateY = centralPositionY + offsetY +
 					centerDistance * Math.sin(currentAngle);
 					
 			circles.add( 
@@ -433,23 +470,53 @@ public class EvaluationApp extends PApplet
 			//Store the read values in the respective variable.
 			if( result[0].equals("Number of circles (integer)") )
 			{
-				numberOfCircles = Integer.parseInt(result[1]); 
+				try{  numberOfCircles = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read the \"Number of circles\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 			}
 			else if( result[0].equals("Distance between circles and frame center (integer)") )
 			{ 
-				centerDistance = Float.parseFloat(result[1]); 
+				try{  centerDistance = Float.parseFloat(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Distance between circles and frame center\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 			}
 			else if( result[0].equals("Circle radius (float)") )
 			{ 
-				circleRadius = Float.parseFloat(result[1]); 
+				try{  circleRadius = Float.parseFloat(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Circle radius\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 			}
 			else if( result[0].equals("Assigned UserID to person performing the evaluation") )
 			{ 
-				userID = Integer.parseInt(result[1]);
+				try{  userID = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Assigned UserID to person performing the evaluation\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 			}
 			else if( result[0].equals("How many sequences does one block have? (integer)") )
 			{ 
-				numberOfSequencesPerBlock = Integer.parseInt(result[1]); 
+				try{  numberOfSequencesPerBlock = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"How many sequences does one block have?\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 				
 				if(numberOfSequencesPerBlock <= 0)
 				{
@@ -459,7 +526,13 @@ public class EvaluationApp extends PApplet
 			}	
 			else if( result[0].equals("How many blocks does one experiment have? (integer)") )
 			{ 
-				numberOfBlocksPerExperiment = Integer.parseInt(result[1]); 
+				try{  numberOfBlocksPerExperiment = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"How many blocks does one experiment have?\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 				
 				if(numberOfBlocksPerExperiment <= 0)
 				{
@@ -469,17 +542,31 @@ public class EvaluationApp extends PApplet
 			}
 			else if( result[0].equals("Random sequence generator (true/false)") )
 			{ 
+				//False is the default value of "generateRandomSequence". If the application is unable to read a value, it will remain false.
 				String intendedBoolean = result[1].toLowerCase();
 				
 				if(intendedBoolean.equals("true") || intendedBoolean.equals("t"))
 				{generateRandomSequence = true;}
-				
-				//False is the default value of "generateRandomSequence". If the application is unable to read a value, it will remain false.
+				else if(intendedBoolean.equals("false") || intendedBoolean.equals("f"))
+				{generateRandomSequence = false;}
+				else
+				{ 
+					System.err.println("It was not possible to read \"Random sequence generator\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nUsing default value (false).");
+				}
 			}
 			else if( result[0].equals("Number of the device to be used") )
 			{
-				int value = Integer.parseInt(result[1]);
-	
+				int value = 99;
+				
+				try{  value = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Number of the device to be used\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
+				
 				if(value == 0) 
 				{ activateLeapMotion = true; }
 				else
@@ -489,12 +576,39 @@ public class EvaluationApp extends PApplet
 			}
 			else if( result[0].equals("Is user right-handed? (true/false)") )
 			{ 
+				//True is the default value of "rightHanded".
 				String intendedBoolean = result[1].toLowerCase();
 				
 				if(intendedBoolean.equals("false") || intendedBoolean.equals("f"))
 				{ rightHanded= false;}
-				
-				//True is the default value of "rightHanded".
+				else if(intendedBoolean.equals("true") || intendedBoolean.equals("t"))
+				{ rightHanded= true;}
+				else
+				{ 
+					System.err.println("It was not possible to read \"Is user right-handed?\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nUsing default value (true).");
+				}
+			}			
+			else if( result[0].equals("Center offset X (integer)") )
+			{ 
+				try{  offsetX = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Center offset X\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
+			}
+			
+			else if( result[0].equals("Center offset Y (integer)") )
+			{ 
+				try{  offsetY = Integer.parseInt(result[1]);  }
+				catch(Exception e)
+				{ 
+					System.err.println("It was not possible to read \"Center offset Y\" from Config.txt.\n"
+									 + "(Missing or wrong value?)\nNow exiting");
+					System.exit(0);
+				}
 			}
 		}
 
@@ -527,9 +641,7 @@ public class EvaluationApp extends PApplet
 	 * Function that starts the Leap Motion device (and respective functions) and creates a new thread 
 	 * for it to run exclusively.
 	 * 
-	 * If the Leap Motion is already started but has been stopped, this function will restart it.
-	 * @param windowHeight 
-	 * @param windowWidth 
+	 * <p>If the Leap Motion is already started but has been stopped, this function will restart it.
 	 */
 	private void activateLeapMotion() 
 	{
@@ -553,9 +665,9 @@ public class EvaluationApp extends PApplet
 	/**
 	 * Function that stops the Leap Motion device.
 	 * 
-	 * NOTE: Stopping the Leap Motion does not kill the thread or terminates the Leap Motion. It just stops
-	 * 		 the Leap Motion from moving the cursor.
-	 * 		 By using listener in the Leap Motion, it was not possible to terminate the device.
+	 * <p><b>Note:</b> Stopping the Leap Motion does not kill the thread or terminates the Leap Motion. It just stops
+	 * 		 the Leap Motion from moving the pointer.
+	 * 		 By using a listener in the Leap Motion, it was not possible to terminate the device through code.
 	 */
 	private void turnOffLeapMotion() 
 	{
@@ -566,10 +678,10 @@ public class EvaluationApp extends PApplet
 	 * Function responsible for creating a Thread that will collect the Mouse position over time and perform the logical action
 	 * of the application.
 	 * 
-	 * Note: This function only creates a Thread, doesn't start it. That must be done manually by the
-	 * 		 by the programmer.
+	 * <p><b>Note:</b> This function only creates a Thread, doesn't start it. That must be done manually by the
+	 * 		           by the programmer.
 	 * 
-	 * Note: The sample rate (the number of times a position is registered) is 40 samples per seconds.
+	 * <p><b>Note2:</b> The sample rate (the number of times a position is registered) is 40 samples per seconds.
 	 * 
 	 * @return Thread that stores the mouse position.
 	 */
@@ -587,7 +699,9 @@ public class EvaluationApp extends PApplet
 					//Sleep 25 milliseconds. This allows the sample rate to be 40 samples per second.
 					try {sleep(25);}catch (InterruptedException e) { e.printStackTrace();}
 					
-					//Store the values read. This way they can be accessible anywhere in this listener without taking the risk of them changing.
+					//Store the values read. This way they can be accessible anywhere in this listener 
+					//without taking the risk of them changing during the process.
+					
 					int readPositionX = mouseX;
 					int readPositionY = mouseY;
 					
@@ -596,7 +710,7 @@ public class EvaluationApp extends PApplet
 						//If a click happens at this time, ignore it.
 						ignoreMouseInput();
 						
-						//Store experiment values.
+						//Store information collected.
 						Pixel lastSequencePixel = null;
 						Information dataToStore = null;
 						
@@ -635,7 +749,7 @@ public class EvaluationApp extends PApplet
 							dataToStore.setStartingCircleCenter(startingCircleCenter);
 							dataToStore.setEndingCircleCenter(targetCircleCenter);
 							
-							dataToStore.setCircleID(i);	//Note: The internal CircleID differs from the real CircleID, which follows the Mackenzie circle.
+							dataToStore.setCircleID(i);	//Note: The internal CircleID differs from the real CircleID. The real follows the Mackenzie circle.
 							
 							dataToStore.setDistanceBetweenCircles(distanceBetweenPoints);
 							dataToStore.setDistanceBetweenFrameAndCircleCenter(centerDistance);
@@ -672,15 +786,16 @@ public class EvaluationApp extends PApplet
 									//This sequence samples are all collected. Go for the next sequence
 									break;	
 								}
-
 							}
 							
 							dataToStore.storeInformationInFile();
 						}
 						
+						//In playing mode the sequence should not be increased as there is no need for such.
 						if(!playingMode)
 						{
 							currentSequenceNumber++;
+							displayTextSequencesLeft = determineActualSequence();
 						}
 						
 						//If the maximum number of trials have been performed, terminate the experiment.
@@ -701,6 +816,7 @@ public class EvaluationApp extends PApplet
 						{
 							currentBlockNumber++;
 							currentSequenceNumber = 0;
+							displayTextSequencesLeft = determineActualSequence();
 						}
 						
 						//Generate a new sequence
@@ -732,7 +848,7 @@ public class EvaluationApp extends PApplet
 					
 						if( targetCircle.doesPointBelongToCircle(readPositionX, readPositionY) )
 						{
-							Sound.playSucessSound();
+							//Sound.playSucessSound();
 							
 							//Acknowledge correct click.
 							readSample.clickHappened();
@@ -768,7 +884,6 @@ public class EvaluationApp extends PApplet
 						mouseClickedInsideTarget = false;
 						sequenceIndex++;
 					}
-					
 				}	
 			}
 		};
@@ -776,11 +891,14 @@ public class EvaluationApp extends PApplet
 	
 	
 	/**
-	 * Function that creates a listener that will check if a mouse click has occurred and play the respective feedback sound.
+	 * Function that creates a listener that will check if a mouse click has occurred and 
+	 * play the respective feedback sound.
 	 * 
-	 * Note:The listener is only created, not SET. The user must add the listener himself/herself.
+	 * <p><b>Note:</b> The listener is only created, not SET. The programmer must add the listener 
+	 *                 himself/herself.
 	 * 
-	 * Note2: The behavior of this listener can be altered by using the functions "ignoreMouseInput()" and "acceptMouseInput()"
+	 * <p><b>Note2:</b> The behavior of this listener can be altered by using the functions 
+	 *                  "ignoreMouseInput()" and "acceptMouseInput()"
 	 * 
 	 * @return The said listener.
 	 */
@@ -813,9 +931,9 @@ public class EvaluationApp extends PApplet
 	
 	/**
 	 * Function that alters the Mouse Listener behavior.
-	 * The listeners is to do nothing even if the mouse button is pressed.
+	 * The listeners is to do nothing even if a click is performed.
 	 * 
-	 * Note: To alter this behavior use "acceptMouseInput()" function.. 
+	 * <p><b>Note:</b> To alter this behavior use "acceptMouseInput()" function. 
 	 */
 	private void ignoreMouseInput()
 	{
@@ -824,11 +942,11 @@ public class EvaluationApp extends PApplet
 	
 	/**
 	 * Function that alters the Mouse Listener behavior.
-	 * The listeners is register the mouse click when one happens.
+	 * <br>The listeners is to register the mouse click when one happens.
 	 * 
-	 * Note: To alter this behavior use "ignoreMouseInput()" function.
+	 * <p><b>Note:</b> To alter this behavior use "ignoreMouseInput()" function.
 	 * 
-	 * Note2: This is the default behavior of the listener. 
+	 * <p><b>Note2:</b> This is the default behavior of the listener. 
 	 */
 	private void acceptMouseInput()
 	{
@@ -838,14 +956,14 @@ public class EvaluationApp extends PApplet
 	/**
 	 * Function that creates a key listener in order to alter the application parameters.
 	 * The keys are as follows:
-	 * - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's. (DEBUG only)
-	 * - > "G" key - Changes the gesture being used by the Leap Motion to interact with the application. (DEBUG only)
-	 * - > "H" key - Changes if the user is right-handed or left-handed. (DEBUG only)
-	 * - > "P" key - Enables/disables playing mode.		
-	 * - > ["0"-"9"] - Keys between 0 and 2 change the device number to the one pressed. (DEBUG only)
-	 * - > "Esc" key - exits the application (due to Processing).
+	 * <br> - > "R" key - Changes if the sequence is randomly generated or follows the same pattern as Makenzie's. (DEBUG only)
+	 * <br> - > "G" key - Changes the gesture being used by the Leap Motion to interact with the application. (DEBUG only)
+	 * <br> - > "H" key - Changes if the user is right-handed or left-handed. (DEBUG only)
+	 * <br> - > "P" key - Enables/disables playing mode.		
+	 * <br> - > ["0"-"9"] - Keys between 0 and 2 change the device number to the one pressed. (DEBUG only)
+	 * <br> - > "Esc" key - exits the application (due to Processing).
 	 * 
-	 * Note: Remember, this function only generates the listener. It must be added manually!
+	 * <p><b>Note:</b> Remember, this function only generates the listener. It must be added manually!
 	 * 
 	 * @return The said listener.
 	 */
@@ -967,7 +1085,7 @@ public class EvaluationApp extends PApplet
 							message += "Touch Pad";
 							break;
 							
-						case 3:
+						case 4:
 							message += "Leap Motion + Touchless";
 							break;
 							

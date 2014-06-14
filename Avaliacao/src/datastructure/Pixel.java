@@ -7,12 +7,12 @@ public class Pixel
 	
 	/**
 	 * Constructor of the Pixel class.
-	 * Creates a class that stores a pixel's X and Y position on the screen.
+	 * <br>Creates a class that stores a pixel's X and Y coordinates.
 	 * 
-	 * Note: Point (0,0) is located in the upper left corner of the screen.
+	 * <p><b>Note:</b> Point (0,0) is located in the upper left corner of the screen.
 	 * 
-	 * @param x - The pixel's X coordinate in the screen.
-	 * @param y - The pixel's Y coordinate in the screen.
+	 * @param x - The pixel's X (width) coordinate in the screen.
+	 * @param y - The pixel's Y (height) coordinate in the screen.
 	 */
 	public Pixel(int x, int y)
 	{
@@ -21,7 +21,7 @@ public class Pixel
 	}
 	
 	/**
-	 * Function that returns the Pixel's X position on the screen.
+	 * Function that returns the Pixel's X (width) position.
 	 * 
 	 * @return Pixel's X position.
 	 */
@@ -29,15 +29,15 @@ public class Pixel
 	{ return xCoordinate; }
 	
 	/**
-	 * Function that alters the X position of the Pixel.
+	 * Function that alters the X (width) position of the Pixel.
 	 * 
-	 * @param xCoordinate - The new X coordinate of the pixel on the screen.
+	 * @param xCoordinate - The new X coordinate of the pixel.
 	 */
 	public void setXCoordinate(int xCoordinate) 
 	{ this.xCoordinate = xCoordinate; }
 	
 	/**
-	 * Function that returns the Pixel's Y position on the screen.
+	 * Function that returns the Pixel's Y (height) position.
 	 * 
 	 * @return Pixel's Y position.
 	 */
@@ -45,16 +45,16 @@ public class Pixel
 	{ return yCoordinate; }
 	
 	/**
-	 * Function that alters the Y position of the Pixel.
+	 * Function that alters the Y (height) position of the Pixel.
 	 * 
-	 * @param yCoordinate - The new Y coordinate of the pixel on the screen.
+	 * @param yCoordinate - The new Y coordinate of the pixel.
 	 */
 	public void setYCoordinate(int yCoordinate) 
 	{ this.yCoordinate = yCoordinate; }
 	
 	/**
 	 * Function that returns a string with the Pixel's coordinates.
-	 * The result follows this format: "X_Coordinate Y_Coordinate".
+	 * <br>The result follows this format: "X_Coordinate Y_Coordinate".
 	 * 
 	 * @return String containing the Pixel's X and Y coordinates.
 	 */

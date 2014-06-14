@@ -9,14 +9,14 @@ public class Sequence
 	
 	/**
 	 * Constructor of the Class Sequence.
-	 * Creates an array of integers representing the order (or index) in which the circles should be traveled during the experiment.
+	 * <br>Creates an array of integers representing the order (or index) in which the circles should be traveled during the experiment.
 	 * 
 	 * @param numberOfCircles - Number of circles to be used in the experiment. 
-	 * @param random - Boolean indicating if the sequence is to be randomly generated (true) or should if it should follow Mackenzie's Paper (false).
+	 * @param random - Boolean indicating if the sequence is to be randomly generated (true) or if it should follow Mackenzie's Paper (false).
 	 */
 	public Sequence(int numberOfCircles, boolean random)
 	{
-		if(numberOfCircles <= 2)
+		if(numberOfCircles <= 1)
 		{
 			System.err.println("It is not possible to create a sequence with one or less number of circles...\nShutting down.");
 			System.exit(0);
@@ -37,7 +37,7 @@ public class Sequence
 			return;
 		}
 		
-		//Trying to follow a pattern similiar to Mackenzie's if the number of circles is different than 16.
+		//Trying to follow a pattern similar to Mackenzie's if the number of circles is different than 16 and not random.
 		if( (numberOfCircles != 16) && !random )
 		{
 			//NOTE: The sequence generated won't be ISO (ISO 9241-9:2000) complaint.
@@ -123,6 +123,7 @@ public class Sequence
 	 * Function that returns the number of the sequence stored on the requested position. 
 	 * 
 	 * @param index - Position to be read. 
+	 * 
 	 * @return Integer representing the index of the circle stored on the requested position. 
 	 */
 	public int get(int index)

@@ -2,25 +2,27 @@
 // 0 = Leap Motion;
 // 1 = Mouse;
 // 2 = Touch Pad;
-Number of the device to be used: 2
+// 4 = Leap Motion + Touchless
 
-Assigned UserID to person performing the evaluation: 6
+Number of the device to be used: 0
+
+Assigned UserID to person performing the evaluation: 99
 
 Is user right-handed? (true/false): true
 
-Number of circles (integer): 16
+Center offset X (integer): 0
 
-Circle radius (float): 30.23 
-
-Distance between circles and frame center (integer): 418.60
-
-//Nota:
-//	Para as medidas de Mackenzie os valores a colocar seriam:
-//	Circle radius = 30
-//	Distance between circles and frame center =  418-419
-
-Random sequence generator (true/false): false
+Center offset Y (integer): 0
 
 How many sequences does one block have? (integer): 5
 
-How many blocks does one experiment have? (integer): 8
+How many blocks does one experiment have? (integer): 7
+
+Number of circles (integer): 16
+
+Circle radius (float): 24.5
+
+Distance between circles and frame center (integer): 340.5
+
+Random sequence generator (true/false): false
+

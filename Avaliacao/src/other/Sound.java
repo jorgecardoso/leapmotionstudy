@@ -10,9 +10,11 @@ import javax.sound.sampled.Clip;
 
 public class Sound 
 {
+	//Path to the music files to be played when a sucess or error occurs. 
 	static private String sucessSound =  "Resources/sound1.wav";		
 	static private String failureSound = "Resources/sound2.wav";
 	
+	//Booleans used to control the frequency in which the sound is played.
 	private static boolean playSucessSound = true;
 	private static boolean playFailureSound = true;
 	
@@ -20,11 +22,11 @@ public class Sound
 	
 	/**
 	 * Function that plays the tune defined as the "Sucess sound".
-	 * If this function is called again in less 200 milliseconds, no sound will be played.
+	 * <br>If this function is called again in less 200 milliseconds, no sound will be played.
 	 */
 	public static void playSucessSound()
 	{
-		//To avoid repeating the sound if the user continues to press the left mouse button or repeats the gesture too fast.  
+		//Avoid repeating the same tune if clicks are performed too close to each other.  
 		if(!playSucessSound)
 		{return;}
 		
@@ -50,11 +52,11 @@ public class Sound
 	
 	/**
 	 * Function that plays the tune defined as the "Failure sound".
-	 * If this function is called again in less 200 milliseconds, no sound will be played.
+	 * <br>If this function is called again in less 200 milliseconds, no sound will be played.
 	 */
 	public static void playFailureSound()
 	{
-		//To avoid repeating the sound if the user continues to press the left mouse button or repeats the gesture too fast.  
+		//Avoid repeating the same tune if clicks are performed too close to each other.
 		if(!playFailureSound)
 		{return;}
 		
@@ -80,7 +82,7 @@ public class Sound
 	
 	/**
 	 * Function that prepares a default timer task that allows the "Sucess sound" to be played again.
-	 * Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
+	 * <br>Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
 	 * 
 	 * @return TimerTask allowing the repetition of the "Sucess sound".
 	 */
@@ -95,7 +97,7 @@ public class Sound
 	
 	/**
 	 * Function that prepares a default timer task that allows the "Failure sound" to be played again.
-	 * Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
+	 * <br>Since the result is a TimerTask, it must be scheduled on a "Timer" in order for it to take effect. 
 	 * 
 	 * @return TimerTask allowing the repetition of the "Failure sound".
 	 */

@@ -2,17 +2,18 @@ package datastructure;
 
 public class Sample 
 {
+	//This class is used to store the pointer's position and if a click as happened.
 	Pixel readPosition;
 	boolean clickedHappened = false;
 
 	/**
-	 * Sample class default constructor without arguments.
+	 * Sample class constructor without arguments.
 	 */
 	public Sample()
 	{}
 	
 	/**
-	 * Sample class default constructor with one argument.
+	 * Sample class constructor with one argument.
 	 * 
 	 * @param position - Pixel of the position read.
 	 */
@@ -22,12 +23,12 @@ public class Sample
 	}
 	
 	/**
-	 * Sample class default constructor with two arguments.
-	 * An alternative to the default constructor with one argument. 
-	 * In this, instead of a Pixel, containing the position coordinates, the X and Y coordinates are passed as arguments.
+	 * Sample class constructor with two arguments.
+	 * <br>An alternative to the constructor with one argument. 
+	 * <br>In this, instead of a Pixel, containing the position coordinates, the X and Y coordinates are passed as arguments.
 	 * 
-	 * @param coordinateX - The read position X coordinate.
-	 * @param coordinateY - The read position X coordinate.
+	 * @param coordinateX - The read position, X (width) coordinate.
+	 * @param coordinateY - The read position, Y (height) coordinate.
 	 */
 	public Sample(int coordinateX, int coordinateY)
 	{
@@ -57,7 +58,7 @@ public class Sample
 	/**
 	 * Function that informs if a click had occurred when this sample was saved.
 	 * 
-	 * @return A boolean with true or false.
+	 * @return A boolean with the answer. 
 	 */
 	public boolean didClickHappen()
 	{
@@ -65,8 +66,7 @@ public class Sample
 	}
 	
 	/**
-	 * Function that that sets the sample clickHappened to true.
-	 * 
+	 * Function that informs this class that a click happened.
 	 */
 	public void clickHappened()
 	{

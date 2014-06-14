@@ -25,20 +25,20 @@ public class Information
 
 	private long elapsedTime;
 
-	private int device;									
+	private int device;									//Integer symbolizing the device being used during the experiment. 
 	private int userId;										
 	private int sequenceNumber;							
 	private int blockNumber;							
 
-	private String fileToStoreInfo;  					
+	private String fileToStoreInfoPath;  					
 
 	/**
 	 * Constructor of the Class Information.
-	 * Creates a structure that stores all the information obtained during a trial.
+	 * <br>Creates a structure that stores all the information obtained during a trial.
 	 * 
-	 * It also contains some static auxiliary functions that calculate the distance between two points.
+	 * <p>It also contains some static auxiliary functions that calculate the distance between two points.
 	 *
-	 * Note: This class only stores information. Altering values in this class won't alter
+	 * <p><b>Note:</b> This class only stores information. Altering values in this class won't alter
 	 * 		 the application parameters. For that, the "Config.txt" file should be altered.
 	 */
 	public Information() 
@@ -47,24 +47,23 @@ public class Information
 		this.device = 0;			this.userId = 0;		
 		this.sequenceNumber = 0;	this.blockNumber = 0;   
 		
-		this.fileToStoreInfo = "";
+		this.fileToStoreInfoPath = "";
 		
 		this.numberOfCircles = 0;
 		this.targetWidth = 0;
 		this.distanceBetweenCirclesAndFrameCenter = 0;	
 
-		
 		//Default values for the variables whose information is altered more frequently.
 		resetInformation();
 		
 		//Create a folder, named "Results", where the results from the experiment will be stored. 
-		createResultsFolder();
+		createResultFolder();
 	}
 	
 	@SuppressWarnings("unchecked")
 	/**
 	 * Function that makes a copy of all the values of this class.
-	 * A solution to avoid arguments passed by reference.
+	 * <br>A solution to avoid arguments passed by reference.
 	 * 
 	 * @return A copy of the class.
 	 */
@@ -80,7 +79,7 @@ public class Information
 		copyOfOriginal.blockNumber = this.blockNumber;
 		copyOfOriginal.sequenceNumber = this.sequenceNumber;
 		copyOfOriginal.numberOfClicks = this.numberOfClicks;
-		copyOfOriginal.fileToStoreInfo = this.fileToStoreInfo;
+		copyOfOriginal.fileToStoreInfoPath = this.fileToStoreInfoPath;
 		copyOfOriginal.numberOfCircles = this.numberOfCircles;
 		copyOfOriginal.path = (Vector<Pixel>) this.path.clone();
 		copyOfOriginal.endingCircleCenter = this.endingCircleCenter;
@@ -91,9 +90,9 @@ public class Information
 	}
 		
 	/**
-	 * Function that resets all the class' changeable values to their default values.
+	 * Function that resets all the more frequently changed class' variables to their default values.
 	 * 
-	 * Note: Device number, User ID, block number and path, to where the results are stored, WILL NOT suffer any change.
+	 * <p><b>Note:</b> Device number, User ID, block number and path to where the results are stored WILL NOT suffer any change.
 	 */
 	public void resetInformation()
 	{
@@ -114,8 +113,8 @@ public class Information
 	/**
 	 * Function that sets the number of circles drawn in the application.
 	 * 
-	 * Note: This function is used by the application to inform this class of the number of circles drawn.
-	 * 		 The inverse is not possible. To alter the number of circles drawn, 
+	 * <p><b>Note:</b> This function is used by the application to inform this class of the number of circles drawn.
+	 * 		 <br>The inverse is not possible. To alter the number of circles drawn, 
 	 * 		 one must alter the "Config.txt" file.
 	 * 
 	 * @param numberOfCircles - Number of circles drawn on the application.
@@ -124,9 +123,10 @@ public class Information
 	{ this.numberOfCircles = numberOfCircles; }
 
 	/**
-	 * Function that returns this trial's starting Circle's center. The starting circle is the last trial's target (or end) circle. 
+	 * Function that returns this trial's starting Circle's center. 
+	 * <br>The starting circle is the last trial's target (or end) circle. 
 	 * 
-	 * Note: The result is a value of the Class Pixel.
+	 * <p><b>Note:</b>The result is a value of the Class Pixel.
 	 * 
 	 * @return Pixel with the coordinates of the Circle's center.
 	 */
@@ -136,7 +136,7 @@ public class Information
 	/**
 	 * Functions that sets this trial's starting Circle's center. 
 	 * 
-	 * Note: This function can't be used to create a circle on the application. It should
+	 * <p><b>Note:</b> This function can't be used to create a circle on the application. It should
 	 * 		 only be used by the application to fill this class' variables. 
 	 * 
 	 * @param StartingCircleCenter - Pixel where the starting circle's center is.
@@ -147,7 +147,7 @@ public class Information
 	/**
 	 * Function that returns this trial's ending Circle's center. The ending circle is also the next trial's starting circle. 
 	 * 
-	 * Note: The result is a value of the Class Pixel.
+	 * <p><b>Note:</b> The result is a value of the Class Pixel.
 	 * 
 	 * @return Pixel with the coordinates of the Circle's center.
 	 */
@@ -155,9 +155,9 @@ public class Information
 	{ return endingCircleCenter; }
 
 	/**
-	 * Functions that sets this trial's ending (or target) Circle's center. 
+	 * Functions that sets this trial's target (or ending) Circle's center. 
 	 * 
-	 * Note: This function can't be used to create a circle on the application. It's should
+	 * <p><b>Note:</b> This function can't be used to create a circle on the application. It should
 	 * 		 only be used by the application to fill this class variables. 
 	 * 
 	 * @param endingCircleCenter - Pixel where the ending circle's center is.
@@ -168,9 +168,9 @@ public class Information
 	/**
 	 * Function that returns this trial's circles' width.
 	 * 
-	 * NOTE: The width is the circle radius * 2.
+	 * <p><b>Note:</b> The width is the circle radius * 2.
 	 * 
-	 * NOTE2: The width is the same for every circle on the experiment.
+	 * <p><b>Note2:</b> The width is the same for every circle on the experiment.
 	 * 
 	 * @return A integer with the circle's radius.
 	 */
@@ -180,7 +180,7 @@ public class Information
 	/**
 	 * Function that sets this trial's circles' width.
 	 * 
-	 * Note: This function is used by the application to inform this class of the target width.
+	 * <p><b>Note:</b> This function is used by the application to inform this class of the target width.
 	 * 		 To change the radius, and consequently the width, the "Config.txt" should be altered.
 	 * 
 	 * @param targetWidth - The circles' width.
@@ -191,7 +191,7 @@ public class Information
 	/**
 	 * Function that returns the current circle ID.
 	 * 
-	 * @return THe actual circle ID on the current trial.
+	 * @return The actual circle ID on the current trial.
 	 */
 	public int getCircleID() 
 	{return circleId;}
@@ -214,17 +214,17 @@ public class Information
 	 * Function that returns the distance between the center of one circle and the application's
 	 * frame center, in pixels.
 	 * 
-	 * Note: This distance is the same for all circles.
+	 * <p><b>Note:</b> This distance is the same for all circles.
 	 * 
-	 * @return Integer value with the distance between the circle and application.
+	 * @return Integer value with the distance between the circle and the frame/window center.
 	 */
 	public float getDistanceBetweenFrameAndCircleCenter() 
 	{ return distanceBetweenCirclesAndFrameCenter; }
 
 	/**
-	 * Function that sets the distance between one circle's center and the application's frame center.
+	 * Function that sets the distance between one circle's center and the application's frame/window center.
 	 *
-	 * Note: This distance is the same for all circles. 
+	 * <p><b>Note:</b> This distance is the same for all circles. 
 	 * 
 	 * @param distance - An integer with the distance between both centers.
 	 */
@@ -251,7 +251,7 @@ public class Information
 	/**
 	 * Function that returns the number of clicks performed by user to during the current trial.
 	 * 
-	 * Note: A successful trial only takes one click to perform. If more, the trial
+	 * <p><b>Note:</b> A successful trial only takes one click to perform. If more than one, the trial
 	 * 		 should be considered unsuccessful.
 	 * 
 	 * @return An integer with number of clicks performed by the user.
@@ -262,7 +262,7 @@ public class Information
 	/**
 	 * Function that sets the number of clicks the user performed during the trial.
 	 * 
-	 * Note: A successful trial only takes one click to perform. If more, the trial
+	 * <p><b>Note:</b> A successful trial only takes one click to perform. If more, the trial
 	 * 		 should be considered unsuccessful.
 	 * 
 	 * @param numberOfClicks - Number of clicks performed by the user.
@@ -274,16 +274,16 @@ public class Information
 	 * Function that informs this class that a click occurred, incrementing the number of
 	 * clicks by one.
 	 * 
-	 * A possible substitute to a would be "setNumberOfClicks(...)" function.
+	 * <p>A possible substitute to a would be "setNumberOfClicks(...)" function.
 	 */
 	public void clickedOccurred()
 	{ this.numberOfClicks++; }
 	
 	/**
-	 * Function that returns the path traveled by the cursor during the trial.
+	 * Function that returns the path traveled by the pointer during the trial.
 	 * 
-	 * The path is the successive pixels occupied by the mouse when moving from the starting
-	 * circle to the ending circle.
+	 * <p>The path is the successive pixels occupied by the pointer when moving from the starting
+	 * circle to the target circle.
 	 * 
 	 * @return The path performed by the cursor.
 	 */
@@ -291,7 +291,7 @@ public class Information
 	{ return this.path; }
 	
 	/**
-	 * Function that alters current path, vector of pixels, to the given one.
+	 * Function that alters current path, vector of pixels, to the intended one.
 	 * 
 	 * @param intendedPath - The new path.
 	 */
@@ -299,7 +299,9 @@ public class Information
 	{ this.path = intendedPath; }
 	
 	/**
-	 * Function that adds a single Pixel the path.
+	 * Function that adds a single Pixel to the path.
+	 * 
+	 * <p><b>Note:</b> The pixel added is considered the last pixel traveled by the pointer.
 	 * 
 	 * @param value - The pixel to be add.
 	 */
@@ -325,10 +327,8 @@ public class Information
 	/**
 	 * Function returns the number (or ID) of the device being used.
 	 * 
-	 * NOTE: The device number, or ID, are as follow:
-	 *         -> 0 = Leap Motion;
-	 *         -> 1 = Mouse;
-	 *         -> 2 = Touch Pad;
+	 * <p><b>Note:</b> Internally, the device ID has no meaning. This can be anything the user defines.
+	 * 		 <br>The only exception is 0, which is attributed to the Leap Motion + Grabbing gesture.
 	 * 
 	 * @return The ID of the device used to perform this trial.
 	 */
@@ -337,6 +337,9 @@ public class Information
 
 	/**
 	 * Function that changes the Device ID to the one desired.
+	 *
+	 * <p><b>Note:</b> Internally, the device ID has no meaning. This can be anything the user defines.
+	 * 		 <br>The only exception is 0, which is attributed to the Leap Motion + Grabbing gesture.
 	 * 
 	 * @param deviceNumber - The desired device ID.
 	 */
@@ -344,9 +347,9 @@ public class Information
 	{ this.device = deviceNumber; }
 
 	/**
-	 * Function that returns the trial's User ID. 
+	 * Function that returns the userID for this trial . 
 	 * 
-	 * The ID represents the user that's performing the trial.
+	 * <p>The ID represents the user that performed / is performing the trial.
 	 * 
 	 * @return The current experiment's User ID.
 	 */
@@ -355,19 +358,19 @@ public class Information
 	
 	/**
 	 * Function that changes the User ID to the next available. 
-	 * Basically, the function increases the ID by one.
+	 * <br>Basically, the function increases the ID by one.
 	 */
 	public void nextUser() 
 	{ userId++;	}
 
 	/**
 	 * Function that changes the User to the the last one.
-	 * It's possible to return to the first User ID by using this function
+	 * <br>It's possible to return to the first User ID by using this function
 	 * several times.
 	 * 
-	 * Note: The first User ID is 0.
+	 * <p><b>Note:</b> The first User ID is 0.
 	 * 
-	 * Note2: If used when the User ID is 0, nothing happens.
+	 * <p><b>Note2:</b> If used when the User ID is 0, nothing happens.
 	 */
 	public void lastUser() 
 	{
@@ -383,7 +386,7 @@ public class Information
 	/**
 	 * Functions that switches the UserId to a specific one.
 	 * 
-	 * Note: User Id cannot be less than 0.
+	 * <p><b>Note:</b> User Id cannot be less than 0.
 	 * 
 	 * @param userId - The desired User ID.
 	 */
@@ -401,7 +404,7 @@ public class Information
 	
 	/**
 	 * Function that returns the actual sequence number.
-	 * In other words, the ID of the current target circle.
+	 * <br>In other words, the ID of the current target circle.
 	 * 
 	 * @return A number (or ID) of the current sequence number.
 	 */
@@ -424,14 +427,14 @@ public class Information
 	
 	/**
 	 * Function that changes the sequence number to the next available.
-	 * In other words, sequence number is increased by one.
+	 * <br>In other words, sequence number is increased by one.
 	 */
 	public void increaseSequenceNumber()
 	{sequenceNumber++;}
 	
 	/**
 	 * Function that returns the actual block number.
-	 * Remembering, a block symbolizes a set of one or more sequences.
+	 * <br>Remembering, a block symbolizes a set of one or more sequences.
 	 * 
 	 * @return The actual block number.
 	 */
@@ -441,7 +444,7 @@ public class Information
 	/**
 	 * Function that changes the block number to the given one.
 	 * 
-	 * In other words, the block number is increased by one.
+	 * <p>In other words, the block number is increased by one.
 	 */
 	public void setBlockNumber(int block)
 	{ blockNumber = block; }
@@ -449,14 +452,14 @@ public class Information
 	/**
 	 * Function that changes the block number to the next available.
 	 * 
-	 * In other words, the block number is increased by one.
+	 * <p>In other words, the block number is increased by one.
 	 */
 	public void increaseBlockNumber()
 	{ blockNumber++; }
 
 	/**
 	 * Function that prints all the class variables to the console, except the path traveled by
-	 * the cursor during the cursor.
+	 * the pointer during the trial.
 	 */
 	public void printInfoWithoutPath()
 	{
@@ -493,7 +496,7 @@ public class Information
 
 	/**
 	 * Function that prints all the class variables to the console, including the path traveled
-	 * by the cursor during the trial.
+	 * by the pointer during the trial.
 	 */
 	public void printInfoWithPath()
 	{
@@ -510,7 +513,7 @@ public class Information
 	/**
 	 * Function that creates a folder, named "Results", where all the results from the evaluation will be stored.
 	 */
-	private void createResultsFolder()
+	private void createResultFolder()
 	{
 		//Check if the "Results" folder (the folder where all results will be stored) already exists.
 		String nameMainFolder = "Results";
@@ -524,9 +527,9 @@ public class Information
 	}
 	
 	/**
-	 * Function that creates a file where the results extracted from the experience will be stored.
+	 * Function that creates a file where the results (from the experiment) saved in this class will be stored.
 	 * 
-	 * Note: The filename is based on the day, month, year, hour, minutes and seconds of the machine's clock.
+	 * <p><b>Note:</b> The filename is (UserID) + ".txt".
 	 * 
 	 * @return A string containing the path of the created file.
 	 */
@@ -583,18 +586,17 @@ public class Information
 
 	/**
 	 * Function that stores the trial's results on the correct file.
-	 * This file is created in the constructor of this class.
 	 */
 	public void storeInformationInFile()
 	{
 		//Check to see if the file where the results will be stored already exists.
-		if( fileToStoreInfo.equals("") )
+		if( fileToStoreInfoPath.equals("") )
 		{
 			//Create file
-			fileToStoreInfo = createStoreFile();
+			fileToStoreInfoPath = createStoreFile();
 		}
 		
-		File fileToWrite = new File(fileToStoreInfo);
+		File fileToWrite = new File(fileToStoreInfoPath);
 
 		if ( !fileToWrite.exists() ) 
 		{
@@ -633,10 +635,10 @@ public class Information
 	}
 	
 	/**
-	 * Function that stores the current cursor position (coordinates) on the application.
+	 * Function that stores the pointer position (coordinates) on the application.
 	 * 
-	 * @param xCoordinate - The current mouse X coordinates. 
-	 * @param yCoordinate - The current mouse Y coordinates.
+	 * @param xCoordinate - The current mouse X (width) coordinates. 
+	 * @param yCoordinate - The current mouse Y (height) coordinates.
 	 */
 	public void storeCursorPosition(int xCoordinate, int yCoordinate)
 	{ path.add(new Pixel(xCoordinate, yCoordinate) ); }
