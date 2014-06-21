@@ -4,12 +4,13 @@ require(ggplot2)
 require(doBy)
 
 GENERATE_INDIVIDUAL_PATHS <- FALSE
-
+GENERATE_CIRCLEID_CHARTS <- FALSE
+GENERATE_SEQUENCE_CHARTS <- TRUE
 
 ############################ data
 
 
-files <- list.files(path="data", pattern="transformed.*")
+files <- list.files(path="data", pattern="transformed.txt")
 files
 dataTransformed <- data.frame()
 for (file in files) {
@@ -43,6 +44,7 @@ print ( paste("X scale: ", minX, maxX, " Y scale: ", minY, maxY))
 
 
 # plot the paths for each user and device. a single plot aggregates one entire sequence
+if (GENERATE_SEQUENCE_CHARTS == TRUE) {
 for (device in unique(dataTransformed$Device) ) {
   for (user in unique(dataTransformed$UserId)) {
     p <- ggplot(dataTransformed[dataTransformed$Device==device &
@@ -61,9 +63,11 @@ for (device in unique(dataTransformed$Device) ) {
     ggsave(file = filename, width=21/2.54, height=29/2.54, dpi=100)
   }
 }
+}
 
 
 # plot the paths for each user and device. a single plot aggregates one circleid
+if (GENERATE_CIRCLEID_CHARTS == TRUE) {
 for (device in unique(dataTransformed$Device) ) {
   for (user in unique(dataTransformed$UserId)) {
     p <- ggplot(dataTransformed[dataTransformed$Device==device &
@@ -82,7 +86,7 @@ for (device in unique(dataTransformed$Device) ) {
     ggsave(file = filename, width=21/2.54, height=29/2.54, dpi=100)
   }
 }
-
+}
 
 
 # plot INDIVIDUAL paths for each user and device. 
@@ -113,19 +117,5 @@ if (GENERATE_INDIVIDUAL_PATHS == TRUE) {
 }
 
 
-
-dataTransformed$cuts<-cut(dataTransformed$percentpath, 100)
-
-
-speed<-aggregate(dataTransformed$speeds, dataTransformed[,c("cuts", "Device")], mean)
-ggplot(speed, aes(x=cuts, y=x, group=Device, colour=Device)) +
-  #geom_smooth() +
-  geom_path()
-
-
-accel<-aggregate(dataTransformed$accels, dataTransformed[,c("cuts", "Device")], mean)
-ggplot(accel, aes(x=cuts, y=x, group=Device, colour=Device)) +
-  #geom_smooth() +
-  geom_path()
 
 
