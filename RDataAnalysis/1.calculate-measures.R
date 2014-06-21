@@ -4,7 +4,7 @@
 #   each selection path lies horizontally.
 # - measures.txt, contains the various Mackenzie's accuracy measures for each path
 
-source("2d.R")
+source("functions.R")
 options(warn=1)
 
 # Transformed data points with abs(y) coordinate greater than NOISE_ERROR_THRESHOLD are 
@@ -17,9 +17,9 @@ NOISE_ERROR_THRESHOLD <- 111400
 SAMPLE_INTERVAL <- 25 #40 samples per second: 25 millisecond interval
 
 
-############################ data
+# get the data from files named 0.txt, 1.txt, etc.
 
-files <- list.files(path="data", pattern="[0-9]+.*")
+files <- list.files(path="data", pattern="^[0-9]+.*")
 files
 dataRaw <- data.frame()
 for (file in files) {
@@ -31,16 +31,19 @@ for (file in files) {
 colnames(dataRaw)
 
 
+# file name for the transformed coordinates
 filenameTransformed <- paste("data/", "transformed.txt", sep="")
-filenameMeasures <- paste("data/", "measures.txt", sep="")
 
+# file name for the measures 
+filenameMeasures <- paste("data/", "measures.txt", sep="")
 
 
 dataMeasures <- data.frame()
 newData <- data.frame()
 
+
 #For noise errors checking
-countNoiseErrors <- 0
+noiseErrorCount <- 0
 
 system.time(
   for (user in unique(dataRaw$UserId) ) {
@@ -49,7 +52,7 @@ system.time(
     newDataUser <- data.frame()
     
     for (device in unique(dataRaw[dataRaw$UserId==user,]$NumberDevice) ) {
-      #for (device in unique(dataRaw$NumberDevice)[1] ) {
+    #  for (device in unique(dataRaw$NumberDevice)[1] ) {
       
       newDataDevice <- data.frame()
       
@@ -71,7 +74,7 @@ system.time(
             indexes <- which(dataRaw$UserId == user & dataRaw$NumberDevice == device & dataRaw$Block == block & dataRaw$Sequence == sequence & dataRaw$CircleID == cid)
             partial <- dataRaw[indexes, ]
             
-            # we consider the movement axis as a line going from the first point to the center of the target
+            # we consider the movement axis as a line going from the first point to the click point inside the target
             axisStart <- c(partial[1,]$MouseX, partial[1,]$MouseY)
             axisEnd <- c(partial[nrow(partial),]$PixelEndCircleX, partial[nrow(partial),]$PixelEndCircleY)
             axis <- axisEnd-axisStart
@@ -128,6 +131,10 @@ system.time(
             speeds <- numeric()
             accels <- numeric()
             percentpath <-numeric()
+            displacement <- numeric()
+            distance <- numeric()
+            insidecount <- 0
+            sampleid <- numeric()
             
             # for noise errors checking
             lastCalculatedPointY <- 0
@@ -141,7 +148,11 @@ system.time(
             # go through all coordinates, transform them and calculate the various measures.
             #for (n in indexes ) {
             for (n in 1:nrow(partial) ) {
+              sampleid[n] <- n    
               percentpath[n] = n/nrow(partial)
+              
+              displacement[n] <- dist(rbind(c(partial[n,]$MouseX, partial[n,]$MouseY), c(partial[1,]$MouseX, partial[1,]$MouseY)))
+              
               partialtargetx[n]<-target[1,1]
               partialtargety[n]<-target[1,2]
               
@@ -157,7 +168,7 @@ system.time(
               if (abs(partialry[n]-lastCalculatedPointY) > NOISE_ERROR_THRESHOLD) {
                 print(paste("Correcting coordinate due to noise", partialry[n]))    
                 partialry[n] <- lastCalculatedPointY
-                countNoiseErrors <- countNoiseErrors +1
+                noiseErrorCount <- noiseErrorCount +1
               }
               lastCalculatedPointY <- partialry[n]
               
@@ -166,8 +177,14 @@ system.time(
               clickPointY <- newPoint[1,2]
               
               
-              # Speed/Accel
+              # Distance
               dist <- dist(rbind(c(clickPointX,clickPointY), c(lastPointX, lastPointY)))
+              if ( n > 1 ) {
+                  distance[n] <- distance[n-1]+dist
+              } else {
+                distance[n] <- 0
+              }
+              # Speed/Accel
               speed <- dist/(SAMPLE_INTERVAL/1000)
               speeds[n] <- speed
               lastPointX <- clickPointX
@@ -185,9 +202,11 @@ system.time(
                 if ( !entered ) {
                   entered <- TRUE
                   TRE <- TRE + 1
+                  insidecount <- 0
                 } 
                 partialinside[n]<-TRUE
-              }else {
+                insidecount <- insidecount + 1
+              } else {
                 entered <- FALSE
                 partialinside[n]<-FALSE
               }
@@ -253,6 +272,10 @@ system.time(
             partial$percentpath <- percentpath
             partial$speeds <- speeds
             partial$accels <- accels
+            partial$displacement <- displacement
+            partial$distance <- distance
+            partial$insidecount <- insidecount
+            partial$sampleid <- sampleid
             
             #newData <- rbind(newData, partial)
             newDataSequence <- rbind(newDataSequence, partial)
@@ -269,7 +292,7 @@ system.time(
 names(dataMeasures) <- c("Device", "UserId", "Block", "Sequence", "CircleID", "ErrorRate", "TRE", "TAC", "MDC", "ODC", "MV", "ME", "MO", "ClickPointX", "ClickPointY","TargetX","TargetY", "MovementTime", "TargetWidth", "Distance", "CalculatedDistance")
 
 # 
-print(paste("Noise errors found: ", countNoiseErrors))
+print(paste("Noise errors found: ", noiseErrorCount))
 
 
 
